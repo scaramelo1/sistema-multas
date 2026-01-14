@@ -321,7 +321,6 @@
 
                 <div class="actions-buttons">
                     <button id="btnLogin" class="btn btn-info" onclick="fazerLogin()">🔑 Fazer Login</button>
-                    <button id="btnGoToRegister" class="btn btn-primary" onclick="toggleAuthMode(true)">📝 Criar Conta</button>
                     <button id="btnRegister" class="btn btn-success hidden" onclick="cadastrarUsuario()">➕ Confirmar Cadastro</button>
                     <button id="btnBackToLogin" class="btn btn-danger hidden" onclick="toggleAuthMode(false)">⬅️ Voltar</button>
                     <button class="btn btn-primary" onclick="testarConexao()">🔍 Testar Conexão DB</button>
@@ -338,7 +337,10 @@
                     <br>
                     <small><strong>E-mail:</strong> <span id="userEmail"></span> | <strong>RE:</strong> <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small>
                 </div>
-                <button class="btn btn-danger" onclick="fazerLogout()">Sair</button>
+                <div>
+                    <button id="btnCriarUsuario" class="btn btn-primary admin-only hidden" onclick="toggleAuthMode(true)">➕ Criar Novo Usuário</button>
+                    <button class="btn btn-danger" onclick="fazerLogout()">Sair</button>
+                </div>
             </div>
 
             <!-- Seção de Multas -->
@@ -414,9 +416,7 @@
                             <th>Modelo</th>
                             <th>Código</th>
                             <th>Descrição</th>
-                            <th>Posto/Grad</th>
-                            <th>RE</th>
-                            <th>Agente</th>
+                            <th>RE do Agente</th>
                             <th>Data</th>
                             <th class="admin-only">Ações</th>
                         </tr>
@@ -457,12 +457,36 @@
         }
 
         function toggleAuthMode(isRegister) {
-            document.getElementById('authTitle').textContent = isRegister ? '📝 Cadastro de Novo Usuário' : '🔐 Autenticação';
-            document.getElementById('registerFields').classList.toggle('hidden', !isRegister);
-            document.getElementById('btnLogin').classList.toggle('hidden', isRegister);
-            document.getElementById('btnGoToRegister').classList.toggle('hidden', isRegister);
-            document.getElementById('btnRegister').classList.toggle('hidden', !isRegister);
-            document.getElementById('btnBackToLogin').classList.toggle('hidden', !isRegister);
+            // Se estiver logado como admin, mostrar form de cadastro na área de multas
+            if (usuarioLogado && perfilUsuario && perfilUsuario.nivel_acesso === 'admin') {
+                document.getElementById('authSection').classList.toggle('hidden', !isRegister);
+                document.getElementById('userInfo').classList.toggle('hidden', isRegister);
+                document.getElementById('multasSection').classList.toggle('hidden', isRegister);
+                
+                if (isRegister) {
+                    document.getElementById('authTitle').textContent = '📝 Cadastro de Novo Usuário';
+                    document.getElementById('registerFields').classList.remove('hidden');
+                    document.getElementById('loginFields').classList.add('hidden');
+                    document.getElementById('btnLogin').classList.add('hidden');
+                    document.getElementById('btnRegister').classList.remove('hidden');
+                    document.getElementById('btnBackToLogin').classList.remove('hidden');
+                    // Limpar campos
+                    document.getElementById('authEmail').value = '';
+                    document.getElementById('authPassword').value = '';
+                    document.getElementById('regNome').value = '';
+                    document.getElementById('regRE').value = '';
+                    document.getElementById('regCargo').value = '';
+                    document.getElementById('regNivel').value = 'agente';
+                }
+            } else {
+                // Modo normal de login/cadastro (não usado mais para cadastro público)
+                document.getElementById('authTitle').textContent = isRegister ? '📝 Cadastro de Novo Usuário' : '🔐 Autenticação';
+                document.getElementById('registerFields').classList.toggle('hidden', !isRegister);
+                document.getElementById('loginFields').classList.toggle('hidden', isRegister);
+                document.getElementById('btnLogin').classList.toggle('hidden', isRegister);
+                document.getElementById('btnRegister').classList.toggle('hidden', !isRegister);
+                document.getElementById('btnBackToLogin').classList.toggle('hidden', !isRegister);
+            }
         }
 
         async function carregarPerfil(user) {
@@ -525,6 +549,12 @@
         }
 
         async function cadastrarUsuario() {
+            // Verificar se é admin
+            if (!usuarioLogado || !perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
+                mostrarStatus('❌ Apenas administradores podem criar contas!', 'error');
+                return;
+            }
+
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
             const nome = document.getElementById('regNome').value;
@@ -554,8 +584,14 @@
                     nivel_acesso: nivel
                 }]);
 
-                if (profileError) mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
-                else mostrarStatus('✅ Conta criada! Verifique seu e-mail.', 'success');
+                if (profileError) {
+                    mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
+                } else {
+                    mostrarStatus('✅ Conta criada com sucesso!', 'success');
+                    setTimeout(() => {
+                        toggleAuthMode(false);
+                    }, 2000);
+                }
             }
         }
 
@@ -610,7 +646,7 @@
             const isAdmin = perfilUsuario.nivel_acesso === 'admin';
 
             if (multas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 10 : 9}" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 8 : 7}" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
                 atualizarEstatisticas([]);
                 return;
             }
@@ -623,9 +659,7 @@
                     <td>${multa.modelo}</td>
                     <td>${multa.codigo_infracao}</td>
                     <td>${multa.descricao_infracao || '-'}</td>
-                    <td>${multa.agente_posto || '-'}</td>
                     <td>${multa.agente_re || '-'}</td>
-                    <td>${multa.agente_nome || '-'}</td>
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
                     ${isAdmin ? `<td><button class="btn btn-danger" onclick="excluirMulta('${multa.id}')">🗑️</button></td>` : ''}
                 `;
