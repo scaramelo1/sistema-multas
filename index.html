@@ -123,6 +123,16 @@
             transform: translateY(-2px);
         }
 
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
         .btn-danger {
             background: #dc3545;
             color: white;
@@ -130,6 +140,11 @@
 
         .btn-danger:hover {
             background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
         }
 
         .status-message {
@@ -224,6 +239,11 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
         .autocomplete-item:hover {
             background-color: #f0f0f0;
         }
@@ -271,6 +291,60 @@
 
         .badge-admin { background: #ffd700; color: #000; }
         .badge-agente { background: #c0c0c0; color: #000; }
+
+        /* Modal de Edição */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+            margin: 0;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -404,7 +478,7 @@
 
                 <div class="actions-buttons">
                     <button class="btn btn-success" onclick="exportarCSV()">📥 Exportar CSV</button>
-                    <button id="btnImportar" class="btn btn-info" onclick="document.getElementById('csvFile').click()">📤 Importar CSV</button>
+                    <button id="btnImportar" class="btn btn-info admin-only" onclick="document.getElementById('csvFile').click()">📤 Importar CSV</button>
                     <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="importarCSV(event)">
                 </div>
 
@@ -418,16 +492,69 @@
                             <th>Descrição</th>
                             <th>RE do Agente</th>
                             <th>Data</th>
-                            <th class="admin-only">Ações</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
+                            <td colspan="8" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Editar Multa</h2>
+                <span class="close" onclick="fecharModalEdicao()">×</span>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+
+                <div class="form-group">
+                    <label for="editPlaca">Placa:</label>
+                    <input type="text" id="editPlaca" maxlength="7" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editMarca">Marca:</label>
+                    <input type="text" id="editMarca" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editModelo">Modelo:</label>
+                    <input type="text" id="editModelo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCodigoInfracao">Código da Infração:</label>
+                    <input type="text" id="editCodigoInfracao" autocomplete="off" required>
+                    <div id="autocomplete-edit-list" class="autocomplete-items"></div>
+                    <input type="hidden" id="editDescricaoInfracao">
+                </div>
+
+                <div class="form-group">
+                    <label for="editAgenteRE">RE do Agente:</label>
+                    <input type="text" id="editAgenteRE" autocomplete="off" required>
+                    <div id="autocomplete-edit-agente-list" class="autocomplete-items"></div>
+                    <input type="hidden" id="editAgenteNome">
+                    <input type="hidden" id="editAgentePosto">
+                </div>
+
+                <div class="form-group">
+                    <label for="editData">Data:</label>
+                    <input type="date" id="editData" required>
+                </div>
+
+                <div class="actions-buttons">
+                    <button type="submit" class="btn btn-success">💾 Salvar Alterações</button>
+                    <button type="button" class="btn btn-danger" onclick="fecharModalEdicao()">❌ Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -457,12 +584,11 @@
         }
 
         function toggleAuthMode(isRegister) {
-            // Se estiver logado como admin, mostrar form de cadastro na área de multas
             if (usuarioLogado && perfilUsuario && perfilUsuario.nivel_acesso === 'admin') {
                 document.getElementById('authSection').classList.toggle('hidden', !isRegister);
                 document.getElementById('userInfo').classList.toggle('hidden', isRegister);
                 document.getElementById('multasSection').classList.toggle('hidden', isRegister);
-                
+
                 if (isRegister) {
                     document.getElementById('authTitle').textContent = '📝 Cadastro de Novo Usuário';
                     document.getElementById('registerFields').classList.remove('hidden');
@@ -470,7 +596,6 @@
                     document.getElementById('btnLogin').classList.add('hidden');
                     document.getElementById('btnRegister').classList.remove('hidden');
                     document.getElementById('btnBackToLogin').classList.remove('hidden');
-                    // Limpar campos
                     document.getElementById('authEmail').value = '';
                     document.getElementById('authPassword').value = '';
                     document.getElementById('regNome').value = '';
@@ -479,7 +604,6 @@
                     document.getElementById('regNivel').value = 'agente';
                 }
             } else {
-                // Modo normal de login/cadastro (não usado mais para cadastro público)
                 document.getElementById('authTitle').textContent = isRegister ? '📝 Cadastro de Novo Usuário' : '🔐 Autenticação';
                 document.getElementById('registerFields').classList.toggle('hidden', !isRegister);
                 document.getElementById('loginFields').classList.toggle('hidden', isRegister);
@@ -503,7 +627,6 @@
                 mostrarUsuarioLogado(user, data);
                 carregarMultas();
 
-                // Auto-preencher dados do agente no form
                 document.getElementById('agenteRE').value = data.re;
                 document.getElementById('agenteNome').value = data.nome_completo;
                 document.getElementById('agentePosto').value = data.cargo;
@@ -535,7 +658,6 @@
                     alert('✅ Multa adicionada!');
                     document.getElementById('multaForm').reset();
                     document.getElementById('data').valueAsDate = new Date();
-                    // Manter dados do agente logado
                     document.getElementById('agenteRE').value = perfilUsuario.re;
                     document.getElementById('agenteNome').value = perfilUsuario.nome_completo;
                     document.getElementById('agentePosto').value = perfilUsuario.cargo;
@@ -543,13 +665,20 @@
                 }
             });
 
+            // Form de edição
+            document.getElementById('editForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await salvarEdicao();
+            });
+
             document.getElementById('placa').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+            document.getElementById('editPlaca').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
             document.getElementById('data').valueAsDate = new Date();
             setupAutocompleteAgente();
+            setupAutocompleteAgenteEdit();
         }
 
         async function cadastrarUsuario() {
-            // Verificar se é admin
             if (!usuarioLogado || !perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
                 mostrarStatus('❌ Apenas administradores podem criar contas!', 'error');
                 return;
@@ -622,20 +751,12 @@
             badge.textContent = perfil.nivel_acesso;
             badge.className = `badge badge-${perfil.nivel_acesso}`;
 
-            // Aplicar restrições de privilégio
             const isAdmin = perfil.nivel_acesso === 'admin';
             document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
-            document.getElementById('btnImportar').classList.toggle('hidden', !isAdmin);
         }
 
         async function carregarMultas() {
             let query = supabaseClient.from('multas').select('*').order('data', { ascending: false });
-
-            // Se for agente, vê apenas as dele (opcional, remova se quiser que todos vejam tudo)
-            if (perfilUsuario.nivel_acesso === 'agente') {
-                // query = query.eq('user_id', usuarioLogado.id); 
-            }
-
             const { data, error } = await query;
             if (!error) listarMultas(data || []);
         }
@@ -646,13 +767,15 @@
             const isAdmin = perfilUsuario.nivel_acesso === 'admin';
 
             if (multas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 8 : 7}" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
                 atualizarEstatisticas([]);
                 return;
             }
 
             multas.forEach(multa => {
                 const tr = document.createElement('tr');
+                const podeEditar = isAdmin || multa.user_id === usuarioLogado.id;
+
                 tr.innerHTML = `
                     <td>${multa.placa}</td>
                     <td>${multa.marca}</td>
@@ -661,7 +784,13 @@
                     <td>${multa.descricao_infracao || '-'}</td>
                     <td>${multa.agente_re || '-'}</td>
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
-                    ${isAdmin ? `<td><button class="btn btn-danger" onclick="excluirMulta('${multa.id}')">🗑️</button></td>` : ''}
+                    <td>
+                        <div class="action-buttons">
+                            ${podeEditar ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>` : ''}
+                            ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>` : ''}
+                            ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -682,10 +811,62 @@
             document.getElementById('statMensal').textContent = mensal;
         }
 
+        function abrirModalEdicao(multa) {
+            document.getElementById('editId').value = multa.id;
+            document.getElementById('editPlaca').value = multa.placa;
+            document.getElementById('editMarca').value = multa.marca;
+            document.getElementById('editModelo').value = multa.modelo;
+            document.getElementById('editCodigoInfracao').value = multa.codigo_infracao;
+            document.getElementById('editDescricaoInfracao').value = multa.descricao_infracao || '';
+            document.getElementById('editAgenteRE').value = multa.agente_re;
+            document.getElementById('editAgenteNome').value = multa.agente_nome;
+            document.getElementById('editAgentePosto').value = multa.agente_posto;
+            document.getElementById('editData').value = multa.data;
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function fecharModalEdicao() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('editForm').reset();
+        }
+
+        async function salvarEdicao() {
+            const id = document.getElementById('editId').value;
+            const multaAtualizada = {
+                placa: document.getElementById('editPlaca').value.toUpperCase(),
+                marca: document.getElementById('editMarca').value,
+                modelo: document.getElementById('editModelo').value,
+                codigo_infracao: document.getElementById('editCodigoInfracao').value,
+                descricao_infracao: document.getElementById('editDescricaoInfracao').value,
+                agente_posto: document.getElementById('editAgentePosto').value,
+                agente_re: document.getElementById('editAgenteRE').value,
+                agente_nome: document.getElementById('editAgenteNome').value,
+                data: document.getElementById('editData').value
+            };
+
+            const { error } = await supabaseClient
+                .from('multas')
+                .update(multaAtualizada)
+                .eq('id', id);
+
+            if (error) {
+                alert('❌ Erro ao atualizar: ' + error.message);
+            } else {
+                alert('✅ Multa atualizada com sucesso!');
+                fecharModalEdicao();
+                carregarMultas();
+            }
+        }
+
         async function excluirMulta(id) {
-            if (!confirm('Excluir?')) return;
+            if (!confirm('⚠️ Tem certeza que deseja excluir esta multa?')) return;
             const { error } = await supabaseClient.from('multas').delete().eq('id', id);
-            if (!error) carregarMultas();
+            if (error) alert('❌ Erro ao excluir: ' + error.message);
+            else {
+                alert('✅ Multa excluída!');
+                carregarMultas();
+            }
         }
 
         function mostrarStatus(msg, tipo) {
@@ -707,12 +888,36 @@
                     data.forEach(p => {
                         const d = document.createElement('div');
                         d.className = 'autocomplete-item';
-                        d.style.padding = '10px'; d.style.cursor = 'pointer';
                         d.innerHTML = `<strong>${p.re}</strong> - ${p.nome_completo}`;
                         d.onclick = () => {
                             input.value = p.re;
                             document.getElementById('agenteNome').value = p.nome_completo;
                             document.getElementById('agentePosto').value = p.cargo;
+                            list.innerHTML = '';
+                        };
+                        list.appendChild(d);
+                    });
+                }
+            });
+        }
+
+        async function setupAutocompleteAgenteEdit() {
+            const input = document.getElementById('editAgenteRE');
+            const list = document.getElementById('autocomplete-edit-agente-list');
+            input.addEventListener('input', async function() {
+                const val = this.value.trim();
+                list.innerHTML = '';
+                if (val.length < 1) return;
+                const { data } = await supabaseClient.from('perfis').select('*').or(`re.ilike.%${val}%,nome_completo.ilike.%${val}%`).limit(5);
+                if (data) {
+                    data.forEach(p => {
+                        const d = document.createElement('div');
+                        d.className = 'autocomplete-item';
+                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome_completo}`;
+                        d.onclick = () => {
+                            input.value = p.re;
+                            document.getElementById('editAgenteNome').value = p.nome_completo;
+                            document.getElementById('editAgentePosto').value = p.cargo;
                             list.innerHTML = '';
                         };
                         list.appendChild(d);
@@ -736,6 +941,14 @@
             const { error } = await supabaseClient.from('perfis').select('count', { count: 'exact', head: true });
             if (error) mostrarStatus('❌ Erro: ' + error.message, 'error');
             else mostrarStatus('✅ Conexão OK!', 'success');
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                fecharModalEdicao();
+            }
         }
     </script>
 </body>
