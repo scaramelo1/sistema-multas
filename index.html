@@ -594,7 +594,7 @@
                 if (isRegister) {
                     document.getElementById('authTitle').textContent = '📝 Cadastro de Novo Usuário';
                     document.getElementById('registerFields').classList.remove('hidden');
-                    document.getElementById('loginFields').classList.add('hidden');
+                    document.getElementById('loginFields').classList.remove('hidden'); // Mantém e-mail e senha visíveis
                     document.getElementById('btnLogin').classList.add('hidden');
                     document.getElementById('btnRegister').classList.remove('hidden');
                     document.getElementById('btnBackToLogin').classList.remove('hidden');
