@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Controle de Multas</title>
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -452,6 +454,11 @@
 </div>
 
 <script>
+    // Configuração Supabase
+    const SUPABASE_URL = "https://xgfzeujvkjrifetokxff.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     let db;
     let infracoesCTB = [
         { codigo: "50100", descricao: "Dirigir veículo sem possuir CNH/PPD/ACC" },
@@ -551,8 +558,8 @@
         }
     }
 
-    // Função para cadastrar novo usuário
-    function mostrarCadastro() {
+    // Função para cadastrar novo usuário no Supabase
+    async function mostrarCadastro() {
         const re = prompt('Digite o RE (Registro) do novo usuário:');
         if (!re || re.trim() === '') {
             alert('❌ RE não pode ser vazio!');
@@ -571,72 +578,63 @@
             return;
         }
 
-        // Verificar se o RE já existe
-        const transaction = db.transaction(["usuarios"], "readwrite");
-        const store = transaction.objectStore("usuarios");
-        const checkRequest = store.get(re.trim());
+        try {
+            // Verificar se o RE já existe no Supabase
+            const { data: existingUser, error: checkError } = await supabase
+                .from('usuarios')
+                .select('re')
+                .eq('re', re.trim())
+                .single();
 
-        checkRequest.onsuccess = (event) => {
-            if (event.target.result) {
+            if (existingUser) {
                 alert('❌ Este RE já está cadastrado no sistema!');
-            } else {
-                // Adicionar novo usuário
-                const novoUsuario = {
-                    re: re.trim(),
-                    senha: senha
-                };
-
-                const addRequest = store.add(novoUsuario);
-
-                addRequest.onsuccess = () => {
-                    alert('✅ Usuário cadastrado com sucesso!\n\nRE: ' + re.trim() + '\n\nAgora você pode fazer login.');
-                };
-
-                addRequest.onerror = () => {
-                    alert('❌ Erro ao cadastrar usuário!');
-                };
+                return;
             }
-        };
 
-        checkRequest.onerror = () => {
-            alert('❌ Erro ao verificar RE no banco de dados!');
-        };
+            // Adicionar novo usuário no Supabase
+            const { error: addError } = await supabase
+                .from('usuarios')
+                .insert([{ re: re.trim(), senha: senha }]);
+
+            if (addError) throw addError;
+
+            alert('✅ Usuário cadastrado com sucesso no Supabase!\n\nRE: ' + re.trim() + '\n\nAgora você pode fazer login.');
+        } catch (error) {
+            console.error('Erro ao cadastrar:', error);
+            alert('❌ Erro ao cadastrar usuário no Supabase: ' + error.message);
+        }
     }
 
-    // Login
-    document.getElementById('loginForm').onsubmit = (e) => {
+    // Login via Supabase
+    document.getElementById('loginForm').onsubmit = async (e) => {
         e.preventDefault();
 
         const re = document.getElementById('loginRE').value.trim();
         const senha = document.getElementById('loginSenha').value;
 
-        const transaction = db.transaction(["usuarios"], "readonly");
-        const store = transaction.objectStore("usuarios");
-        const request = store.get(re);
+        try {
+            const { data: usuario, error } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('re', re)
+                .single();
 
-        request.onsuccess = (event) => {
-            const usuario = event.target.result;
+            console.log('Tentativa de login Supabase - RE:', re);
             
-            console.log('Tentativa de login - RE:', re);
-            console.log('Usuário encontrado:', usuario);
-            
-            if (!usuario) {
+            if (error || !usuario) {
                 alert('❌ RE não encontrado no sistema!\n\nClique em "Cadastrar Novo Usuário" para criar uma conta.');
             } else if (usuario.senha !== senha) {
                 alert('❌ Senha incorreta!\n\nRE encontrado, mas a senha não confere.');
-                console.log('Senha digitada:', senha);
-                console.log('Senha esperada:', usuario.senha);
             } else {
                 sessionStorage.setItem('usuarioLogado', re);
                 mostrarSistema();
                 document.getElementById('loginForm').reset();
-                alert('✅ Login realizado com sucesso!');
+                alert('✅ Login realizado com sucesso via Supabase!');
             }
-        };
-
-        request.onerror = () => {
-            alert('❌ Erro ao verificar credenciais no banco de dados!');
-        };
+        } catch (error) {
+            console.error('Erro no login:', error);
+            alert('❌ Erro ao conectar com o Supabase!');
+        }
     };
 
     // Máscara para placa
@@ -967,65 +965,39 @@
         event.target.value = '';
     }
 
-    // Função de teste de conexão do banco de dados
-    function testarConexaoDB() {
+    // Função de teste de conexão do banco de dados e Supabase
+    async function testarConexaoDB() {
         try {
-            if (!db) {
-                alert('❌ Erro: Banco de dados não inicializado!');
-                return;
+            let resultado = '🔍 TESTE DE CONEXÃO\n\n';
+
+            // Testar IndexedDB
+            if (db) {
+                resultado += '📦 INDEXEDDB (Local):\n';
+                resultado += `  • Nome: ${db.name}\n`;
+                resultado += `  • Status: ✅ Conectado\n`;
             }
 
-            let resultado = '✅ TESTE DE CONEXÃO DO BANCO DE DADOS\n\n';
-            resultado += `📊 Nome do DB: ${db.name}\n`;
-            resultado += `🔢 Versão: ${db.version}\n`;
-            resultado += `📁 Object Stores:\n`;
+            // Testar Supabase
+            resultado += '\n☁️ SUPABASE (Nuvem):\n';
+            const { data: supData, error: supError } = await supabase
+                .from('usuarios')
+                .select('re', { count: 'exact', head: true });
 
-            const storeNames = Array.from(db.objectStoreNames);
-            storeNames.forEach(name => {
-                resultado += `  • ${name}\n`;
-            });
+            if (supError) {
+                resultado += `  • Status: ❌ Erro (${supError.message})\n`;
+                resultado += `  • Dica: Verifique se criou a tabela 'usuarios' no SQL Editor do Supabase.\n`;
+            } else {
+                resultado += `  • Status: ✅ Conectado\n`;
+                const { count } = await supabase.from('usuarios').select('*', { count: 'exact', head: true });
+                resultado += `  • Usuários no Supabase: ${count}\n`;
+            }
 
-            // Testar contagem de registros em cada store
-            const transaction = db.transaction(storeNames, "readonly");
-            
-            let multasCount = 0;
-            let usuariosCount = 0;
-            let baseCount = 0;
-
-            // Contar multas
-            const multasStore = transaction.objectStore("multas");
-            multasStore.count().onsuccess = (e) => {
-                multasCount = e.target.result;
-                
-                // Contar usuários
-                const usuariosStore = transaction.objectStore("usuarios");
-                usuariosStore.count().onsuccess = (e2) => {
-                    usuariosCount = e2.target.result;
-                    
-                    // Verificar base de infrações
-                    const baseStore = transaction.objectStore("base_infracoes");
-                    baseStore.get("lista_atual").onsuccess = (e3) => {
-                        baseCount = e3.target.result ? e3.target.result.dados.length : infracoesCTB.length;
-                        
-                        resultado += `\n📈 ESTATÍSTICAS:\n`;
-                        resultado += `  • Multas cadastradas: ${multasCount}\n`;
-                        resultado += `  • Usuários cadastrados: ${usuariosCount}\n`;
-                        resultado += `  • Infrações na base: ${baseCount}\n`;
-                        resultado += `\n✅ Conexão com IndexedDB funcionando perfeitamente!`;
-                        
-                        if (usuariosCount === 0) {
-                            resultado += `\n\n⚠️ ATENÇÃO: Nenhum usuário cadastrado!\nClique em "Cadastrar Novo Usuário" para criar uma conta.`;
-                        }
-                        
-                        alert(resultado);
-                        console.log('TESTE DB:', resultado);
-                    };
-                };
-            };
+            alert(resultado);
+            console.log('TESTE CONEXÃO:', resultado);
 
         } catch (error) {
             alert('❌ Erro ao testar conexão: ' + error.message);
-            console.error('Erro no teste DB:', error);
+            console.error('Erro no teste:', error);
         }
     }
 </script>
