@@ -334,7 +334,64 @@
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             console.log('✅ Supabase inicializado!');
             verificarSessaoInicial();
+            configurarEventos();
         });
+        
+        // Verificar sessão inicial
+        async function verificarSessaoInicial() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                mostrarUsuarioLogado(session.user);
+                carregarMultas();
+            }
+        }
+        
+        // Configurar eventos do formulário
+        function configurarEventos() {
+            // Adicionar multa
+            document.getElementById('multaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const novaMulta = {
+                    placa: document.getElementById('placa').value.toUpperCase(),
+                    marca: document.getElementById('marca').value,
+                    modelo: document.getElementById('modelo').value,
+                    codigo_infracao: document.getElementById('codigoInfracao').value,
+                    descricao_infracao: document.getElementById('descricaoInfracao').value,
+                    agente_autuador: document.getElementById('agenteAutuador').value,
+                    data: document.getElementById('data').value
+                };
+
+                try {
+                    const { data, error } = await supabase
+                        .from('multas')
+                        .insert([novaMulta])
+                        .select();
+
+                    if (error) {
+                        alert('Erro ao adicionar multa: ' + error.message);
+                        console.error('Erro:', error);
+                    } else {
+                        alert('✅ Multa adicionada com sucesso!');
+                        document.getElementById('multaForm').reset();
+                        document.getElementById('data').valueAsDate = new Date();
+                        carregarMultas();
+                    }
+                } catch (error) {
+                    alert('Erro ao adicionar multa: ' + error.message);
+                    console.error('Erro:', error);
+                }
+            });
+            
+            // Máscara para placa
+            document.getElementById('placa').addEventListener('input', function(e) {
+                let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                e.target.value = value;
+            });
+
+            // Data padrão
+            document.getElementById('data').valueAsDate = new Date();
+        }
 
         // Função para mostrar mensagens de status
         function mostrarStatus(mensagem, tipo) {
@@ -346,6 +403,10 @@
 
         // Testar conexão com o banco de dados
         async function testarConexao() {
+            if (!supabase) {
+                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
+                return;
+            }
             try {
                 mostrarStatus('🔄 Testando conexão...', 'info');
 
@@ -367,6 +428,11 @@
 
         // Cadastrar novo usuário
         async function cadastrarUsuario() {
+            if (!supabase) {
+                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
+                return;
+            }
+            
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
 
@@ -403,6 +469,11 @@
 
         // Fazer login
         async function fazerLogin() {
+            if (!supabase) {
+                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
+                return;
+            }
+            
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
 
@@ -435,6 +506,11 @@
 
         // Fazer logout
         async function fazerLogout() {
+            if (!supabase) {
+                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
+                return;
+            }
+            
             const { error } = await supabase.auth.signOut();
             if (!error) {
                 document.getElementById('authSection').classList.remove('hidden');
@@ -452,16 +528,15 @@
             document.getElementById('userEmail').textContent = user.email;
         }
 
-        // Verificar se já está logado
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                mostrarUsuarioLogado(session.user);
-                carregarMultas();
-            }
-        });
+
 
         // Carregar multas do Supabase
         async function carregarMultas() {
+            if (!supabase) {
+                console.error('Supabase não inicializado');
+                return;
+            }
+            
             try {
                 const { data, error } = await supabase
                     .from('multas')
@@ -507,42 +582,15 @@
             });
         }
 
-        // Adicionar multa
-        document.getElementById('multaForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
 
-            const novaMulta = {
-                placa: document.getElementById('placa').value.toUpperCase(),
-                marca: document.getElementById('marca').value,
-                modelo: document.getElementById('modelo').value,
-                codigo_infracao: document.getElementById('codigoInfracao').value,
-                descricao_infracao: document.getElementById('descricaoInfracao').value,
-                agente_autuador: document.getElementById('agenteAutuador').value,
-                data: document.getElementById('data').value
-            };
-
-            try {
-                const { data, error } = await supabase
-                    .from('multas')
-                    .insert([novaMulta])
-                    .select();
-
-                if (error) {
-                    alert('Erro ao adicionar multa: ' + error.message);
-                    console.error('Erro:', error);
-                } else {
-                    alert('✅ Multa adicionada com sucesso!');
-                    document.getElementById('multaForm').reset();
-                    carregarMultas();
-                }
-            } catch (error) {
-                alert('Erro ao adicionar multa: ' + error.message);
-                console.error('Erro:', error);
-            }
-        });
 
         // Excluir multa
         async function excluirMulta(id) {
+            if (!supabase) {
+                alert('❌ Supabase não inicializado. Recarregue a página.');
+                return;
+            }
+            
             if (!confirm('Deseja realmente excluir esta multa?')) return;
 
             try {
@@ -564,6 +612,11 @@
 
         // Exportar CSV
         async function exportarCSV() {
+            if (!supabase) {
+                alert('❌ Supabase não inicializado. Recarregue a página.');
+                return;
+            }
+            
             try {
                 const { data, error } = await supabase
                     .from('multas')
@@ -631,14 +684,7 @@
             reader.readAsText(file);
         }
 
-        // Máscara para placa
-        document.getElementById('placa').addEventListener('input', function(e) {
-            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            e.target.value = value;
-        });
 
-        // Data padrão
-        document.getElementById('data').valueAsDate = new Date();
     </script>
 </body>
 </html>
