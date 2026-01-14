@@ -157,6 +157,46 @@
             border: 1px solid #bee5eb;
         }
 
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .stat-card .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-period {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
         .multas-section {
             margin-top: 30px;
         }
@@ -270,6 +310,25 @@
             <!-- Seção de Multas -->
             <div id="multasSection" class="multas-section hidden">
                 <h2>📋 Cadastro de Multas</h2>
+
+                <!-- Estatísticas -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>📊 TOTAL DE MULTAS</h3>
+                        <div class="stat-number" id="statTotal">0</div>
+                        <div class="stat-period">Todas as multas cadastradas</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>📅 MULTAS DESTA SEMANA</h3>
+                        <div class="stat-number" id="statSemanal">0</div>
+                        <div class="stat-period" id="periodoSemanal">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>📆 MULTAS DESTE MÊS</h3>
+                        <div class="stat-number" id="statMensal">0</div>
+                        <div class="stat-period" id="periodoMensal">-</div>
+                    </div>
+                </div>
 
                 <form id="multaForm">
                     <div class="form-group">
@@ -655,9 +714,57 @@
                 }
 
                 listarMultas(data || []);
+                atualizarEstatisticas(data || []);
             } catch (error) {
                 console.error('Erro ao carregar multas:', error);
             }
+        }
+
+        // Atualizar estatísticas
+        function atualizarEstatisticas(multas) {
+            const hoje = new Date();
+            
+            // Calcular início e fim da semana (domingo a sábado)
+            const diaSemana = hoje.getDay(); // 0 = domingo, 6 = sábado
+            const inicioSemana = new Date(hoje);
+            inicioSemana.setDate(hoje.getDate() - diaSemana);
+            inicioSemana.setHours(0, 0, 0, 0);
+            
+            const fimSemana = new Date(inicioSemana);
+            fimSemana.setDate(inicioSemana.getDate() + 6);
+            fimSemana.setHours(23, 59, 59, 999);
+            
+            // Calcular início e fim do mês
+            const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
+            
+            // Contar multas
+            const total = multas.length;
+            
+            const semanal = multas.filter(multa => {
+                const dataMulta = new Date(multa.data);
+                return dataMulta >= inicioSemana && dataMulta <= fimSemana;
+            }).length;
+            
+            const mensal = multas.filter(multa => {
+                const dataMulta = new Date(multa.data);
+                return dataMulta >= inicioMes && dataMulta <= fimMes;
+            }).length;
+            
+            // Atualizar interface
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statSemanal').textContent = semanal;
+            document.getElementById('statMensal').textContent = mensal;
+            
+            // Formatar períodos
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            
+            document.getElementById('periodoSemanal').textContent = 
+                `${inicioSemana.getDate().toString().padStart(2, '0')}/${(inicioSemana.getMonth() + 1).toString().padStart(2, '0')} a ${fimSemana.getDate().toString().padStart(2, '0')}/${(fimSemana.getMonth() + 1).toString().padStart(2, '0')}`;
+            
+            document.getElementById('periodoMensal').textContent = 
+                `${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
         }
 
         // Listar multas na tabela
