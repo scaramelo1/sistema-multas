@@ -348,6 +348,9 @@
             </div>
             <button type="submit" class="btn btn-primary">Entrar</button>
         </form>
+        <div style="margin-top: 20px; text-align: center;">
+            <button class="btn btn-warning" onclick="testarConexaoDB()">🧪 Testar Conexão DB</button>
+        </div>
     </div>
 </div>
 
@@ -417,9 +420,10 @@
             
             <button class="btn btn-info" onclick="document.getElementById('baseFile').click()">📚 Atualizar Base de Infrações (JSON)</button>
             <input type="file" id="baseFile" accept=".json" style="display: none;" onchange="importarBaseInfracoes(event)">
-            <span id="baseStatus" class="base-status">Base: Padrão (Reduzida)</span>
             
             <button class="btn btn-warning" onclick="testarConexaoDB()">🧪 Testar Conexão DB</button>
+            
+            <span id="baseStatus" class="base-status">Base: Padrão (Reduzida)</span>
         </div>
 
         <!-- Tabela -->
