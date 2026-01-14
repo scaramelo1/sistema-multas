@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Multas - Supabase</title>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card h3 { color: #667eea; font-size: 2em; margin-bottom: 10px; }
+        .content { padding: 30px; }
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; position: relative; }
+        .form-group label { margin-bottom: 5px; font-weight: 600; }
+        .form-group input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .form-group input:focus { outline: none; border-color: #667eea; }
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+        }
+        .autocomplete-items div { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        .autocomplete-items div:hover { background-color: #667eea; color: white; }
+        .actions-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .base-status { margin-left: 10px; padding: 5px; background: #28a745; color: white; border-radius: 5px; font-size: 0.8em; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        thead { background: #667eea; color: white; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .btn-delete { background: #dc3545; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
+        .config-alert { background: #d4edda; padding: 15px; border-radius: 8px; margin: 20px 30px; border: 1px solid #c3e6cb; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 Controle de Multas (Vercel + Supabase)</h1>
+        </header>
+
+        <div id="configWarning" class="config-alert">
+            ✅ <strong>Sistema Configurado!</strong> Conectado ao Supabase com sucesso.
+        </div>
+
+        <div class="stats">
+            <div class="stat-card"><h3 id="totalMultas">0</h3><p>Total de Multas</p></div>
+            <div class="stat-card"><h3 id="multasMes">0</h3><p>Este Mês</p></div>
+            <div class="stat-card"><h3 id="infracoesUnicas">0</h3><p>Infrações Únicas</p></div>
+        </div>
+
+        <div class="content">
+            <div class="form-section">
+                <form id="multaForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Placa *</label>
+                            <input type="text" id="placa" required maxlength="8" placeholder="ABC1D23">
+                        </div>
+                        <div class="form-group">
+                            <label>Marca *</label>
+                            <input type="text" id="marca" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Modelo *</label>
+                            <input type="text" id="modelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Código Infração *</label>
+                            <input type="text" id="codigoInfracao" required autocomplete="off">
+                            <input type="hidden" id="descricaoInfracao">
+                        </div>
+                        <div class="form-group">
+                            <label>Agente *</label>
+                            <input type="text" id="agenteAutuador" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Data *</label>
+                            <input type="date" id="data" required>
+                        </div>
+                    </div>
+                    <div class="actions-buttons">
+                        <button type="submit" class="btn btn-primary">➕ Adicionar Multa</button>
+                        <button type="button" class="btn btn-secondary" onclick="exportarCSV()">📥 Exportar CSV</button>
+                        <button type="button" class="btn btn-info" onclick="document.getElementById('baseFile').click()">📂 Importar Base JSON</button>
+                        <input type="file" id="baseFile" accept=".json" style="display:none" onchange="importarBaseInfracoes(event)">
+                        <span id="baseStatus" class="base-status" style="display:none"></span>
+                    </div>
+                </form>
+            </div>
+
+            <table id="multasTable">
+                <thead>
+                    <tr>
+                        <th>Placa</th>
+                        <th>Marca/Modelo</th>
+                        <th>Infração</th>
+                        <th>Agente</th>
+                        <th>Data</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="multasBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO SUPABASE ---
+        const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
+        // -----------------------------
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let infracoesCTB = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('data').valueAsDate = new Date();
+            carregarInfracoes();
+            listarMultas();
+            atualizarEstatisticas();
+            aplicarMascaraPlaca();
+        });
+
+        async function carregarInfracoes() {
+            const { data, error } = await supabase.from('infracoes').select('*').order('codigo');
+            if (!error && data) {
+                infracoesCTB = data;
+                autocomplete(document.getElementById('codigoInfracao'), () => infracoesCTB);
+                if(data.length > 0) {
+                    document.getElementById('baseStatus').textContent = `${data.length} códigos`;
+                    document.getElementById('baseStatus').style.display = 'inline-block';
+                }
+            }
+        }
+
+        async function listarMultas() {
+            const { data, error } = await supabase.from('multas').select('*').order('data', { ascending: false });
+            const tbody = document.getElementById('multasBody');
+            tbody.innerHTML = '';
+            if (data && data.length > 0) {
+                data.forEach(m => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${m.placa}</td>
+                        <td>${m.marca} ${m.modelo}</td>
+                        <td><strong>${m.codigo_infracao}</strong><br><small>${m.descricao_infracao || ''}</small></td>
+                        <td>${m.agente_autuador}</td>
+                        <td>${new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                        <td><button class="btn-delete" onclick="deletarMulta(${m.id})">🗑️</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#999;">Nenhuma multa cadastrada</td></tr>';
+            }
+        }
+
+        document.getElementById('multaForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                placa: document.getElementById('placa').value,
+                marca: document.getElementById('marca').value,
+                modelo: document.getElementById('modelo').value,
+                codigo_infracao: document.getElementById('codigoInfracao').value,
+                descricao_infracao: document.getElementById('descricaoInfracao').value,
+                agente_autuador: document.getElementById('agenteAutuador').value,
+                data: document.getElementById('data').value
+            };
+            const { error } = await supabase.from('multas').insert([payload]);
+            if (!error) {
+                alert('✅ Multa cadastrada com sucesso!');
+                document.getElementById('multaForm').reset();
+                document.getElementById('data').valueAsDate = new Date();
+                document.getElementById('descricaoInfracao').value = '';
+                listarMultas();
+                atualizarEstatisticas();
+            } else { 
+                alert('❌ Erro ao salvar: ' + error.message); 
+            }
+        };
+
+        async function deletarMulta(id) {
+            if(confirm('Tem certeza que deseja excluir esta multa?')) {
+                const { error } = await supabase.from('multas').delete().eq('id', id);
+                if(!error) {
+                    listarMultas();
+                    atualizarEstatisticas();
+                }
+            }
+        }
+
+        async function atualizarEstatisticas() {
+            const { data: total, count: countTotal } = await supabase.from('multas').select('*', { count: 'exact', head: true });
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+            const { data: mes, count: countMes } = await supabase.from('multas').select('*', { count: 'exact', head: true }).gte('data', firstDay);
+            const { data: infracoes } = await supabase.from('multas').select('codigo_infracao');
+
+            document.getElementById('totalMultas').textContent = countTotal || 0;
+            document.getElementById('multasMes').textContent = countMes || 0;
+
+            if(infracoes) {
+                const uniqueInfracoes = new Set(infracoes.map(i => i.codigo_infracao));
+                document.getElementById('infracoesUnicas').textContent = uniqueInfracoes.size;
+            }
+        }
+
+        async function importarBaseInfracoes(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    if (!Array.isArray(json) || !json[0]?.codigo || !json[0]?.descricao) {
+                        alert('❌ Formato inválido! O JSON deve ser um array com objetos contendo "codigo" e "descricao".');
+                        return;
+                    }
+
+                    // Deletar infrações existentes
+                    await supabase.from('infracoes').delete().neq('id', 0);
+
+                    // Inserir novas
+                    const { error } = await supabase.from('infracoes').insert(json);
+                    if(!error) { 
+                        alert(`✅ Base atualizada! ${json.length} infrações importadas.`); 
+                        carregarInfracoes(); 
+                    } else {
+                        alert('❌ Erro ao importar: ' + error.message);
+                    }
+                } catch(err) {
+                    alert('❌ Erro ao processar arquivo: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function aplicarMascaraPlaca() {
+            document.getElementById('placa').addEventListener('input', (e) => {
+                let valor = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                e.target.value = valor.substring(0, 7);
+            });
+        }
+
+        function autocomplete(inp, arrFunc) {
+            let currentList = null;
+
+            inp.addEventListener('input', function() {
+                const val = this.value.toLowerCase();
+
+                // Remover lista anterior
+                if(currentList) currentList.remove();
+
+                if (!val) return;
+
+                const list = document.createElement('div');
+                list.className = 'autocomplete-items';
+                this.parentNode.appendChild(list);
+                currentList = list;
+
+                const filtered = arrFunc().filter(i => 
+                    i.codigo.toLowerCase().includes(val) || 
+                    i.descricao.toLowerCase().includes(val)
+                ).slice(0, 10);
+
+                filtered.forEach(item => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<strong>${item.codigo}</strong> - ${item.descricao}`;
+                    div.onclick = () => {
+                        inp.value = item.codigo;
+                        document.getElementById('descricaoInfracao').value = item.descricao;
+                        list.remove();
+                    };
+                    list.appendChild(div);
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if(currentList && e.target !== inp) {
+                    currentList.remove();
+                    currentList = null;
+                }
+            });
+        }
+
+        async function exportarCSV() {
+            const { data, error } = await supabase.from('multas').select('*').order('data', { ascending: false });
+
+            if(error || !data) {
+                alert('Erro ao exportar dados');
+                return;
+            }
+
+            let csv = 'Placa,Marca,Modelo,Código Infração,Descrição Infração,Agente Autuador,Data\n';
+
+            data.forEach(m => {
+                const dataFormatada = new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR');
+                csv += `${m.placa},${m.marca},${m.modelo},${m.codigo_infracao},"${m.descricao_infracao || ''}",${m.agente_autuador},${dataFormatada}\n`;
+            });
+
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `multas_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
