@@ -208,6 +208,15 @@
             background: #138496;
         }
 
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
         .base-status {
             font-size: 0.85em;
             color: #666;
@@ -409,6 +418,8 @@
             <button class="btn btn-info" onclick="document.getElementById('baseFile').click()">📚 Atualizar Base de Infrações (JSON)</button>
             <input type="file" id="baseFile" accept=".json" style="display: none;" onchange="importarBaseInfracoes(event)">
             <span id="baseStatus" class="base-status">Base: Padrão (Reduzida)</span>
+            
+            <button class="btn btn-warning" onclick="testarConexaoDB()">🧪 Testar Conexão DB</button>
         </div>
 
         <!-- Tabela -->
@@ -889,6 +900,64 @@
         };
         reader.readAsText(file);
         event.target.value = '';
+    }
+
+    // Função de teste de conexão do banco de dados
+    function testarConexaoDB() {
+        try {
+            if (!db) {
+                alert('❌ Erro: Banco de dados não inicializado!');
+                return;
+            }
+
+            let resultado = '✅ TESTE DE CONEXÃO DO BANCO DE DADOS\n\n';
+            resultado += `📊 Nome do DB: ${db.name}\n`;
+            resultado += `🔢 Versão: ${db.version}\n`;
+            resultado += `📁 Object Stores:\n`;
+
+            const storeNames = Array.from(db.objectStoreNames);
+            storeNames.forEach(name => {
+                resultado += `  • ${name}\n`;
+            });
+
+            // Testar contagem de registros em cada store
+            const transaction = db.transaction(storeNames, "readonly");
+            
+            let multasCount = 0;
+            let usuariosCount = 0;
+            let baseCount = 0;
+
+            // Contar multas
+            const multasStore = transaction.objectStore("multas");
+            multasStore.count().onsuccess = (e) => {
+                multasCount = e.target.result;
+                
+                // Contar usuários
+                const usuariosStore = transaction.objectStore("usuarios");
+                usuariosStore.count().onsuccess = (e2) => {
+                    usuariosCount = e2.target.result;
+                    
+                    // Verificar base de infrações
+                    const baseStore = transaction.objectStore("base_infracoes");
+                    baseStore.get("lista_atual").onsuccess = (e3) => {
+                        baseCount = e3.target.result ? e3.target.result.dados.length : infracoesCTB.length;
+                        
+                        resultado += `\n📈 ESTATÍSTICAS:\n`;
+                        resultado += `  • Multas cadastradas: ${multasCount}\n`;
+                        resultado += `  • Usuários cadastrados: ${usuariosCount}\n`;
+                        resultado += `  • Infrações na base: ${baseCount}\n`;
+                        resultado += `\n✅ Conexão com IndexedDB funcionando perfeitamente!`;
+                        
+                        alert(resultado);
+                        console.log('TESTE DB:', resultado);
+                    };
+                };
+            };
+
+        } catch (error) {
+            alert('❌ Erro ao testar conexão: ' + error.message);
+            console.error('Erro no teste DB:', error);
+        }
     }
 </script>
 
