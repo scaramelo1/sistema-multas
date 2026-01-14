@@ -557,8 +557,14 @@
             document.getElementById('userEmail').textContent = user.email;
         }
 
+        // Variável para controlar se o autocomplete já foi configurado
+        let autocompleteAgenteConfigurado = false;
+
         // Autocomplete para agentes
         async function setupAutocompleteAgente() {
+            if (autocompleteAgenteConfigurado) return; // Evita duplicação
+            autocompleteAgenteConfigurado = true;
+            
             const input = document.getElementById('agenteRE');
             const autocompleteList = document.getElementById('autocomplete-agente-list');
             
