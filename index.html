@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Controle de Multas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* (Mantém todo o CSS igual ao seu código original) */
         * {
             margin: 0;
             padding: 0;
@@ -59,7 +58,6 @@
 
         .form-group {
             margin-bottom: 15px;
-            position: relative;
         }
 
         .form-group label {
@@ -251,6 +249,50 @@
             background-color: #f0f0f0;
         }
 
+        .form-group {
+            position: relative;
+        }
+
+        .stats-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-item h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-item p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-admin { background: #ffd700; color: #000; }
+        .badge-agente { background: #c0c0c0; color: #000; }
+
         /* Modal de Edição */
         .modal {
             display: none;
@@ -321,27 +363,27 @@
                 <div id="loginFields">
                     <div class="form-group">
                         <label for="authEmail">E-mail:</label>
-                        <input type="email" id="authEmail" placeholder="seu@email.com" />
+                        <input type="email" id="authEmail" placeholder="seu@email.com">
                     </div>
 
                     <div class="form-group">
                         <label for="authPassword">Senha:</label>
-                        <input type="password" id="authPassword" placeholder="Sua senha" />
+                        <input type="password" id="authPassword" placeholder="Sua senha">
                     </div>
                 </div>
 
                 <div id="registerFields" class="hidden">
                     <div class="form-group">
                         <label for="regNome">Nome Completo:</label>
-                        <input type="text" id="regNome" placeholder="Nome do Agente" />
+                        <input type="text" id="regNome" placeholder="Nome do Agente">
                     </div>
                     <div class="form-group">
                         <label for="regRE">RE:</label>
-                        <input type="text" id="regRE" placeholder="Ex: 127861-4" />
+                        <input type="text" id="regRE" placeholder="Ex: 127861-4">
                     </div>
                     <div class="form-group">
                         <label for="regCargo">Cargo/Posto:</label>
-                        <input type="text" id="regCargo" placeholder="Ex: Sd PM" />
+                        <input type="text" id="regCargo" placeholder="Ex: Sd PM">
                     </div>
                     <div class="form-group">
                         <label for="regNivel">Nível de Acesso:</label>
@@ -365,22 +407,13 @@
             <!-- Informações do Usuário Logado -->
             <div id="userInfo" class="user-info hidden">
                 <div>
-                    <strong>Usuário:</strong> <span id="userName" style="font-weight: bold; color: #333;"></span>
+                    <strong>Usuário:</strong> <span id="userName" style="font-weight: bold; color: #333;"></span> 
                     <span id="userBadge" class="badge"></span>
-                    <br />
-                    <small
-                        ><strong>E-mail:</strong> <span id="userEmail"></span> | <strong>RE:</strong>
-                        <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small
-                    >
+                    <br>
+                    <small><strong>E-mail:</strong> <span id="userEmail"></span> | <strong>RE:</strong> <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small>
                 </div>
                 <div>
-                    <button
-                        id="btnCriarUsuario"
-                        class="btn btn-primary admin-only hidden"
-                        onclick="toggleAuthMode(true)"
-                    >
-                        ➕ Criar Novo Usuário
-                    </button>
+                    <button id="btnCriarUsuario" class="btn btn-primary admin-only hidden" onclick="toggleAuthMode(true)">➕ Criar Novo Usuário</button>
                     <button class="btn btn-danger" onclick="fazerLogout()">Sair</button>
                 </div>
             </div>
@@ -408,55 +441,37 @@
                 <form id="multaForm">
                     <div class="form-group">
                         <label for="placa">Placa:</label>
-                        <input
-                            type="text"
-                            id="placa"
-                            placeholder="AAA1A11 ou AAA1111"
-                            maxlength="7"
-                            required
-                        />
+                        <input type="text" id="placa" placeholder="AAA1A11 ou AAA1111" maxlength="7" required>
                     </div>
 
                     <div class="form-group">
                         <label for="marca">Marca:</label>
-                        <input type="text" id="marca" placeholder="Ex: Toyota" required />
+                        <input type="text" id="marca" placeholder="Ex: Toyota" required>
                     </div>
 
                     <div class="form-group">
                         <label for="modelo">Modelo:</label>
-                        <input type="text" id="modelo" placeholder="Ex: Corolla" required />
+                        <input type="text" id="modelo" placeholder="Ex: Corolla" required>
                     </div>
 
                     <div class="form-group">
                         <label for="codigoInfracao">Código da Infração:</label>
-                        <input
-                            type="text"
-                            id="codigoInfracao"
-                            placeholder="Ex: 50291"
-                            autocomplete="off"
-                            required
-                        />
+                        <input type="text" id="codigoInfracao" placeholder="Ex: 50291" autocomplete="off" required>
                         <div id="autocomplete-list" class="autocomplete-items"></div>
-                        <input type="hidden" id="descricaoInfracao" />
+                        <input type="hidden" id="descricaoInfracao">
                     </div>
 
                     <div class="form-group">
                         <label for="agenteRE">RE do Agente:</label>
-                        <input
-                            type="text"
-                            id="agenteRE"
-                            placeholder="Digite o RE"
-                            autocomplete="off"
-                            required
-                        />
+                        <input type="text" id="agenteRE" placeholder="Digite o RE" autocomplete="off" required>
                         <div id="autocomplete-agente-list" class="autocomplete-items"></div>
-                        <input type="hidden" id="agenteNome" />
-                        <input type="hidden" id="agentePosto" />
+                        <input type="hidden" id="agenteNome">
+                        <input type="hidden" id="agentePosto">
                     </div>
 
                     <div class="form-group">
                         <label for="data">Data:</label>
-                        <input type="date" id="data" required />
+                        <input type="date" id="data" required>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Adicionar Multa</button>
@@ -464,20 +479,8 @@
 
                 <div class="actions-buttons">
                     <button class="btn btn-success" onclick="exportarCSV()">📥 Exportar CSV</button>
-                    <button
-                        id="btnImportar"
-                        class="btn btn-info admin-only"
-                        onclick="document.getElementById('csvFile').click()"
-                    >
-                        📤 Importar CSV
-                    </button>
-                    <input
-                        type="file"
-                        id="csvFile"
-                        accept=".csv"
-                        style="display: none"
-                        onchange="importarCSV(event)"
-                    />
+                    <button id="btnImportar" class="btn btn-info admin-only" onclick="document.getElementById('csvFile').click()">📤 Importar CSV</button>
+                    <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="importarCSV(event)">
                 </div>
 
                 <table id="multasTable">
@@ -496,9 +499,7 @@
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="9" style="text-align: center; color: #999">
-                                Nenhuma multa cadastrada
-                            </td>
+                            <td colspan="9" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
                         </tr>
                     </tbody>
                 </table>
@@ -514,58 +515,46 @@
                 <span class="close" onclick="fecharModalEdicao()">×</span>
             </div>
             <form id="editForm">
-                <input type="hidden" id="editId" />
+                <input type="hidden" id="editId">
 
                 <div class="form-group">
                     <label for="editPlaca">Placa:</label>
-                    <input type="text" id="editPlaca" maxlength="7" required />
+                    <input type="text" id="editPlaca" maxlength="7" required>
                 </div>
 
                 <div class="form-group">
                     <label for="editMarca">Marca:</label>
-                    <input type="text" id="editMarca" required />
+                    <input type="text" id="editMarca" required>
                 </div>
 
                 <div class="form-group">
                     <label for="editModelo">Modelo:</label>
-                    <input type="text" id="editModelo" required />
+                    <input type="text" id="editModelo" required>
                 </div>
 
                 <div class="form-group">
                     <label for="editCodigoInfracao">Código da Infração:</label>
-                    <input
-                        type="text"
-                        id="editCodigoInfracao"
-                        autocomplete="off"
-                        required
-                    />
+                    <input type="text" id="editCodigoInfracao" autocomplete="off" required>
                     <div id="autocomplete-edit-list" class="autocomplete-items"></div>
-                    <input type="hidden" id="editDescricaoInfracao" />
+                    <input type="hidden" id="editDescricaoInfracao">
                 </div>
 
                 <div class="form-group">
                     <label for="editAgenteRE">RE do Agente:</label>
-                    <input
-                        type="text"
-                        id="editAgenteRE"
-                        autocomplete="off"
-                        required
-                    />
+                    <input type="text" id="editAgenteRE" autocomplete="off" required>
                     <div id="autocomplete-edit-agente-list" class="autocomplete-items"></div>
-                    <input type="hidden" id="editAgenteNome" />
-                    <input type="hidden" id="editAgentePosto" />
+                    <input type="hidden" id="editAgenteNome">
+                    <input type="hidden" id="editAgentePosto">
                 </div>
 
                 <div class="form-group">
                     <label for="editData">Data:</label>
-                    <input type="date" id="editData" required />
+                    <input type="date" id="editData" required>
                 </div>
 
                 <div class="actions-buttons">
                     <button type="submit" class="btn btn-success">💾 Salvar Alterações</button>
-                    <button type="button" class="btn btn-danger" onclick="fecharModalEdicao()">
-                        ❌ Cancelar
-                    </button>
+                    <button type="button" class="btn btn-danger" onclick="fecharModalEdicao()">❌ Cancelar</button>
                 </div>
             </form>
         </div>
@@ -573,14 +562,13 @@
 
     <script>
         const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
-        const SUPABASE_KEY =
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
 
         let supabaseClient;
         let usuarioLogado = null;
         let perfilUsuario = null;
 
-        window.addEventListener('load', function () {
+        window.addEventListener('load', function() {
             if (typeof window.supabase === 'undefined') {
                 alert('Erro ao carregar Supabase.');
                 return;
@@ -591,9 +579,7 @@
         });
 
         async function verificarSessaoInicial() {
-            const {
-                data: { session },
-            } = await supabaseClient.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 await carregarPerfil(session.user);
             }
@@ -620,9 +606,7 @@
                     document.getElementById('regNivel').value = 'agente';
                 }
             } else {
-                document.getElementById('authTitle').textContent = isRegister
-                    ? '📝 Cadastro de Novo Usuário'
-                    : '🔐 Autenticação';
+                document.getElementById('authTitle').textContent = isRegister ? '📝 Cadastro de Novo Usuário' : '🔐 Autenticação';
                 document.getElementById('registerFields').classList.toggle('hidden', !isRegister);
                 document.getElementById('loginFields').classList.toggle('hidden', isRegister);
                 document.getElementById('btnLogin').classList.toggle('hidden', isRegister);
@@ -667,7 +651,7 @@
                     agente_re: document.getElementById('agenteRE').value,
                     agente_nome: document.getElementById('agenteNome').value,
                     data: document.getElementById('data').value,
-                    user_id: usuarioLogado.id,
+                    user_id: usuarioLogado.id
                 };
 
                 const { error } = await supabaseClient.from('multas').insert([novaMulta]);
@@ -688,8 +672,8 @@
                 await salvarEdicao();
             });
 
-            document.getElementById('placa').addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
-            document.getElementById('editPlaca').addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
+            document.getElementById('placa').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+            document.getElementById('editPlaca').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
             document.getElementById('data').valueAsDate = new Date();
             setupAutocompleteAgente();
             setupAutocompleteAgenteEdit();
@@ -722,15 +706,13 @@
             }
 
             if (authData.user) {
-                const { error: profileError } = await supabaseClient.from('perfis').insert([
-                    {
-                        id: authData.user.id,
-                        nome_completo: nome,
-                        re: re,
-                        cargo: cargo,
-                        nivel_acesso: nivel,
-                    },
-                ]);
+                const { error: profileError } = await supabaseClient.from('perfis').insert([{
+                    id: authData.user.id,
+                    nome_completo: nome,
+                    re: re,
+                    cargo: cargo,
+                    nivel_acesso: nivel
+                }]);
 
                 if (profileError) {
                     mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
@@ -771,26 +753,24 @@
             badge.className = `badge badge-${perfil.nivel_acesso}`;
 
             const isAdmin = perfil.nivel_acesso === 'admin';
-            document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
         }
 
         async function carregarMultas() {
             // Fazemos um JOIN com a tabela perfis para pegar o RE de quem inseriu
             let query = supabaseClient
                 .from('multas')
-                .select(
-                    `
+                .select(`
                     *,
                     perfis:user_id (
                         re
                     )
-                `
-                )
+                `)
                 .order('data', { ascending: false });
 
             const { data, error } = await query;
             if (!error) listarMultas(data || []);
-            else console.error('Erro ao carregar multas:', error);
+            else console.error("Erro ao carregar multas:", error);
         }
 
         function listarMultas(multas) {
@@ -804,7 +784,7 @@
                 return;
             }
 
-            multas.forEach((multa) => {
+            multas.forEach(multa => {
                 const tr = document.createElement('tr');
                 const podeEditar = isAdmin || multa.user_id === usuarioLogado.id;
 
@@ -822,18 +802,8 @@
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
                     <td>
                         <div class="action-buttons">
-                            ${
-                                podeEditar
-                                    ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(
-                                          multa
-                                      )})'>✏️</button>`
-                                    : ''
-                            }
-                            ${
-                                isAdmin
-                                    ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
-                                    : ''
-                            }
+                            ${podeEditar ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>` : ''}
+                            ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>` : ''}
                             ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
                         </div>
                     </td>
@@ -847,15 +817,10 @@
             const hoje = new Date();
             const inicioSemana = new Date(hoje);
             inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-            inicioSemana.setHours(0, 0, 0, 0);
+            inicioSemana.setHours(0,0,0,0);
 
-            const semanal = multas.filter((m) => new Date(m.data) >= inicioSemana).length;
-            const mensal =
-                multas.filter(
-                    (m) =>
-                        new Date(m.data).getMonth() === hoje.getMonth() &&
-                        new Date(m.data).getFullYear() === hoje.getFullYear()
-                ).length;
+            const semanal = multas.filter(m => new Date(m.data) >= inicioSemana).length;
+            const mensal = multas.filter(m => new Date(m.data).getMonth() === hoje.getMonth() && new Date(m.data).getFullYear() === hoje.getFullYear()).length;
 
             document.getElementById('statTotal').textContent = multas.length;
             document.getElementById('statSemanal').textContent = semanal;
@@ -893,10 +858,13 @@
                 agente_posto: document.getElementById('editAgentePosto').value,
                 agente_re: document.getElementById('editAgenteRE').value,
                 agente_nome: document.getElementById('editAgenteNome').value,
-                data: document.getElementById('editData').value,
+                data: document.getElementById('editData').value
             };
 
-            const { error } = await supabaseClient.from('multas').update(multaAtualizada).eq('id', id);
+            const { error } = await supabaseClient
+                .from('multas')
+                .update(multaAtualizada)
+                .eq('id', id);
 
             if (error) {
                 alert('❌ Erro ao atualizar: ' + error.message);
@@ -924,89 +892,52 @@
             div.style.display = 'block';
         }
 
-        // Autocomplete para agenteRE (formulário principal)
         async function setupAutocompleteAgente() {
             const input = document.getElementById('agenteRE');
             const list = document.getElementById('autocomplete-agente-list');
-            input.addEventListener('input', async function () {
+            input.addEventListener('input', async function() {
                 const val = this.value.trim();
                 list.innerHTML = '';
                 if (val.length < 1) return;
-
-                // Busca na tabela agentes pelo RE (case insensitive)
-                const { data, error } = await supabaseClient
-                    .from('agentes')
-                    .select('re, posto, nome')
-                    .ilike('re', `%${val}%`)
-                    .limit(10);
-
-                if (error) {
-                    console.error('Erro ao buscar agentes:', error);
-                    return;
-                }
-
-                if (data && data.length > 0) {
-                    data.forEach((agente) => {
+                const { data } = await supabaseClient.from('perfis').select('*').or(`re.ilike.%${val}%,nome_completo.ilike.%${val}%`).limit(5);
+                if (data) {
+                    data.forEach(p => {
                         const d = document.createElement('div');
                         d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${agente.re}</strong> - ${agente.posto || ''} - ${agente.nome}`;
+                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome_completo}`;
                         d.onclick = () => {
-                            input.value = agente.re;
-                            document.getElementById('agenteNome').value = agente.nome;
-                            document.getElementById('agentePosto').value = agente.posto || '';
+                            input.value = p.re;
+                            document.getElementById('agenteNome').value = p.nome_completo;
+                            document.getElementById('agentePosto').value = p.cargo;
                             list.innerHTML = '';
                         };
                         list.appendChild(d);
                     });
-                }
-            });
-
-            document.addEventListener('click', function (e) {
-                if (e.target !== input) {
-                    list.innerHTML = '';
                 }
             });
         }
 
-        // Autocomplete para agenteRE (formulário de edição)
         async function setupAutocompleteAgenteEdit() {
             const input = document.getElementById('editAgenteRE');
             const list = document.getElementById('autocomplete-edit-agente-list');
-            input.addEventListener('input', async function () {
+            input.addEventListener('input', async function() {
                 const val = this.value.trim();
                 list.innerHTML = '';
                 if (val.length < 1) return;
-
-                const { data, error } = await supabaseClient
-                    .from('agentes')
-                    .select('re, posto, nome')
-                    .ilike('re', `%${val}%`)
-                    .limit(10);
-
-                if (error) {
-                    console.error('Erro ao buscar agentes:', error);
-                    return;
-                }
-
-                if (data && data.length > 0) {
-                    data.forEach((agente) => {
+                const { data } = await supabaseClient.from('perfis').select('*').or(`re.ilike.%${val}%,nome_completo.ilike.%${val}%`).limit(5);
+                if (data) {
+                    data.forEach(p => {
                         const d = document.createElement('div');
                         d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${agente.re}</strong> - ${agente.posto || ''} - ${agente.nome}`;
+                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome_completo}`;
                         d.onclick = () => {
-                            input.value = agente.re;
-                            document.getElementById('editAgenteNome').value = agente.nome;
-                            document.getElementById('editAgentePosto').value = agente.posto || '';
+                            input.value = p.re;
+                            document.getElementById('editAgenteNome').value = p.nome_completo;
+                            document.getElementById('editAgentePosto').value = p.cargo;
                             list.innerHTML = '';
                         };
                         list.appendChild(d);
                     });
-                }
-            });
-
-            document.addEventListener('click', function (e) {
-                if (e.target !== input) {
-                    list.innerHTML = '';
                 }
             });
         }
@@ -1014,104 +945,12 @@
         async function exportarCSV() {
             const { data } = await supabaseClient.from('multas').select('*');
             let csv = 'Placa,Marca,Modelo,Codigo,Descricao,Posto,RE,Agente,Data\n';
-            data.forEach(
-                (m) =>
-                    (csv += `${m.placa},${m.marca},${m.modelo},${m.codigo_infracao},"${m.descricao_infracao}",${m.agente_posto},${m.agente_re},${m.agente_nome},${m.data}\n`)
-            );
+            data.forEach(m => csv += `${m.placa},${m.marca},${m.modelo},${m.codigo_infracao},"${m.descricao_infracao}",${m.agente_posto},${m.agente_re},${m.agente_nome},${m.data}\n`);
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = 'multas.csv';
             a.click();
-        }
-
-        async function importarCSV(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            try {
-                const text = await file.text();
-                const rows = parseCSV(text);
-                if (!rows || rows.length < 2) {
-                    alert('Arquivo CSV vazio ou inválido.');
-                    return;
-                }
-
-                const header = rows.shift().map(h => h.trim().toLowerCase());
-                const map = {
-                    'placa': 'placa',
-                    'marca': 'marca',
-                    'modelo': 'modelo',
-                    'codigo': 'codigo_infracao',
-                    'codigo_infracao': 'codigo_infracao',
-                    'descricao': 'descricao_infracao',
-                    'descricao_infracao': 'descricao_infracao',
-                    'posto': 'agente_posto',
-                    're': 'agente_re',
-                    'agente': 'agente_nome',
-                    'data': 'data'
-                };
-
-                const items = rows.map(cols => {
-                    const obj = {};
-                    header.forEach((h, i) => {
-                        const key = h.replace(/\s+/g, '');
-                        const mapped = map[key];
-                        if (mapped) obj[mapped] = cols[i] ? cols[i].trim().replace(/^"|"$/g, '') : '';
-                    });
-                    // Normalize date to YYYY-MM-DD if possible
-                    if (obj.data) {
-                        const d = new Date(obj.data);
-                        if (!isNaN(d)) obj.data = d.toISOString().split('T')[0];
-                    } else {
-                        obj.data = new Date().toISOString().split('T')[0];
-                    }
-                    if (usuarioLogado && usuarioLogado.id) obj.user_id = usuarioLogado.id;
-                    return obj;
-                });
-
-                // Insert in chunks to avoid payload limits
-                const chunkSize = 100;
-                for (let i = 0; i < items.length; i += chunkSize) {
-                    const batch = items.slice(i, i + chunkSize);
-                    const { error } = await supabaseClient.from('multas').insert(batch);
-                    if (error) {
-                        alert('Erro ao importar: ' + error.message);
-                        return;
-                    }
-                }
-
-                alert('✅ Importação concluída!');
-                carregarMultas();
-            } catch (err) {
-                console.error(err);
-                alert('Erro ao processar o CSV. Verifique o formato.');
-            }
-        }
-
-        function parseCSV(text) {
-            const lines = text.split(/\r\n|\n/);
-            const rows = [];
-            for (let line of lines) {
-                if (line.trim() === '') continue;
-                const cols = [];
-                let cur = '';
-                let inQuotes = false;
-                for (let i = 0; i < line.length; i++) {
-                    const ch = line[i];
-                    if (ch === '"') {
-                        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
-                        else inQuotes = !inQuotes;
-                    } else if (ch === ',' && !inQuotes) {
-                        cols.push(cur);
-                        cur = '';
-                    } else {
-                        cur += ch;
-                    }
-                }
-                cols.push(cur);
-                rows.push(cols);
-            }
-            return rows;
         }
 
         async function testarConexao() {
@@ -1120,12 +959,12 @@
             else mostrarStatus('✅ Conexão OK!', 'success');
         }
 
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             const modal = document.getElementById('editModal');
             if (event.target == modal) {
                 fecharModalEdicao();
             }
-        };
+        }
     </script>
 </body>
 </html>
