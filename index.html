@@ -288,6 +288,11 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="numeroInfracao">Número da Infração:</label>
+                        <input type="text" id="numeroInfracao" placeholder="Ex: 123456789" required>
+                    </div>
+
+                    <div class="form-group">
                         <label for="codigoInfracao">Código da Infração:</label>
                         <input type="text" id="codigoInfracao" placeholder="Ex: 50291" autocomplete="off" required>
                         <div id="autocomplete-list" class="autocomplete-items"></div>
@@ -322,6 +327,7 @@
                             <th>Placa</th>
                             <th>Marca</th>
                             <th>Modelo</th>
+                            <th>Nº Infração</th>
                             <th>Código</th>
                             <th>Descrição</th>
                             <th>Posto/Grad</th>
@@ -333,7 +339,7 @@
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
+                            <td colspan="11" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
                         </tr>
                     </tbody>
                 </table>
@@ -380,6 +386,7 @@
                     placa: document.getElementById('placa').value.toUpperCase(),
                     marca: document.getElementById('marca').value,
                     modelo: document.getElementById('modelo').value,
+                    numero_infracao: document.getElementById('numeroInfracao').value,
                     codigo_infracao: document.getElementById('codigoInfracao').value,
                     descricao_infracao: document.getElementById('descricaoInfracao').value,
                     agente_posto: document.getElementById('agentePosto').value,
@@ -659,7 +666,7 @@
             tbody.innerHTML = '';
 
             if (multas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td></tr>';
                 return;
             }
 
@@ -669,6 +676,7 @@
                     <td>${multa.placa}</td>
                     <td>${multa.marca}</td>
                     <td>${multa.modelo}</td>
+                    <td>${multa.numero_infracao || '-'}</td>
                     <td>${multa.codigo_infracao}</td>
                     <td>${multa.descricao_infracao || '-'}</td>
                     <td>${multa.agente_posto || '-'}</td>
@@ -725,9 +733,9 @@
 
                 if (error) throw error;
 
-                let csv = 'Placa,Marca,Modelo,Codigo Infracao,Descricao Infracao,Posto/Graduacao,RE,Agente Nome,Data\n';
+                let csv = 'Placa,Marca,Modelo,Numero Infracao,Codigo Infracao,Descricao Infracao,Posto/Graduacao,RE,Agente Nome,Data\n';
                 data.forEach(multa => {
-                    csv += `${multa.placa},${multa.marca},${multa.modelo},${multa.codigo_infracao},"${multa.descricao_infracao || ''}",${multa.agente_posto || ''},${multa.agente_re || ''},${multa.agente_nome || ''},${multa.data}\n`;
+                    csv += `${multa.placa},${multa.marca},${multa.modelo},${multa.numero_infracao || ''},${multa.codigo_infracao},"${multa.descricao_infracao || ''}",${multa.agente_posto || ''},${multa.agente_re || ''},${multa.agente_nome || ''},${multa.data}\n`;
                 });
 
                 const blob = new Blob([csv], { type: 'text/csv' });
