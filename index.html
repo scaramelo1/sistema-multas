@@ -322,7 +322,19 @@
         const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let supabase;
+        
+        // Inicializar quando a página carregar
+        window.addEventListener('load', function() {
+            if (typeof window.supabase === 'undefined') {
+                console.error('Supabase não carregado!');
+                alert('Erro ao carregar Supabase. Recarregue a página.');
+                return;
+            }
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('✅ Supabase inicializado!');
+            verificarSessaoInicial();
+        });
 
         // Função para mostrar mensagens de status
         function mostrarStatus(mensagem, tipo) {
