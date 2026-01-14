@@ -348,7 +348,8 @@
             </div>
             <button type="submit" class="btn btn-primary">Entrar</button>
         </form>
-        <div style="margin-top: 20px; text-align: center;">
+        <div style="margin-top: 20px; text-align: center; display: flex; gap: 10px; flex-direction: column;">
+            <button class="btn btn-success" onclick="mostrarCadastro()">➕ Cadastrar Novo Usuário</button>
             <button class="btn btn-warning" onclick="testarConexaoDB()">🧪 Testar Conexão DB</button>
         </div>
     </div>
@@ -550,6 +551,58 @@
         }
     }
 
+    // Função para cadastrar novo usuário
+    function mostrarCadastro() {
+        const re = prompt('Digite o RE (Registro) do novo usuário:');
+        if (!re || re.trim() === '') {
+            alert('❌ RE não pode ser vazio!');
+            return;
+        }
+
+        const senha = prompt('Digite a senha para o usuário:');
+        if (!senha || senha.trim() === '') {
+            alert('❌ Senha não pode ser vazia!');
+            return;
+        }
+
+        const confirmarSenha = prompt('Confirme a senha:');
+        if (senha !== confirmarSenha) {
+            alert('❌ As senhas não conferem!');
+            return;
+        }
+
+        // Verificar se o RE já existe
+        const transaction = db.transaction(["usuarios"], "readwrite");
+        const store = transaction.objectStore("usuarios");
+        const checkRequest = store.get(re.trim());
+
+        checkRequest.onsuccess = (event) => {
+            if (event.target.result) {
+                alert('❌ Este RE já está cadastrado no sistema!');
+            } else {
+                // Adicionar novo usuário
+                const novoUsuario = {
+                    re: re.trim(),
+                    senha: senha
+                };
+
+                const addRequest = store.add(novoUsuario);
+
+                addRequest.onsuccess = () => {
+                    alert('✅ Usuário cadastrado com sucesso!\n\nRE: ' + re.trim() + '\n\nAgora você pode fazer login.');
+                };
+
+                addRequest.onerror = () => {
+                    alert('❌ Erro ao cadastrar usuário!');
+                };
+            }
+        };
+
+        checkRequest.onerror = () => {
+            alert('❌ Erro ao verificar RE no banco de dados!');
+        };
+    }
+
     // Login
     document.getElementById('loginForm').onsubmit = (e) => {
         e.preventDefault();
@@ -564,17 +617,25 @@
         request.onsuccess = (event) => {
             const usuario = event.target.result;
             
-            if (usuario && usuario.senha === senha) {
+            console.log('Tentativa de login - RE:', re);
+            console.log('Usuário encontrado:', usuario);
+            
+            if (!usuario) {
+                alert('❌ RE não encontrado no sistema!\n\nClique em "Cadastrar Novo Usuário" para criar uma conta.');
+            } else if (usuario.senha !== senha) {
+                alert('❌ Senha incorreta!\n\nRE encontrado, mas a senha não confere.');
+                console.log('Senha digitada:', senha);
+                console.log('Senha esperada:', usuario.senha);
+            } else {
                 sessionStorage.setItem('usuarioLogado', re);
                 mostrarSistema();
                 document.getElementById('loginForm').reset();
-            } else {
-                alert('RE ou senha incorretos!');
+                alert('✅ Login realizado com sucesso!');
             }
         };
 
         request.onerror = () => {
-            alert('Erro ao verificar credenciais!');
+            alert('❌ Erro ao verificar credenciais no banco de dados!');
         };
     };
 
@@ -951,6 +1012,10 @@
                         resultado += `  • Usuários cadastrados: ${usuariosCount}\n`;
                         resultado += `  • Infrações na base: ${baseCount}\n`;
                         resultado += `\n✅ Conexão com IndexedDB funcionando perfeitamente!`;
+                        
+                        if (usuariosCount === 0) {
+                            resultado += `\n\n⚠️ ATENÇÃO: Nenhum usuário cadastrado!\nClique em "Cadastrar Novo Usuário" para criar uma conta.`;
+                        }
                         
                         alert(resultado);
                         console.log('TESTE DB:', resultado);
