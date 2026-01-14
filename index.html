@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Controle de Multas</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -17,40 +16,15 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .container {
             max-width: 1200px;
-            width: 100%;
+            margin: 0 auto;
             background: white;
             border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
-            display: none; /* Escondido por padrão */
-        }
-
-        /* Tela de Login */
-        #loginContainer {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        #loginContainer h2 {
-            color: #667eea;
-            margin-bottom: 25px;
-        }
-
-        .login-form .form-group {
-            margin-bottom: 20px;
-            text-align: left;
         }
 
         .header {
@@ -58,25 +32,6 @@
             color: white;
             padding: 30px;
             text-align: center;
-            position: relative;
-        }
-
-        .btn-logout {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 0.8em;
-            text-decoration: none;
-            border: 1px solid white;
-        }
-
-        .btn-logout:hover {
-            background: white;
-            color: #764ba2;
         }
 
         .header h1 {
@@ -284,30 +239,113 @@
             font-size: 0.9em;
             opacity: 0.9;
         }
+
+        /* Estilos para tela de login */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-content {
+            padding: 30px;
+        }
+
+        .login-form-group {
+            margin-bottom: 20px;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9;
+        }
+
+        .autocomplete-active {
+            background-color: #667eea !important;
+            color: #ffffff;
+        }
+
+        .form-group {
+            position: relative;
+        }
     </style>
 </head>
 <body>
 
 <!-- Tela de Login -->
-<div id="loginContainer">
-    <h2>Acesso ao Sistema</h2>
-    <form id="loginForm" class="login-form">
-        <div class="form-group">
-            <label for="loginEmail">E-mail</label>
-            <input type="email" id="loginEmail" placeholder="seu@email.com" required>
-        </div>
-        <div class="form-group">
-            <label for="loginPassword">Senha</label>
-            <input type="password" id="loginPassword" placeholder="******" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Entrar</button>
-    </form>
-    <p id="loginError" style="color: #dc3545; margin-top: 15px; font-size: 0.9em; display: none;"></p>
+<div id="loginScreen" class="login-container">
+    <div class="login-header">
+        <h1>🔐 Login</h1>
+        <p>Sistema de Controle de Multas</p>
+    </div>
+    <div class="login-content">
+        <form id="loginForm">
+            <div class="login-form-group">
+                <label for="loginRE">RE (Registro)</label>
+                <input type="text" id="loginRE" placeholder="Digite seu RE" required>
+            </div>
+            <div class="login-form-group">
+                <label for="loginSenha">Senha</label>
+                <input type="password" id="loginSenha" placeholder="Digite sua senha" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+    </div>
 </div>
 
-<div class="container" id="appContainer">
+<!-- Sistema Principal -->
+<div id="mainSystem" class="container hidden">
+    <button class="btn btn-logout" onclick="logout()">🚪 Sair</button>
     <div class="header">
-        <a href="#" class="btn-logout" onclick="logout()">Sair 🚪</a>
         <h1>🚗 Sistema de Controle de Multas</h1>
         <p>Gerenciamento completo de infrações de trânsito</p>
     </div>
@@ -398,49 +436,6 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI'; // Substitua pela sua chave real
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // Monitorar estado da sessão
-    supabase.auth.onAuthStateChange((event, session) => {
-        if (session) {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            document.body.style.alignItems = 'flex-start'; // Ajuste para o sistema
-            listarMultas();
-            atualizarEstatisticas();
-        } else {
-            document.getElementById('loginContainer').style.display = 'block';
-            document.getElementById('appContainer').style.display = 'none';
-            document.body.style.alignItems = 'center'; // Centralizar login
-        }
-    });
-
-    // Lógica de Login
-    document.getElementById('loginForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        const errorMsg = document.getElementById('loginError');
-
-        errorMsg.style.display = 'none';
-
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-        if (error) {
-            errorMsg.textContent = "Erro: " + error.message;
-            errorMsg.style.display = 'block';
-        }
-    };
-
-    // Lógica de Logout
-    async function logout() {
-        if (confirm('Deseja realmente sair?')) {
-            await supabase.auth.signOut();
-        }
-    }
-
     let db;
     let infracoesCTB = [
         { codigo: "50100", descricao: "Dirigir veículo sem possuir CNH/PPD/ACC" },
@@ -492,16 +487,80 @@
         if (!db.objectStoreNames.contains("base_infracoes")) {
             db.createObjectStore("base_infracoes", { keyPath: "id" });
         }
+
+        // Store de usuários
+        if (!db.objectStoreNames.contains("usuarios")) {
+            const userStore = db.createObjectStore("usuarios", { keyPath: "re" });
+            userStore.createIndex("re", "re", { unique: true });
+        }
     };
 
     request.onsuccess = (event) => {
         db = event.target.result;
-        carregarBaseInfracoes();
-        // listarMultas e atualizarEstatisticas agora são chamados pelo onAuthStateChange
+        verificarLogin();
     };
 
     request.onerror = () => {
         alert("Erro ao abrir o banco de dados!");
+    };
+
+    // Funções de autenticação
+    function verificarLogin() {
+        const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+        if (usuarioLogado) {
+            mostrarSistema();
+        } else {
+            mostrarLogin();
+        }
+    }
+
+    function mostrarLogin() {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainSystem').classList.add('hidden');
+    }
+
+    function mostrarSistema() {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainSystem').classList.remove('hidden');
+        carregarBaseInfracoes();
+        listarMultas();
+        atualizarEstatisticas();
+    }
+
+    function logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            sessionStorage.removeItem('usuarioLogado');
+            mostrarLogin();
+            document.getElementById('loginForm').reset();
+        }
+    }
+
+    // Login
+    document.getElementById('loginForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const re = document.getElementById('loginRE').value.trim();
+        const senha = document.getElementById('loginSenha').value;
+
+        const transaction = db.transaction(["usuarios"], "readonly");
+        const store = transaction.objectStore("usuarios");
+        const request = store.get(re);
+
+        request.onsuccess = (event) => {
+            const usuario = event.target.result;
+            
+            if (usuario && usuario.senha === senha) {
+                sessionStorage.setItem('usuarioLogado', re);
+                mostrarSistema();
+                document.getElementById('loginForm').reset();
+            } else {
+                alert('RE ou senha incorretos!');
+            }
+        };
+
+        request.onerror = () => {
+            alert('Erro ao verificar credenciais!');
+        };
     };
 
     // Máscara para placa
@@ -623,6 +682,7 @@
             marca: document.getElementById('marca').value,
             modelo: document.getElementById('modelo').value,
             codigoInfracao: document.getElementById('codigoInfracao').value,
+            descricaoInfracao: document.getElementById('descricaoInfracao').value,
             agenteAutuador: document.getElementById('agenteAutuador').value,
             data: document.getElementById('data').value
         };
@@ -662,7 +722,7 @@
                 multas.sort((a, b) => new Date(b.data) - new Date(a.data));
 
                 if (multas.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma multa cadastrada</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhuma multa cadastrada</td></tr>';
                 } else {
                     multas.forEach(multa => {
                         const tr = document.createElement("tr");
@@ -671,6 +731,7 @@
                             <td>${multa.marca}</td>
                             <td>${multa.modelo}</td>
                             <td>${multa.codigoInfracao}</td>
+                            <td>${multa.descricaoInfracao || ''}</td>
                             <td>${multa.agenteAutuador}</td>
                             <td>${new Date(multa.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                             <td><button class="btn btn-danger" onclick="excluirMulta(${multa.id})">🗑️ Excluir</button></td>
