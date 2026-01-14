@@ -20,7 +20,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -185,6 +185,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            font-size: 13px;
         }
 
         table th {
@@ -490,14 +491,15 @@
                             <th>Modelo</th>
                             <th>Código</th>
                             <th>Descrição</th>
-                            <th>RE do Agente</th>
+                            <th>RE Agente</th>
+                            <th>Inserido por (RE)</th>
                             <th>Data</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="8" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
+                            <td colspan="9" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
                         </tr>
                     </tbody>
                 </table>
@@ -665,7 +667,6 @@
                 }
             });
 
-            // Form de edição
             document.getElementById('editForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await salvarEdicao();
@@ -756,9 +757,20 @@
         }
 
         async function carregarMultas() {
-            let query = supabaseClient.from('multas').select('*').order('data', { ascending: false });
+            // Fazemos um JOIN com a tabela perfis para pegar o RE de quem inseriu
+            let query = supabaseClient
+                .from('multas')
+                .select(`
+                    *,
+                    perfis:user_id (
+                        re
+                    )
+                `)
+                .order('data', { ascending: false });
+
             const { data, error } = await query;
             if (!error) listarMultas(data || []);
+            else console.error("Erro ao carregar multas:", error);
         }
 
         function listarMultas(multas) {
@@ -767,7 +779,7 @@
             const isAdmin = perfilUsuario.nivel_acesso === 'admin';
 
             if (multas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
                 atualizarEstatisticas([]);
                 return;
             }
@@ -776,6 +788,9 @@
                 const tr = document.createElement('tr');
                 const podeEditar = isAdmin || multa.user_id === usuarioLogado.id;
 
+                // O RE de quem inseriu vem do objeto 'perfis' (resultado do join)
+                const reInseriu = multa.perfis ? multa.perfis.re : '-';
+
                 tr.innerHTML = `
                     <td>${multa.placa}</td>
                     <td>${multa.marca}</td>
@@ -783,6 +798,7 @@
                     <td>${multa.codigo_infracao}</td>
                     <td>${multa.descricao_infracao || '-'}</td>
                     <td>${multa.agente_re || '-'}</td>
+                    <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
                     <td>
                         <div class="action-buttons">
@@ -943,7 +959,6 @@
             else mostrarStatus('✅ Conexão OK!', 'success');
         }
 
-        // Fechar modal ao clicar fora
         window.onclick = function(event) {
             const modal = document.getElementById('editModal');
             if (event.target == modal) {
