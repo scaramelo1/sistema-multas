@@ -228,6 +228,35 @@
         .form-group {
             position: relative;
         }
+
+        .stats-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-item h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-item p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -269,6 +298,22 @@
 
             <!-- Seção de Multas -->
             <div id="multasSection" class="multas-section hidden">
+                <!-- Cabeçalho de Estatísticas -->
+                <div class="stats-header">
+                    <div class="stat-item">
+                        <h3 id="statTotal">0</h3>
+                        <p>📊 Total de Multas</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="statSemanal">0</h3>
+                        <p>📅 Multas desta Semana</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="statMensal">0</h3>
+                        <p>📆 Multas deste Mês</p>
+                    </div>
+                </div>
+
                 <h2>📋 Cadastro de Multas</h2>
 
                 <form id="multaForm">
@@ -324,14 +369,16 @@
                             <th>Modelo</th>
                             <th>Código</th>
                             <th>Descrição</th>
-                            <th>RE do Autuador</th>
+                            <th>Posto/Grad</th>
+                            <th>RE</th>
+                            <th>Agente</th>
                             <th>Data</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="8" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
+                            <td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
                         </tr>
                     </tbody>
                 </table>
@@ -657,7 +704,8 @@
             tbody.innerHTML = '';
 
             if (multas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td></tr>';
+                atualizarEstatisticas([]);
                 return;
             }
 
@@ -669,7 +717,9 @@
                     <td>${multa.modelo}</td>
                     <td>${multa.codigo_infracao}</td>
                     <td>${multa.descricao_infracao || '-'}</td>
+                    <td>${multa.agente_posto || '-'}</td>
                     <td>${multa.agente_re || '-'}</td>
+                    <td>${multa.agente_nome || '-'}</td>
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
                     <td>
                         <button class="btn btn-danger" onclick="excluirMulta('${multa.id}')">🗑️</button>
@@ -677,9 +727,48 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            atualizarEstatisticas(multas);
         }
 
 
+
+        // Atualizar estatísticas
+        function atualizarEstatisticas(multas) {
+            const hoje = new Date();
+            const anoAtual = hoje.getFullYear();
+            const mesAtual = hoje.getMonth();
+            
+            // Calcular início e fim da semana (domingo a sábado)
+            const diaSemana = hoje.getDay(); // 0 = domingo, 6 = sábado
+            const inicioSemana = new Date(hoje);
+            inicioSemana.setDate(hoje.getDate() - diaSemana);
+            inicioSemana.setHours(0, 0, 0, 0);
+            
+            const fimSemana = new Date(inicioSemana);
+            fimSemana.setDate(inicioSemana.getDate() + 6);
+            fimSemana.setHours(23, 59, 59, 999);
+            
+            // Total de multas
+            const total = multas.length;
+            
+            // Multas da semana
+            const semanal = multas.filter(multa => {
+                const dataMulta = new Date(multa.data);
+                return dataMulta >= inicioSemana && dataMulta <= fimSemana;
+            }).length;
+            
+            // Multas do mês
+            const mensal = multas.filter(multa => {
+                const dataMulta = new Date(multa.data);
+                return dataMulta.getFullYear() === anoAtual && dataMulta.getMonth() === mesAtual;
+            }).length;
+            
+            // Atualizar elementos HTML
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statSemanal').textContent = semanal;
+            document.getElementById('statMensal').textContent = mensal;
+        }
 
         // Excluir multa
         async function excluirMulta(id) {
