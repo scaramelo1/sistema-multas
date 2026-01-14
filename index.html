@@ -67,7 +67,7 @@
             font-weight: 500;
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -76,7 +76,7 @@
             transition: border-color 0.3s;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -204,6 +204,9 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .user-info strong {
@@ -257,6 +260,17 @@
             font-size: 0.9em;
             opacity: 0.9;
         }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-admin { background: #ffd700; color: #000; }
+        .badge-agente { background: #c0c0c0; color: #000; }
     </style>
 </head>
 <body>
@@ -269,22 +283,48 @@
         <div class="content">
             <!-- Seção de Autenticação -->
             <div id="authSection" class="auth-section">
-                <h2>🔐 Autenticação</h2>
+                <h2 id="authTitle">🔐 Autenticação</h2>
 
-                <div class="form-group">
-                    <label for="authEmail">E-mail:</label>
-                    <input type="email" id="authEmail" placeholder="seu@email.com">
+                <div id="loginFields">
+                    <div class="form-group">
+                        <label for="authEmail">E-mail:</label>
+                        <input type="email" id="authEmail" placeholder="seu@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="authPassword">Senha:</label>
+                        <input type="password" id="authPassword" placeholder="Sua senha">
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="authPassword">Senha:</label>
-                    <input type="password" id="authPassword" placeholder="Sua senha">
+                <div id="registerFields" class="hidden">
+                    <div class="form-group">
+                        <label for="regNome">Nome Completo:</label>
+                        <input type="text" id="regNome" placeholder="Nome do Agente">
+                    </div>
+                    <div class="form-group">
+                        <label for="regRE">RE:</label>
+                        <input type="text" id="regRE" placeholder="Ex: 127861-4">
+                    </div>
+                    <div class="form-group">
+                        <label for="regCargo">Cargo/Posto:</label>
+                        <input type="text" id="regCargo" placeholder="Ex: Sd PM">
+                    </div>
+                    <div class="form-group">
+                        <label for="regNivel">Nível de Acesso:</label>
+                        <select id="regNivel">
+                            <option value="agente">Agente</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="actions-buttons">
+                    <button id="btnLogin" class="btn btn-info" onclick="fazerLogin()">🔑 Fazer Login</button>
+                    <button id="btnGoToRegister" class="btn btn-primary" onclick="toggleAuthMode(true)">📝 Criar Conta</button>
+                    <button id="btnRegister" class="btn btn-success hidden" onclick="cadastrarUsuario()">➕ Confirmar Cadastro</button>
+                    <button id="btnBackToLogin" class="btn btn-danger hidden" onclick="toggleAuthMode(false)">⬅️ Voltar</button>
                     <button class="btn btn-primary" onclick="testarConexao()">🔍 Testar Conexão DB</button>
-                    <button class="btn btn-success" onclick="cadastrarUsuario()">➕ Cadastrar Novo Usuário</button>
-                    <button class="btn btn-info" onclick="fazerLogin()">🔑 Fazer Login</button>
                 </div>
 
                 <div id="authStatus"></div>
@@ -292,8 +332,13 @@
 
             <!-- Informações do Usuário Logado -->
             <div id="userInfo" class="user-info hidden">
-                <strong>Usuário logado:</strong> <span id="userEmail"></span>
-                <button class="btn btn-danger" onclick="fazerLogout()" style="float: right;">Sair</button>
+                <div>
+                    <strong>Usuário:</strong> <span id="userEmail"></span> 
+                    <span id="userBadge" class="badge"></span>
+                    <br>
+                    <small><strong>RE:</strong> <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small>
+                </div>
+                <button class="btn btn-danger" onclick="fazerLogout()">Sair</button>
             </div>
 
             <!-- Seção de Multas -->
@@ -341,7 +386,7 @@
 
                     <div class="form-group">
                         <label for="agenteRE">RE do Agente:</label>
-                        <input type="text" id="agenteRE" placeholder="Digite o RE (ex: 127861-4)" autocomplete="off" required>
+                        <input type="text" id="agenteRE" placeholder="Digite o RE" autocomplete="off" required>
                         <div id="autocomplete-agente-list" class="autocomplete-items"></div>
                         <input type="hidden" id="agenteNome">
                         <input type="hidden" id="agentePosto">
@@ -357,7 +402,7 @@
 
                 <div class="actions-buttons">
                     <button class="btn btn-success" onclick="exportarCSV()">📥 Exportar CSV</button>
-                    <button class="btn btn-info" onclick="document.getElementById('csvFile').click()">📤 Importar CSV</button>
+                    <button id="btnImportar" class="btn btn-info" onclick="document.getElementById('csvFile').click()">📤 Importar CSV</button>
                     <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="importarCSV(event)">
                 </div>
 
@@ -373,7 +418,7 @@
                             <th>RE</th>
                             <th>Agente</th>
                             <th>Data</th>
-                            <th>Ações</th>
+                            <th class="admin-only">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="multasBody">
@@ -387,40 +432,66 @@
     </div>
 
     <script>
-        // Configuração do Supabase
         const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
 
         let supabaseClient;
-        
-        // Inicializar quando a página carregar
+        let usuarioLogado = null;
+        let perfilUsuario = null;
+
         window.addEventListener('load', function() {
             if (typeof window.supabase === 'undefined') {
-                console.error('Supabase não carregado!');
-                alert('Erro ao carregar Supabase. Recarregue a página.');
+                alert('Erro ao carregar Supabase.');
                 return;
             }
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log('✅ Supabase inicializado!');
             verificarSessaoInicial();
             configurarEventos();
         });
-        
-        // Verificar sessão inicial
+
         async function verificarSessaoInicial() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
-                mostrarUsuarioLogado(session.user);
-                carregarMultas();
+                await carregarPerfil(session.user);
             }
         }
-        
-        // Configurar eventos do formulário
+
+        function toggleAuthMode(isRegister) {
+            document.getElementById('authTitle').textContent = isRegister ? '📝 Cadastro de Novo Usuário' : '🔐 Autenticação';
+            document.getElementById('registerFields').classList.toggle('hidden', !isRegister);
+            document.getElementById('btnLogin').classList.toggle('hidden', isRegister);
+            document.getElementById('btnGoToRegister').classList.toggle('hidden', isRegister);
+            document.getElementById('btnRegister').classList.toggle('hidden', !isRegister);
+            document.getElementById('btnBackToLogin').classList.toggle('hidden', !isRegister);
+        }
+
+        async function carregarPerfil(user) {
+            usuarioLogado = user;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('perfis')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) throw error;
+                perfilUsuario = data;
+                mostrarUsuarioLogado(user, data);
+                carregarMultas();
+
+                // Auto-preencher dados do agente no form
+                document.getElementById('agenteRE').value = data.re;
+                document.getElementById('agenteNome').value = data.nome_completo;
+                document.getElementById('agentePosto').value = data.cargo;
+            } catch (error) {
+                console.error('Erro ao carregar perfil:', error);
+                mostrarStatus('Erro ao carregar dados do perfil.', 'error');
+            }
+        }
+
         function configurarEventos() {
-            // Adicionar multa
             document.getElementById('multaForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-
                 const novaMulta = {
                     placa: document.getElementById('placa').value.toUpperCase(),
                     marca: document.getElementById('marca').value,
@@ -430,281 +501,115 @@
                     agente_posto: document.getElementById('agentePosto').value,
                     agente_re: document.getElementById('agenteRE').value,
                     agente_nome: document.getElementById('agenteNome').value,
-                    data: document.getElementById('data').value
+                    data: document.getElementById('data').value,
+                    user_id: usuarioLogado.id
                 };
 
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('multas')
-                        .insert([novaMulta])
-                        .select();
-
-                    if (error) {
-                        alert('Erro ao adicionar multa: ' + error.message);
-                        console.error('Erro:', error);
-                    } else {
-                        alert('✅ Multa adicionada com sucesso!');
-                        document.getElementById('multaForm').reset();
-                        document.getElementById('data').valueAsDate = new Date();
-                        carregarMultas();
-                    }
-                } catch (error) {
-                    alert('Erro ao adicionar multa: ' + error.message);
-                    console.error('Erro:', error);
+                const { error } = await supabaseClient.from('multas').insert([novaMulta]);
+                if (error) alert('Erro: ' + error.message);
+                else {
+                    alert('✅ Multa adicionada!');
+                    document.getElementById('multaForm').reset();
+                    document.getElementById('data').valueAsDate = new Date();
+                    // Manter dados do agente logado
+                    document.getElementById('agenteRE').value = perfilUsuario.re;
+                    document.getElementById('agenteNome').value = perfilUsuario.nome_completo;
+                    document.getElementById('agentePosto').value = perfilUsuario.cargo;
+                    carregarMultas();
                 }
             });
-            
-            // Máscara para placa
-            document.getElementById('placa').addEventListener('input', function(e) {
-                let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                e.target.value = value;
-            });
 
-            // Data padrão
+            document.getElementById('placa').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
             document.getElementById('data').valueAsDate = new Date();
-            
-            // Autocomplete para agentes
             setupAutocompleteAgente();
         }
 
-        // Função para mostrar mensagens de status
-        function mostrarStatus(mensagem, tipo) {
-            const statusDiv = document.getElementById('authStatus');
-            statusDiv.className = `status-message status-${tipo}`;
-            statusDiv.textContent = mensagem;
-            statusDiv.style.display = 'block';
-        }
-
-        // Testar conexão com o banco de dados
-        async function testarConexao() {
-            if (!supabaseClient) {
-                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
-                return;
-            }
-            try {
-                mostrarStatus('🔄 Testando conexão...', 'info');
-
-                // Tenta fazer uma query simples
-                const { data, error } = await supabaseClient.from('multas').select('count', { count: 'exact', head: true });
-
-                if (error) {
-                    // Se a tabela não existe, vamos criar
-                    mostrarStatus('⚠️ Tabela "multas" não encontrada. Você precisa criar a tabela no Supabase.', 'error');
-                    console.error('Erro:', error);
-                } else {
-                    mostrarStatus('✅ Conexão com o banco de dados estabelecida com sucesso!', 'success');
-                }
-            } catch (error) {
-                mostrarStatus('❌ Erro ao conectar: ' + error.message, 'error');
-                console.error('Erro:', error);
-            }
-        }
-
-        // Cadastrar novo usuário
         async function cadastrarUsuario() {
-            if (!supabaseClient) {
-                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
-                return;
-            }
-            
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
+            const nome = document.getElementById('regNome').value;
+            const re = document.getElementById('regRE').value;
+            const cargo = document.getElementById('regCargo').value;
+            const nivel = document.getElementById('regNivel').value;
 
-            if (!email || !password) {
-                mostrarStatus('❌ Por favor, preencha e-mail e senha!', 'error');
+            if (!email || !password || !nome || !re) {
+                mostrarStatus('❌ Preencha todos os campos!', 'error');
                 return;
             }
 
-            if (password.length < 6) {
-                mostrarStatus('❌ A senha deve ter no mínimo 6 caracteres!', 'error');
+            mostrarStatus('🔄 Criando conta...', 'info');
+            const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
+
+            if (authError) {
+                mostrarStatus('❌ Erro: ' + authError.message, 'error');
                 return;
             }
 
-            try {
-                mostrarStatus('🔄 Cadastrando usuário...', 'info');
+            if (authData.user) {
+                const { error: profileError } = await supabaseClient.from('perfis').insert([{
+                    id: authData.user.id,
+                    nome_completo: nome,
+                    re: re,
+                    cargo: cargo,
+                    nivel_acesso: nivel
+                }]);
 
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                });
-
-                if (error) {
-                    mostrarStatus('❌ Erro ao cadastrar: ' + error.message, 'error');
-                    console.error('Erro:', error);
-                } else {
-                    mostrarStatus('✅ Usuário cadastrado com sucesso! Verifique seu e-mail para confirmar.', 'success');
-                    console.log('Usuário criado:', data);
-                }
-            } catch (error) {
-                mostrarStatus('❌ Erro ao cadastrar: ' + error.message, 'error');
-                console.error('Erro:', error);
+                if (profileError) mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
+                else mostrarStatus('✅ Conta criada! Verifique seu e-mail.', 'success');
             }
         }
 
-        // Fazer login
         async function fazerLogin() {
-            if (!supabaseClient) {
-                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
-                return;
-            }
-            
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
-
-            if (!email || !password) {
-                mostrarStatus('❌ Por favor, preencha e-mail e senha!', 'error');
-                return;
-            }
-
-            try {
-                mostrarStatus('🔄 Fazendo login...', 'info');
-
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password,
-                });
-
-                if (error) {
-                    mostrarStatus('❌ Erro ao fazer login: ' + error.message, 'error');
-                    console.error('Erro:', error);
-                } else {
-                    mostrarStatus('✅ Login realizado com sucesso!', 'success');
-                    mostrarUsuarioLogado(data.user);
-                    carregarMultas();
-                }
-            } catch (error) {
-                mostrarStatus('❌ Erro ao fazer login: ' + error.message, 'error');
-                console.error('Erro:', error);
-            }
+            mostrarStatus('🔄 Entrando...', 'info');
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) mostrarStatus('❌ ' + error.message, 'error');
+            else await carregarPerfil(data.user);
         }
 
-        // Fazer logout
         async function fazerLogout() {
-            if (!supabaseClient) {
-                mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
-                return;
-            }
-            
-            const { error } = await supabaseClient.auth.signOut();
-            if (!error) {
-                document.getElementById('authSection').classList.remove('hidden');
-                document.getElementById('userInfo').classList.add('hidden');
-                document.getElementById('multasSection').classList.add('hidden');
-                mostrarStatus('✅ Logout realizado com sucesso!', 'success');
-            }
+            await supabaseClient.auth.signOut();
+            location.reload();
         }
 
-        // Mostrar informações do usuário logado
-        function mostrarUsuarioLogado(user) {
+        function mostrarUsuarioLogado(user, perfil) {
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('userInfo').classList.remove('hidden');
             document.getElementById('multasSection').classList.remove('hidden');
             document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userRE').textContent = perfil.re;
+            document.getElementById('userPosto').textContent = perfil.cargo;
+
+            const badge = document.getElementById('userBadge');
+            badge.textContent = perfil.nivel_acesso;
+            badge.className = `badge badge-${perfil.nivel_acesso}`;
+
+            // Aplicar restrições de privilégio
+            const isAdmin = perfil.nivel_acesso === 'admin';
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
+            document.getElementById('btnImportar').classList.toggle('hidden', !isAdmin);
         }
 
-        // Variável para controlar se o autocomplete já foi configurado
-        let autocompleteAgenteConfigurado = false;
-
-        // Autocomplete para agentes
-        async function setupAutocompleteAgente() {
-            if (autocompleteAgenteConfigurado) return; // Evita duplicação
-            autocompleteAgenteConfigurado = true;
-            
-            const input = document.getElementById('agenteRE');
-            const autocompleteList = document.getElementById('autocomplete-agente-list');
-            
-            input.addEventListener('input', async function() {
-                const value = this.value.trim();
-                autocompleteList.innerHTML = '';
-                
-                if (value.length < 1) return;
-                
-                try {
-                    // Buscar agentes no Supabase
-                    const { data, error } = await supabaseClient
-                        .from('agentes')
-                        .select('*')
-                        .or(`re.ilike.%${value}%,nome_completo.ilike.%${value}%`)
-                        .limit(10);
-                    
-                    if (error) {
-                        console.error('Erro ao buscar agentes:', error);
-                        return;
-                    }
-                    
-                    if (data && data.length > 0) {
-                        data.forEach(agente => {
-                            const div = document.createElement('div');
-                            div.className = 'autocomplete-item';
-                            div.innerHTML = `<strong>${agente.re}</strong> - ${agente.posto_graduacao} ${agente.nome_completo}`;
-                            div.style.padding = '10px';
-                            div.style.cursor = 'pointer';
-                            div.style.borderBottom = '1px solid #e0e0e0';
-                            
-                            div.addEventListener('click', function() {
-                                input.value = agente.re;
-                                document.getElementById('agenteNome').value = agente.nome_completo;
-                                document.getElementById('agentePosto').value = agente.posto_graduacao;
-                                autocompleteList.innerHTML = '';
-                            });
-                            
-                            autocompleteList.appendChild(div);
-                        });
-                        
-                        autocompleteList.style.display = 'block';
-                        autocompleteList.style.position = 'absolute';
-                        autocompleteList.style.backgroundColor = 'white';
-                        autocompleteList.style.border = '1px solid #667eea';
-                        autocompleteList.style.borderRadius = '8px';
-                        autocompleteList.style.maxHeight = '200px';
-                        autocompleteList.style.overflowY = 'auto';
-                        autocompleteList.style.zIndex = '1000';
-                        autocompleteList.style.width = input.offsetWidth + 'px';
-                    }
-                } catch (error) {
-                    console.error('Erro ao buscar agentes:', error);
-                }
-            });
-            
-            // Fechar autocomplete ao clicar fora
-            document.addEventListener('click', function(e) {
-                if (e.target !== input) {
-                    autocompleteList.innerHTML = '';
-                }
-            });
-        }
-
-        // Carregar multas do Supabase
         async function carregarMultas() {
-            if (!supabaseClient) {
-                console.error('Supabase não inicializado');
-                return;
-            }
-            
-            try {
-                const { data, error } = await supabaseClient
-                    .from('multas')
-                    .select('*')
-                    .order('data', { ascending: false });
+            let query = supabaseClient.from('multas').select('*').order('data', { ascending: false });
 
-                if (error) {
-                    console.error('Erro ao carregar multas:', error);
-                    return;
-                }
-
-                listarMultas(data || []);
-            } catch (error) {
-                console.error('Erro ao carregar multas:', error);
+            // Se for agente, vê apenas as dele (opcional, remova se quiser que todos vejam tudo)
+            if (perfilUsuario.nivel_acesso === 'agente') {
+                // query = query.eq('user_id', usuarioLogado.id); 
             }
+
+            const { data, error } = await query;
+            if (!error) listarMultas(data || []);
         }
 
-        // Listar multas na tabela
         function listarMultas(multas) {
             const tbody = document.getElementById('multasBody');
             tbody.innerHTML = '';
+            const isAdmin = perfilUsuario.nivel_acesso === 'admin';
 
             if (multas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${isAdmin ? 10 : 9}" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
                 atualizarEstatisticas([]);
                 return;
             }
@@ -721,161 +626,82 @@
                     <td>${multa.agente_re || '-'}</td>
                     <td>${multa.agente_nome || '-'}</td>
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
-                    <td>
-                        <button class="btn btn-danger" onclick="excluirMulta('${multa.id}')">🗑️</button>
-                    </td>
+                    ${isAdmin ? `<td><button class="btn btn-danger" onclick="excluirMulta('${multa.id}')">🗑️</button></td>` : ''}
                 `;
                 tbody.appendChild(tr);
             });
-
             atualizarEstatisticas(multas);
         }
 
-
-
-        // Atualizar estatísticas
         function atualizarEstatisticas(multas) {
             const hoje = new Date();
-            const anoAtual = hoje.getFullYear();
-            const mesAtual = hoje.getMonth();
-            
-            // Calcular início e fim da semana (domingo a sábado)
-            const diaSemana = hoje.getDay(); // 0 = domingo, 6 = sábado
             const inicioSemana = new Date(hoje);
-            inicioSemana.setDate(hoje.getDate() - diaSemana);
-            inicioSemana.setHours(0, 0, 0, 0);
-            
-            const fimSemana = new Date(inicioSemana);
-            fimSemana.setDate(inicioSemana.getDate() + 6);
-            fimSemana.setHours(23, 59, 59, 999);
-            
-            // Total de multas
-            const total = multas.length;
-            
-            // Multas da semana
-            const semanal = multas.filter(multa => {
-                const dataMulta = new Date(multa.data);
-                return dataMulta >= inicioSemana && dataMulta <= fimSemana;
-            }).length;
-            
-            // Multas do mês
-            const mensal = multas.filter(multa => {
-                const dataMulta = new Date(multa.data);
-                return dataMulta.getFullYear() === anoAtual && dataMulta.getMonth() === mesAtual;
-            }).length;
-            
-            // Atualizar elementos HTML
-            document.getElementById('statTotal').textContent = total;
+            inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+            inicioSemana.setHours(0,0,0,0);
+
+            const semanal = multas.filter(m => new Date(m.data) >= inicioSemana).length;
+            const mensal = multas.filter(m => new Date(m.data).getMonth() === hoje.getMonth() && new Date(m.data).getFullYear() === hoje.getFullYear()).length;
+
+            document.getElementById('statTotal').textContent = multas.length;
             document.getElementById('statSemanal').textContent = semanal;
             document.getElementById('statMensal').textContent = mensal;
         }
 
-        // Excluir multa
         async function excluirMulta(id) {
-            if (!supabaseClient) {
-                alert('❌ Supabase não inicializado. Recarregue a página.');
-                return;
-            }
-            
-            if (!confirm('Deseja realmente excluir esta multa?')) return;
-
-            try {
-                const { error } = await supabaseClient
-                    .from('multas')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) {
-                    alert('Erro ao excluir multa: ' + error.message);
-                } else {
-                    alert('✅ Multa excluída com sucesso!');
-                    carregarMultas();
-                }
-            } catch (error) {
-                alert('Erro ao excluir multa: ' + error.message);
-            }
+            if (!confirm('Excluir?')) return;
+            const { error } = await supabaseClient.from('multas').delete().eq('id', id);
+            if (!error) carregarMultas();
         }
 
-        // Exportar CSV
-        async function exportarCSV() {
-            if (!supabaseClient) {
-                alert('❌ Supabase não inicializado. Recarregue a página.');
-                return;
-            }
-            
-            try {
-                const { data, error } = await supabaseClient
-                    .from('multas')
-                    .select('*');
-
-                if (error) throw error;
-
-                let csv = 'Placa,Marca,Modelo,Codigo Infracao,Descricao Infracao,Posto/Graduacao,RE,Agente Nome,Data\n';
-                data.forEach(multa => {
-                    csv += `${multa.placa},${multa.marca},${multa.modelo},${multa.codigo_infracao},"${multa.descricao_infracao || ''}",${multa.agente_posto || ''},${multa.agente_re || ''},${multa.agente_nome || ''},${multa.data}\n`;
-                });
-
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `multas_${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
-            } catch (error) {
-                alert('Erro ao exportar CSV: ' + error.message);
-            }
+        function mostrarStatus(msg, tipo) {
+            const div = document.getElementById('authStatus');
+            div.className = `status-message status-${tipo}`;
+            div.textContent = msg;
+            div.style.display = 'block';
         }
 
-        // Importar CSV
-        function importarCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                const multas = [];
-
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-
-                    const values = lines[i].split(',');
-                    multas.push({
-                        placa: values[0],
-                        marca: values[1],
-                        modelo: values[2],
-                        codigo_infracao: values[3],
-                        descricao_infracao: values[4]?.replace(/"/g, ''),
-                        agente_posto: values[5],
-                        agente_re: values[6],
-                        agente_nome: values[7],
-                        data: values[8]
+        async function setupAutocompleteAgente() {
+            const input = document.getElementById('agenteRE');
+            const list = document.getElementById('autocomplete-agente-list');
+            input.addEventListener('input', async function() {
+                const val = this.value.trim();
+                list.innerHTML = '';
+                if (val.length < 1) return;
+                const { data } = await supabaseClient.from('perfis').select('*').or(`re.ilike.%${val}%,nome_completo.ilike.%${val}%`).limit(5);
+                if (data) {
+                    data.forEach(p => {
+                        const d = document.createElement('div');
+                        d.className = 'autocomplete-item';
+                        d.style.padding = '10px'; d.style.cursor = 'pointer';
+                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome_completo}`;
+                        d.onclick = () => {
+                            input.value = p.re;
+                            document.getElementById('agenteNome').value = p.nome_completo;
+                            document.getElementById('agentePosto').value = p.cargo;
+                            list.innerHTML = '';
+                        };
+                        list.appendChild(d);
                     });
                 }
-
-                try {
-                    const { error } = await supabaseClient
-                        .from('multas')
-                        .insert(multas);
-
-                    if (error) {
-                        alert('Erro ao importar CSV: ' + error.message);
-                    } else {
-                        alert('✅ CSV importado com sucesso!');
-                        carregarMultas();
-                    }
-                } catch (error) {
-                    alert('Erro ao importar CSV: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
+            });
         }
 
+        async function exportarCSV() {
+            const { data } = await supabaseClient.from('multas').select('*');
+            let csv = 'Placa,Marca,Modelo,Codigo,Descricao,Posto,RE,Agente,Data\n';
+            data.forEach(m => csv += `${m.placa},${m.marca},${m.modelo},${m.codigo_infracao},"${m.descricao_infracao}",${m.agente_posto},${m.agente_re},${m.agente_nome},${m.data}\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'multas.csv';
+            a.click();
+        }
 
+        async function testarConexao() {
+            const { error } = await supabaseClient.from('perfis').select('count', { count: 'exact', head: true });
+            if (error) mostrarStatus('❌ Erro: ' + error.message, 'error');
+            else mostrarStatus('✅ Conexão OK!', 'success');
+        }
     </script>
 </body>
 </html>
-
-
-esse é codigo certo e princiapl, quereo trabalhar somente com ele
