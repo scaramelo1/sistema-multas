@@ -1,376 +1,700 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Controle de Multas - Supabase</title>
-    <!-- Supabase JS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 30px;
-            background: #f8f9fa;
-        }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .stat-card h3 { color: #667eea; font-size: 2em; margin-bottom: 10px; }
-        .content { padding: 30px; }
-        .form-section {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .form-group { display: flex; flex-direction: column; position: relative; }
-        .form-group label { margin-bottom: 5px; font-weight: 600; }
-        .form-group input {
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-        .form-group input:focus { outline: none; border-color: #667eea; }
-        .autocomplete-items {
-            position: absolute;
-            border: 1px solid #d4d4d4;
-            z-index: 99;
-            top: 100%;
-            left: 0;
-            right: 0;
-            max-height: 200px;
-            overflow-y: auto;
-            background: white;
-        }
-        .autocomplete-items div { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
-        .autocomplete-items div:hover { background-color: #667eea; color: white; }
-        .actions-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-info { background: #17a2b8; color: white; }
-        .base-status { margin-left: 10px; padding: 5px; background: #28a745; color: white; border-radius: 5px; font-size: 0.8em; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        thead { background: #667eea; color: white; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        .btn-delete { background: #dc3545; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
-        .config-alert { background: #d4edda; padding: 15px; border-radius: 8px; margin: 20px 30px; border: 1px solid #c3e6cb; color: #155724; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Controle de Multas - Login (Supabase)</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 24px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.6em; }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .badge {
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.22);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.9em;
+      white-space: nowrap;
+    }
+
+    .content { padding: 30px; }
+
+    .card {
+      background: #f8f9fa;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      max-width: 520px;
+      margin: 30px auto;
+    }
+
+    .card h2 { margin-bottom: 14px; }
+    .hint { color: #666; margin-bottom: 16px; font-size: 0.95em; line-height: 1.35; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .form-group { display: flex; flex-direction: column; position: relative; }
+    .form-group label { margin-bottom: 6px; font-weight: 600; color: #444; }
+    .form-group input {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      transition: all 0.2s;
+      font-size: 1em;
+    }
+    .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.12); }
+
+    .btn {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { filter: brightness(0.95); transform: translateY(-1px); }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { filter: brightness(0.95); }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { filter: brightness(0.95); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .alert {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid;
+      margin: 12px 0 0;
+      font-size: 0.95em;
+      line-height: 1.35;
+    }
+    .alert-error { background: #f8d7da; border-color: #f5c2c7; color: #842029; }
+    .alert-info { background: #cff4fc; border-color: #b6effb; color: #055160; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 24px 30px;
+      background: #f8f9fa;
+    }
+    .stat-card {
+      background: white;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .stat-card h3 { color: #667eea; font-size: 2em; margin-bottom: 8px; }
+    .stat-card p { color: #666; font-size: 0.9em; }
+
+    .form-section {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .form-section h2 { margin-bottom: 16px; }
+    .form-grid-app {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 16px;
+    }
+
+    .autocomplete-items {
+      position: absolute;
+      border: 1px solid #d4d4d4;
+      z-index: 99;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 220px;
+      overflow-y: auto;
+      background: white;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .autocomplete-items div {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .autocomplete-items div:hover { background: #667eea; color: white; }
+
+    .actions-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-info:hover { filter: brightness(0.95); }
+    .base-status { margin-left: 10px; padding: 6px 10px; background: #28a745; color: white; border-radius: 999px; font-size: 0.85em; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    thead { background: #667eea; color: white; }
+    th, td { padding: 14px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
+    .btn-delete { background: #dc3545; color: white; border: none; padding: 8px 10px; border-radius: 7px; cursor: pointer; }
+
+    .footer-note {
+      color: #666;
+      font-size: 0.9em;
+      margin-top: 14px;
+      line-height: 1.35;
+    }
+
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚗 Controle de Multas (Vercel + Supabase)</h1>
-        </header>
+  <div class="container">
+    <header>
+      <h1>Controle de Multas (Vercel + Supabase)</h1>
+      <div class="header-right">
+        <span id="userBadge" class="badge hidden"></span>
+        <button id="btnSair" class="btn btn-danger hidden" type="button">Sair</button>
+      </div>
+    </header>
 
-        <div id="configWarning" class="config-alert">
-            ✅ <strong>Sistema Configurado!</strong> Conectado ao Supabase com sucesso.
-        </div>
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="content">
+      <div class="card">
+        <h2>Login</h2>
+        <p class="hint">
+          Entre com seu <strong>RE</strong> e <strong>Senha</strong>.
+          <br />
+          Importante: por segurane7a, a senha <strong>ne3o</strong> fica em tabela. Ela fica no <strong>Supabase Auth</strong> (hash).
+        </p>
 
-        <div class="stats">
-            <div class="stat-card"><h3 id="totalMultas">0</h3><p>Total de Multas</p></div>
-            <div class="stat-card"><h3 id="multasMes">0</h3><p>Este Mês</p></div>
-            <div class="stat-card"><h3 id="infracoesUnicas">0</h3><p>Infrações Únicas</p></div>
-        </div>
-
-        <div class="content">
-            <div class="form-section">
-                <form id="multaForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Placa *</label>
-                            <input type="text" id="placa" required maxlength="8" placeholder="ABC1D23">
-                        </div>
-                        <div class="form-group">
-                            <label>Marca *</label>
-                            <input type="text" id="marca" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Modelo *</label>
-                            <input type="text" id="modelo" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Código Infração *</label>
-                            <input type="text" id="codigoInfracao" required autocomplete="off">
-                            <input type="hidden" id="descricaoInfracao">
-                        </div>
-                        <div class="form-group">
-                            <label>Agente *</label>
-                            <input type="text" id="agenteAutuador" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Data *</label>
-                            <input type="date" id="data" required>
-                        </div>
-                    </div>
-                    <div class="actions-buttons">
-                        <button type="submit" class="btn btn-primary">➕ Adicionar Multa</button>
-                        <button type="button" class="btn btn-secondary" onclick="exportarCSV()">📥 Exportar CSV</button>
-                        <button type="button" class="btn btn-info" onclick="document.getElementById('baseFile').click()">📂 Importar Base JSON</button>
-                        <input type="file" id="baseFile" accept=".json" style="display:none" onchange="importarBaseInfracoes(event)">
-                        <span id="baseStatus" class="base-status" style="display:none"></span>
-                    </div>
-                </form>
+        <form id="loginForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="reLogin">RE</label>
+              <input id="reLogin" type="text" inputmode="numeric" autocomplete="username" placeholder="Ex: 123456" required />
             </div>
+            <div class="form-group">
+              <label for="senhaLogin">Senha</label>
+              <input id="senhaLogin" type="password" autocomplete="current-password" required />
+            </div>
+            <button id="btnEntrar" class="btn btn-primary" type="submit">Entrar</button>
+          </div>
+          <div id="loginMsg" class="alert alert-error hidden"></div>
+        </form>
 
-            <table id="multasTable">
-                <thead>
-                    <tr>
-                        <th>Placa</th>
-                        <th>Marca/Modelo</th>
-                        <th>Infração</th>
-                        <th>Agente</th>
-                        <th>Data</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="multasBody"></tbody>
-            </table>
+        <div class="alert alert-info" style="margin-top:14px;">
+          <strong>Como criar usue1rios:</strong> No Supabase, ve1 em <em>Authentication bb Users bb Add user</em>.
+          Use o e-mail no formato <code>RE@multas.local</code> (ex: <code>123456@multas.local</code>) e defina a senha.
+          Depois, insira/atualize o cadastro do usue1rio na tabela <code>usuarios</code> com o mesmo <code>id</code> do Auth.
         </div>
+      </div>
     </div>
 
-    <script>
-        // --- CONFIGURAÇÃO SUPABASE ---
-        const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
-        // -----------------------------
+    <!-- APP VIEW -->
+    <div id="appView" class="hidden">
+      <div class="stats">
+        <div class="stat-card"><h3 id="totalMultas">0</h3><p>Total de Multas</p></div>
+        <div class="stat-card"><h3 id="multasMes">0</h3><p>Este Meas</p></div>
+        <div class="stat-card"><h3 id="infracoesUnicas">0</h3><p>Infrae7f5es danicas</p></div>
+      </div>
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let infracoesCTB = [];
+      <div class="content">
+        <div class="form-section">
+          <h2>Cadastrar Nova Multa</h2>
+          <form id="multaForm">
+            <div class="form-grid-app">
+              <div class="form-group">
+                <label for="placa">Placa *</label>
+                <input type="text" id="placa" required maxlength="8" placeholder="ABC1D23 ou ABC1234" />
+              </div>
+              <div class="form-group">
+                <label for="marca">Marca *</label>
+                <input type="text" id="marca" required />
+              </div>
+              <div class="form-group">
+                <label for="modelo">Modelo *</label>
+                <input type="text" id="modelo" required />
+              </div>
+              <div class="form-group">
+                <label for="codigoInfracao">Cf3digo da Infrae7e3o *</label>
+                <input type="text" id="codigoInfracao" required autocomplete="off" placeholder="Digite o cf3digo" />
+                <input type="hidden" id="descricaoInfracao" />
+              </div>
+              <div class="form-group">
+                <label for="agenteAutuador">Agente Autuador *</label>
+                <input type="text" id="agenteAutuador" required />
+              </div>
+              <div class="form-group">
+                <label for="data">Data *</label>
+                <input type="date" id="data" required />
+              </div>
+            </div>
+            <div class="actions-buttons">
+              <button type="submit" class="btn btn-primary">a0 Adicionar Multa</button>
+              <button type="button" class="btn btn-secondary" onclick="exportarCSV()">f Exportar CSV</button>
+              <button type="button" class="btn btn-info" onclick="document.getElementById('baseFile').click()">Importar Base de Infrae7f5es (JSON)</button>
+              <input type="file" id="baseFile" accept=".json" style="display:none" />
+              <span id="baseStatus" class="base-status hidden"></span>
+            </div>
+            <div id="appMsg" class="alert alert-error hidden"></div>
+          </form>
+          <p class="footer-note">
+            Dica: o sistema salva as multas por usue1rio (por <code>user_id</code>) via RLS no Supabase.
+          </p>
+        </div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('data').valueAsDate = new Date();
-            carregarInfracoes();
-            listarMultas();
-            atualizarEstatisticas();
-            aplicarMascaraPlaca();
+        <h2>Lista de Multas</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Placa</th>
+              <th>Marca/Modelo</th>
+              <th>Infrae7e3o</th>
+              <th>Agente</th>
+              <th>Data</th>
+              <th>Ae7f5es</th>
+            </tr>
+          </thead>
+          <tbody id="multasBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- CONFIGURAc7c3O SUPABASE ---
+    const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
+    // -----------------------------
+
+    const sbLib = window.supabase;
+    const supa = sbLib?.createClient ? sbLib.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+    let infracoesCTB = [];
+    let currentUser = null;
+
+    const elLoginView = document.getElementById('loginView');
+    const elAppView = document.getElementById('appView');
+    const elUserBadge = document.getElementById('userBadge');
+    const elBtnSair = document.getElementById('btnSair');
+
+    const elLoginMsg = document.getElementById('loginMsg');
+    const elAppMsg = document.getElementById('appMsg');
+
+    function show(el) { el.classList.remove('hidden'); }
+    function hide(el) { el.classList.add('hidden'); }
+
+    function setLoginError(msg) {
+      elLoginMsg.textContent = msg;
+      show(elLoginMsg);
+    }
+
+    function setAppError(msg) {
+      elAppMsg.textContent = msg;
+      show(elAppMsg);
+    }
+
+    function clearMsgs() {
+      hide(elLoginMsg);
+      hide(elAppMsg);
+      elLoginMsg.textContent = '';
+      elAppMsg.textContent = '';
+    }
+
+    function reToEmail(re) {
+      const clean = String(re || '').trim();
+      return `${clean}@multas.local`;
+    }
+
+    async function init() {
+      if (!supa) {
+        setLoginError('Falha ao carregar a biblioteca do Supabase. Verifique sua conexe3o e tente novamente.');
+        return;
+      }
+
+      // Se je1 existe sesse3o, entra direto
+      const { data: sessionData, error: sessionErr } = await supa.auth.getSession();
+      if (sessionErr) {
+        setLoginError('Erro ao verificar sesse3o: ' + sessionErr.message);
+        return;
+      }
+
+      if (sessionData?.session?.user) {
+        currentUser = sessionData.session.user;
+        await onLoggedIn();
+      } else {
+        onLoggedOut();
+      }
+
+      // Listener de alterae7e3o de auth (login/logout)
+      supa.auth.onAuthStateChange(async (_event, session) => {
+        if (session?.user) {
+          currentUser = session.user;
+          await onLoggedIn();
+        } else {
+          currentUser = null;
+          onLoggedOut();
+        }
+      });
+
+      // Import infrae7f5es
+      document.getElementById('baseFile').addEventListener('change', importarBaseInfracoes);
+
+      // Me1scara placa
+      aplicarMascaraPlaca();
+
+      // Data default
+      document.getElementById('data').valueAsDate = new Date();
+    }
+
+    function onLoggedOut() {
+      clearMsgs();
+      show(elLoginView);
+      hide(elAppView);
+      hide(elBtnSair);
+      hide(elUserBadge);
+      elUserBadge.textContent = '';
+    }
+
+    async function onLoggedIn() {
+      clearMsgs();
+      hide(elLoginView);
+      show(elAppView);
+      show(elBtnSair);
+      show(elUserBadge);
+
+      // Carrega perfil (graduacao/re/nome)
+      const { data: perfil, error: perfilErr } = await supa
+        .from('usuarios')
+        .select('graduacao, re, nome_completo')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+      if (perfilErr) {
+        elUserBadge.textContent = `Logado`;
+      } else if (perfil) {
+        const parts = [];
+        if (perfil.graduacao) parts.push(perfil.graduacao);
+        if (perfil.re) parts.push('RE ' + perfil.re);
+        if (perfil.nome_completo) parts.push(perfil.nome_completo);
+        elUserBadge.textContent = parts.join(' b7 ') || 'Logado';
+      } else {
+        elUserBadge.textContent = 'Logado';
+      }
+
+      await carregarInfracoes();
+      await listarMultas();
+      await atualizarEstatisticas();
+    }
+
+    // LOGIN
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMsgs();
+
+      const re = document.getElementById('reLogin').value.trim();
+      const senha = document.getElementById('senhaLogin').value;
+      if (!re || !senha) {
+        setLoginError('Informe RE e Senha.');
+        return;
+      }
+
+      const email = reToEmail(re);
+
+      const btn = document.getElementById('btnEntrar');
+      btn.disabled = true;
+      btn.textContent = 'Entrando...';
+
+      try {
+        const { data, error } = await supa.auth.signInWithPassword({ email, password: senha });
+        if (error) {
+          setLoginError(error.message);
+          return;
+        }
+        if (!data?.user) {
+          setLoginError('Ne3o foi possedvel autenticar.');
+          return;
+        }
+        // onAuthStateChange vai cuidar do resto
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      }
+    });
+
+    // SAIR
+    elBtnSair.addEventListener('click', async () => {
+      await supa.auth.signOut();
+    });
+
+    // APP
+    async function carregarInfracoes() {
+      const { data, error } = await supa.from('infracoes').select('id,codigo,descricao').order('codigo');
+      if (error) {
+        // Infrae7f5es podem ser opcionais
+        infracoesCTB = [];
+        return;
+      }
+      infracoesCTB = data || [];
+      autocomplete(document.getElementById('codigoInfracao'), () => infracoesCTB);
+
+      const baseStatus = document.getElementById('baseStatus');
+      if (infracoesCTB.length > 0) {
+        baseStatus.textContent = `${infracoesCTB.length} cf3digos`;
+        show(baseStatus);
+      } else {
+        hide(baseStatus);
+      }
+    }
+
+    document.getElementById('multaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMsgs();
+
+      if (!currentUser?.id) {
+        setAppError('Sesse3o inve1lida. Fae7a login novamente.');
+        return;
+      }
+
+      const payload = {
+        user_id: currentUser.id,
+        placa: document.getElementById('placa').value.trim().toUpperCase(),
+        marca: document.getElementById('marca').value.trim(),
+        modelo: document.getElementById('modelo').value.trim(),
+        codigo_infracao: document.getElementById('codigoInfracao').value.trim(),
+        descricao_infracao: document.getElementById('descricaoInfracao').value.trim(),
+        agente_autuador: document.getElementById('agenteAutuador').value.trim(),
+        data: document.getElementById('data').value
+      };
+
+      const { error } = await supa.from('multas').insert([payload]);
+      if (error) {
+        setAppError('Erro ao cadastrar: ' + error.message);
+        return;
+      }
+
+      alert(' Multa cadastrada com sucesso!');
+      document.getElementById('multaForm').reset();
+      document.getElementById('descricaoInfracao').value = '';
+      document.getElementById('data').valueAsDate = new Date();
+
+      await listarMultas();
+      await atualizarEstatisticas();
+    });
+
+    async function listarMultas() {
+      const tbody = document.getElementById('multasBody');
+      tbody.innerHTML = '';
+
+      const { data, error } = await supa
+        .from('multas')
+        .select('id, placa, marca, modelo, codigo_infracao, descricao_infracao, agente_autuador, data, user_id')
+        .eq('user_id', currentUser.id)
+        .order('data', { ascending: false });
+
+      if (error) {
+        setAppError('Erro ao listar: ' + error.message);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#999;">Nenhuma multa cadastrada</td></tr>';
+        return;
+      }
+
+      data.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${m.placa}</td>
+          <td>${m.marca} ${m.modelo}</td>
+          <td><strong>${m.codigo_infracao}</strong><br><small>${m.descricao_infracao || ''}</small></td>
+          <td>${m.agente_autuador}</td>
+          <td>${new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+          <td><button class="btn-delete" type="button" onclick="deletarMulta(${m.id})">Excluir</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.deletarMulta = async function (id) {
+      clearMsgs();
+      if (!confirm('Tem certeza que deseja excluir esta multa?')) return;
+      const { error } = await supa.from('multas').delete().eq('id', id).eq('user_id', currentUser.id);
+      if (error) {
+        setAppError('Erro ao excluir: ' + error.message);
+        return;
+      }
+      await listarMultas();
+      await atualizarEstatisticas();
+    };
+
+    async function atualizarEstatisticas() {
+      // Total
+      const { count: totalCount } = await supa
+        .from('multas')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id);
+
+      // Meas atual
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const { count: mesCount } = await supa
+        .from('multas')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id)
+        .gte('data', firstDay);
+
+      // Infrae7f5es fanicas
+      const { data: cods } = await supa
+        .from('multas')
+        .select('codigo_infracao')
+        .eq('user_id', currentUser.id);
+
+      document.getElementById('totalMultas').textContent = totalCount || 0;
+      document.getElementById('multasMes').textContent = mesCount || 0;
+      document.getElementById('infracoesUnicas').textContent = cods ? new Set(cods.map(c => c.codigo_infracao)).size : 0;
+    }
+
+    async function importarBaseInfracoes(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+
+        if (!Array.isArray(json) || !json[0]?.codigo || !json[0]?.descricao) {
+          alert('Formato inve1lido! Esperado: [{"codigo":"...","descricao":"..."}, ...]');
+          return;
+        }
+
+        // Observae7e3o: esta operae7e3o costuma ser "admin". Se quiser, eu restrinjo depois.
+        await supa.from('infracoes').delete().neq('id', 0);
+        const { error } = await supa.from('infracoes').insert(json);
+        if (error) {
+          alert('Erro ao importar: ' + error.message);
+          return;
+        }
+
+        alert(`Base atualizada! ${json.length} infrae7f5es importadas.`);
+        await carregarInfracoes();
+      } catch (err) {
+        alert('Erro ao processar arquivo: ' + err.message);
+      } finally {
+        event.target.value = '';
+      }
+    }
+
+    function aplicarMascaraPlaca() {
+      const el = document.getElementById('placa');
+      el.addEventListener('input', (e) => {
+        let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        e.target.value = v.substring(0, 8);
+      });
+    }
+
+    function autocomplete(inp, arrFunc) {
+      let currentList = null;
+
+      inp.addEventListener('input', function () {
+        const val = this.value.toLowerCase();
+        if (currentList) currentList.remove();
+        if (!val) return;
+
+        const list = document.createElement('div');
+        list.className = 'autocomplete-items';
+        this.parentNode.appendChild(list);
+        currentList = list;
+
+        const filtered = arrFunc()
+          .filter(i => i.codigo.toLowerCase().includes(val) || i.descricao.toLowerCase().includes(val))
+          .slice(0, 10);
+
+        filtered.forEach(item => {
+          const div = document.createElement('div');
+          div.innerHTML = `<strong>${item.codigo}</strong> - ${item.descricao}`;
+          div.onclick = () => {
+            inp.value = item.codigo;
+            document.getElementById('descricaoInfracao').value = item.descricao;
+            list.remove();
+          };
+          list.appendChild(div);
         });
+      });
 
-        async function carregarInfracoes() {
-            const { data, error } = await supabase.from('infracoes').select('*').order('codigo');
-            if (!error && data) {
-                infracoesCTB = data;
-                autocomplete(document.getElementById('codigoInfracao'), () => infracoesCTB);
-                if(data.length > 0) {
-                    document.getElementById('baseStatus').textContent = `${data.length} códigos`;
-                    document.getElementById('baseStatus').style.display = 'inline-block';
-                }
-            }
+      document.addEventListener('click', (e) => {
+        if (currentList && e.target !== inp) {
+          currentList.remove();
+          currentList = null;
         }
+      });
+    }
 
-        async function listarMultas() {
-            const { data, error } = await supabase.from('multas').select('*').order('data', { ascending: false });
-            const tbody = document.getElementById('multasBody');
-            tbody.innerHTML = '';
-            if (data && data.length > 0) {
-                data.forEach(m => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${m.placa}</td>
-                        <td>${m.marca} ${m.modelo}</td>
-                        <td><strong>${m.codigo_infracao}</strong><br><small>${m.descricao_infracao || ''}</small></td>
-                        <td>${m.agente_autuador}</td>
-                        <td>${new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                        <td><button class="btn-delete" onclick="deletarMulta(${m.id})">🗑️</button></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#999;">Nenhuma multa cadastrada</td></tr>';
-            }
-        }
+    window.exportarCSV = async function () {
+      clearMsgs();
+      const { data, error } = await supa
+        .from('multas')
+        .select('placa, marca, modelo, codigo_infracao, descricao_infracao, agente_autuador, data')
+        .eq('user_id', currentUser.id)
+        .order('data', { ascending: false });
 
-        document.getElementById('multaForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = {
-                placa: document.getElementById('placa').value,
-                marca: document.getElementById('marca').value,
-                modelo: document.getElementById('modelo').value,
-                codigo_infracao: document.getElementById('codigoInfracao').value,
-                descricao_infracao: document.getElementById('descricaoInfracao').value,
-                agente_autuador: document.getElementById('agenteAutuador').value,
-                data: document.getElementById('data').value
-            };
-            const { error } = await supabase.from('multas').insert([payload]);
-            if (!error) {
-                alert('✅ Multa cadastrada com sucesso!');
-                document.getElementById('multaForm').reset();
-                document.getElementById('data').valueAsDate = new Date();
-                document.getElementById('descricaoInfracao').value = '';
-                listarMultas();
-                atualizarEstatisticas();
-            } else { 
-                alert('❌ Erro ao salvar: ' + error.message); 
-            }
-        };
+      if (error) {
+        setAppError('Erro ao exportar: ' + error.message);
+        return;
+      }
 
-        async function deletarMulta(id) {
-            if(confirm('Tem certeza que deseja excluir esta multa?')) {
-                const { error } = await supabase.from('multas').delete().eq('id', id);
-                if(!error) {
-                    listarMultas();
-                    atualizarEstatisticas();
-                }
-            }
-        }
+      const header = ['Placa','Marca','Modelo','Cf3digo Infrae7e3o','Descrie7e3o Infrae7e3o','Agente Autuador','Data'];
+      const rows = (data || []).map(m => [
+        m.placa,
+        m.marca,
+        m.modelo,
+        m.codigo_infracao,
+        (m.descricao_infracao || '').replace(/\r?\n/g, ' '),
+        m.agente_autuador,
+        new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR')
+      ]);
 
-        async function atualizarEstatisticas() {
-            const { data: total, count: countTotal } = await supabase.from('multas').select('*', { count: 'exact', head: true });
-            const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-            const { data: mes, count: countMes } = await supabase.from('multas').select('*', { count: 'exact', head: true }).gte('data', firstDay);
-            const { data: infracoes } = await supabase.from('multas').select('codigo_infracao');
+      const escapeCsv = (v) => {
+        const s = String(v ?? '');
+        if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      };
 
-            document.getElementById('totalMultas').textContent = countTotal || 0;
-            document.getElementById('multasMes').textContent = countMes || 0;
+      const csv = [header, ...rows].map(r => r.map(escapeCsv).join(',')).join('\n');
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `multas_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    };
 
-            if(infracoes) {
-                const uniqueInfracoes = new Set(infracoes.map(i => i.codigo_infracao));
-                document.getElementById('infracoesUnicas').textContent = uniqueInfracoes.size;
-            }
-        }
-
-        async function importarBaseInfracoes(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const json = JSON.parse(e.target.result);
-                    if (!Array.isArray(json) || !json[0]?.codigo || !json[0]?.descricao) {
-                        alert('❌ Formato inválido! O JSON deve ser um array com objetos contendo "codigo" e "descricao".');
-                        return;
-                    }
-
-                    // Deletar infrações existentes
-                    await supabase.from('infracoes').delete().neq('id', 0);
-
-                    // Inserir novas
-                    const { error } = await supabase.from('infracoes').insert(json);
-                    if(!error) { 
-                        alert(`✅ Base atualizada! ${json.length} infrações importadas.`); 
-                        carregarInfracoes(); 
-                    } else {
-                        alert('❌ Erro ao importar: ' + error.message);
-                    }
-                } catch(err) {
-                    alert('❌ Erro ao processar arquivo: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function aplicarMascaraPlaca() {
-            document.getElementById('placa').addEventListener('input', (e) => {
-                let valor = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                e.target.value = valor.substring(0, 7);
-            });
-        }
-
-        function autocomplete(inp, arrFunc) {
-            let currentList = null;
-
-            inp.addEventListener('input', function() {
-                const val = this.value.toLowerCase();
-
-                // Remover lista anterior
-                if(currentList) currentList.remove();
-
-                if (!val) return;
-
-                const list = document.createElement('div');
-                list.className = 'autocomplete-items';
-                this.parentNode.appendChild(list);
-                currentList = list;
-
-                const filtered = arrFunc().filter(i => 
-                    i.codigo.toLowerCase().includes(val) || 
-                    i.descricao.toLowerCase().includes(val)
-                ).slice(0, 10);
-
-                filtered.forEach(item => {
-                    const div = document.createElement('div');
-                    div.innerHTML = `<strong>${item.codigo}</strong> - ${item.descricao}`;
-                    div.onclick = () => {
-                        inp.value = item.codigo;
-                        document.getElementById('descricaoInfracao').value = item.descricao;
-                        list.remove();
-                    };
-                    list.appendChild(div);
-                });
-            });
-
-            document.addEventListener('click', (e) => {
-                if(currentList && e.target !== inp) {
-                    currentList.remove();
-                    currentList = null;
-                }
-            });
-        }
-
-        async function exportarCSV() {
-            const { data, error } = await supabase.from('multas').select('*').order('data', { ascending: false });
-
-            if(error || !data) {
-                alert('Erro ao exportar dados');
-                return;
-            }
-
-            let csv = 'Placa,Marca,Modelo,Código Infração,Descrição Infração,Agente Autuador,Data\n';
-
-            data.forEach(m => {
-                const dataFormatada = new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR');
-                csv += `${m.placa},${m.marca},${m.modelo},${m.codigo_infracao},"${m.descricao_infracao || ''}",${m.agente_autuador},${dataFormatada}\n`;
-            });
-
-            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `multas_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-        }
-    </script>
+    init();
+  </script>
 </body>
 </html>
