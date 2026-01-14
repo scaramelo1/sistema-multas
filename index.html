@@ -204,8 +204,10 @@
               <input id="senhaLogin" type="password" autocomplete="current-password" required />
             </div>
             <button id="btnEntrar" class="btn btn-primary" type="submit">Entrar</button>
+            <button id="btnTestarSupabase" class="btn btn-info" type="button" style="margin-top:10px;">🔍 Testar Conexão Supabase</button>
           </div>
           <div id="loginMsg" class="alert alert-error hidden"></div>
+          <div id="testeResultado" class="alert alert-info hidden" style="white-space:pre-wrap; font-family:monospace; font-size:0.85em; max-height:300px; overflow-y:auto;"></div>
         </form>
 
         <div class="alert alert-info" style="margin-top:14px;">
@@ -306,6 +308,7 @@
 
     const elLoginMsg = document.getElementById('loginMsg');
     const elAppMsg = document.getElementById('appMsg');
+    const elTesteResultado = document.getElementById('testeResultado');
 
     function show(el) { el.classList.remove('hidden'); }
     function hide(el) { el.classList.add('hidden'); }
@@ -323,8 +326,10 @@
     function clearMsgs() {
       hide(elLoginMsg);
       hide(elAppMsg);
+      hide(elTesteResultado);
       elLoginMsg.textContent = '';
       elAppMsg.textContent = '';
+      elTesteResultado.textContent = '';
     }
 
     function reToEmail(re) {
@@ -693,6 +698,106 @@
       link.download = `multas_${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
     };
+
+    // TESTE SUPABASE (botão)
+    document.getElementById('btnTestarSupabase').addEventListener('click', async () => {
+      clearMsgs();
+      const btn = document.getElementById('btnTestarSupabase');
+      btn.disabled = true;
+      btn.textContent = 'Testando...';
+
+      let resultado = '=== TESTE DE CONEXÃO SUPABASE ===\n\n';
+
+      // 1) Verifica se a lib carregou
+      resultado += '1️⃣ Biblioteca supabase-js:\n';
+      if (!window.supabase?.createClient) {
+        resultado += '❌ NÃO carregou (window.supabase.createClient indefinido)\n';
+        resultado += `   window.supabase = ${JSON.stringify(window.supabase)}\n\n`;
+        elTesteResultado.textContent = resultado;
+        show(elTesteResultado);
+        btn.disabled = false;
+        btn.textContent = '🔍 Testar Conexão Supabase';
+        console.error('TESTE SUPABASE:', resultado);
+        return;
+      }
+      resultado += '✅ Carregou com sucesso\n\n';
+
+      // 2) Teste via fetch (REST direto)
+      resultado += '2️⃣ Teste via fetch (REST API):\n';
+      resultado += `   URL: ${SUPABASE_URL}/rest/v1/\n`;
+      try {
+        const resFetch = await fetch(`${SUPABASE_URL}/rest/v1/?select=1`, {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        const textFetch = await resFetch.text();
+        resultado += `   Status HTTP: ${resFetch.status}\n`;
+        resultado += `   Resposta: ${textFetch.substring(0, 300)}\n`;
+        if (resFetch.ok) {
+          resultado += '✅ Fetch OK - Supabase está acessível\n\n';
+        } else {
+          resultado += '⚠️ Fetch retornou erro HTTP (veja status acima)\n\n';
+        }
+      } catch (errFetch) {
+        resultado += `❌ Erro no fetch: ${errFetch.message}\n`;
+        resultado += '   (Possível bloqueio de rede, CORS, ou URL errada)\n\n';
+      }
+
+      // 3) Teste via supabase-js client
+      resultado += '3️⃣ Teste via supabase-js (client):\n';
+      try {
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        resultado += '   Client criado com sucesso\n';
+
+        // Tenta select na tabela 'multas'
+        resultado += '   Testando: SELECT id FROM multas LIMIT 1\n';
+        const { data: dataMultas, error: errorMultas } = await client.from('multas').select('id').limit(1);
+        if (errorMultas) {
+          resultado += `   ⚠️ Erro no select (multas): ${errorMultas.message}\n`;
+          resultado += `      code: ${errorMultas.code || 'N/A'}\n`;
+          resultado += `      hint: ${errorMultas.hint || 'N/A'}\n`;
+        } else {
+          resultado += `   ✅ Select OK (multas): ${JSON.stringify(dataMultas)}\n`;
+        }
+
+        // Tenta select na tabela 'usuarios'
+        resultado += '\n   Testando: SELECT id FROM usuarios LIMIT 1\n';
+        const { data: dataUsuarios, error: errorUsuarios } = await client.from('usuarios').select('id').limit(1);
+        if (errorUsuarios) {
+          resultado += `   ⚠️ Erro no select (usuarios): ${errorUsuarios.message}\n`;
+          resultado += `      code: ${errorUsuarios.code || 'N/A'}\n`;
+          resultado += `      hint: ${errorUsuarios.hint || 'N/A'}\n`;
+        } else {
+          resultado += `   ✅ Select OK (usuarios): ${JSON.stringify(dataUsuarios)}\n`;
+        }
+
+        // Tenta select na tabela 'infracoes'
+        resultado += '\n   Testando: SELECT id FROM infracoes LIMIT 1\n';
+        const { data: dataInfracoes, error: errorInfracoes } = await client.from('infracoes').select('id').limit(1);
+        if (errorInfracoes) {
+          resultado += `   ⚠️ Erro no select (infracoes): ${errorInfracoes.message}\n`;
+          resultado += `      code: ${errorInfracoes.code || 'N/A'}\n`;
+          resultado += `      hint: ${errorInfracoes.hint || 'N/A'}\n`;
+        } else {
+          resultado += `   ✅ Select OK (infracoes): ${JSON.stringify(dataInfracoes)}\n`;
+        }
+
+      } catch (errClient) {
+        resultado += `❌ Erro ao criar/usar client: ${errClient.message}\n`;
+      }
+
+      resultado += '\n=== FIM DO TESTE ===\n';
+      resultado += '\n📋 Copie este resultado e envie para diagnóstico.';
+
+      elTesteResultado.textContent = resultado;
+      show(elTesteResultado);
+      console.log('TESTE SUPABASE COMPLETO:', resultado);
+
+      btn.disabled = false;
+      btn.textContent = '🔍 Testar Conexão Supabase';
+    });
 
     init();
   </script>
