@@ -322,7 +322,7 @@
         const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
 
-        let supabase;
+        let supabaseClient;
         
         // Inicializar quando a página carregar
         window.addEventListener('load', function() {
@@ -331,7 +331,7 @@
                 alert('Erro ao carregar Supabase. Recarregue a página.');
                 return;
             }
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             console.log('✅ Supabase inicializado!');
             verificarSessaoInicial();
             configurarEventos();
@@ -339,7 +339,7 @@
         
         // Verificar sessão inicial
         async function verificarSessaoInicial() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 mostrarUsuarioLogado(session.user);
                 carregarMultas();
@@ -363,7 +363,7 @@
                 };
 
                 try {
-                    const { data, error } = await supabase
+                    const { data, error } = await supabaseClient
                         .from('multas')
                         .insert([novaMulta])
                         .select();
@@ -403,7 +403,7 @@
 
         // Testar conexão com o banco de dados
         async function testarConexao() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
                 return;
             }
@@ -411,7 +411,7 @@
                 mostrarStatus('🔄 Testando conexão...', 'info');
 
                 // Tenta fazer uma query simples
-                const { data, error } = await supabase.from('multas').select('count', { count: 'exact', head: true });
+                const { data, error } = await supabaseClient.from('multas').select('count', { count: 'exact', head: true });
 
                 if (error) {
                     // Se a tabela não existe, vamos criar
@@ -428,7 +428,7 @@
 
         // Cadastrar novo usuário
         async function cadastrarUsuario() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
                 return;
             }
@@ -449,7 +449,7 @@
             try {
                 mostrarStatus('🔄 Cadastrando usuário...', 'info');
 
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
                 });
@@ -469,7 +469,7 @@
 
         // Fazer login
         async function fazerLogin() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
                 return;
             }
@@ -485,7 +485,7 @@
             try {
                 mostrarStatus('🔄 Fazendo login...', 'info');
 
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password,
                 });
@@ -506,12 +506,12 @@
 
         // Fazer logout
         async function fazerLogout() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 mostrarStatus('❌ Supabase não inicializado. Recarregue a página.', 'error');
                 return;
             }
             
-            const { error } = await supabase.auth.signOut();
+            const { error } = await supabaseClient.auth.signOut();
             if (!error) {
                 document.getElementById('authSection').classList.remove('hidden');
                 document.getElementById('userInfo').classList.add('hidden');
@@ -532,13 +532,13 @@
 
         // Carregar multas do Supabase
         async function carregarMultas() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 console.error('Supabase não inicializado');
                 return;
             }
             
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('multas')
                     .select('*')
                     .order('data', { ascending: false });
@@ -586,7 +586,7 @@
 
         // Excluir multa
         async function excluirMulta(id) {
-            if (!supabase) {
+            if (!supabaseClient) {
                 alert('❌ Supabase não inicializado. Recarregue a página.');
                 return;
             }
@@ -594,7 +594,7 @@
             if (!confirm('Deseja realmente excluir esta multa?')) return;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('multas')
                     .delete()
                     .eq('id', id);
@@ -612,13 +612,13 @@
 
         // Exportar CSV
         async function exportarCSV() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 alert('❌ Supabase não inicializado. Recarregue a página.');
                 return;
             }
             
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('multas')
                     .select('*');
 
@@ -667,7 +667,7 @@
                 }
 
                 try {
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('multas')
                         .insert(multas);
 
