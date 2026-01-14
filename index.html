@@ -287,8 +287,8 @@
 
                 <div id="loginFields">
                     <div class="form-group">
-                        <label for="authEmail">E-mail:</label>
-                        <input type="email" id="authEmail" placeholder="seu@email.com">
+                        <label for="authRE">RE:</label>
+                        <input type="text" id="authRE" placeholder="Ex: 127861-4">
                     </div>
 
                     <div class="form-group">
@@ -305,6 +305,14 @@
                     <div class="form-group">
                         <label for="regRE">RE:</label>
                         <input type="text" id="regRE" placeholder="Ex: 127861-4">
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail">E-mail:</label>
+                        <input type="email" id="regEmail" placeholder="email@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="regSenha">Senha:</label>
+                        <input type="password" id="regSenha" placeholder="Senha do usuário">
                     </div>
                     <div class="form-group">
                         <label for="regCargo">Cargo/Posto:</label>
@@ -471,10 +479,12 @@
                     document.getElementById('btnRegister').classList.remove('hidden');
                     document.getElementById('btnBackToLogin').classList.remove('hidden');
                     // Limpar campos
-                    document.getElementById('authEmail').value = '';
+                    document.getElementById('authRE').value = '';
                     document.getElementById('authPassword').value = '';
                     document.getElementById('regNome').value = '';
                     document.getElementById('regRE').value = '';
+                    document.getElementById('regEmail').value = '';
+                    document.getElementById('regSenha').value = '';
                     document.getElementById('regCargo').value = '';
                     document.getElementById('regNivel').value = 'agente';
                 }
@@ -555,8 +565,8 @@
                 return;
             }
 
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regSenha').value;
             const nome = document.getElementById('regNome').value;
             const re = document.getElementById('regRE').value;
             const cargo = document.getElementById('regCargo').value;
@@ -580,6 +590,7 @@
                     id: authData.user.id,
                     nome_completo: nome,
                     re: re,
+                    email: email,
                     cargo: cargo,
                     nivel_acesso: nivel
                 }]);
@@ -596,10 +607,65 @@
         }
 
         async function fazerLogin() {
-            const email = document.getElementById('authEmail').value;
+            const re = document.getElementById('authRE').value;
             const password = document.getElementById('authPassword').value;
+            
+            if (!re || !password) {
+                mostrarStatus('❌ Preencha RE e senha!', 'error');
+                return;
+            }
+
             mostrarStatus('🔄 Entrando...', 'info');
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            
+            // Buscar o e-mail associado ao RE
+            const { data: perfilData, error: perfilError } = await supabaseClient
+                .from('perfis')
+                .select('id')
+                .eq('re', re)
+                .single();
+
+            if (perfilError || !perfilData) {
+                mostrarStatus('❌ RE não encontrado!', 'error');
+                return;
+            }
+
+            // Buscar o e-mail do usuário pelo ID
+            const { data: { users }, error: userError } = await supabaseClient.auth.admin.listUsers();
+            
+            if (userError) {
+                // Fallback: tentar buscar email diretamente da tabela perfis se existir
+                const { data: perfilCompleto } = await supabaseClient
+                    .from('perfis')
+                    .select('*')
+                    .eq('re', re)
+                    .single();
+                
+                if (perfilCompleto && perfilCompleto.email) {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+                        email: perfilCompleto.email, 
+                        password 
+                    });
+                    if (error) mostrarStatus('❌ ' + error.message, 'error');
+                    else await carregarPerfil(data.user);
+                } else {
+                    mostrarStatus('❌ Erro ao buscar dados do usuário', 'error');
+                }
+                return;
+            }
+
+            // Encontrar o usuário pelo ID do perfil
+            const user = users?.find(u => u.id === perfilData.id);
+            if (!user) {
+                mostrarStatus('❌ Usuário não encontrado!', 'error');
+                return;
+            }
+
+            // Fazer login com o e-mail encontrado
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+                email: user.email, 
+                password 
+            });
+            
             if (error) mostrarStatus('❌ ' + error.message, 'error');
             else await carregarPerfil(data.user);
         }
