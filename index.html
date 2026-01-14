@@ -1,805 +1,835 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema de Controle de Multas - Login (Supabase)</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
-      color: #222;
-    }
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-    header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 24px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    header h1 { font-size: 1.6em; }
-    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .badge {
-      background: rgba(255,255,255,0.16);
-      border: 1px solid rgba(255,255,255,0.22);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 0.9em;
-      white-space: nowrap;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Controle de Multas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .content { padding: 30px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .card {
-      background: #f8f9fa;
-      padding: 22px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      max-width: 520px;
-      margin: 30px auto;
-    }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: none; /* Escondido por padrão */
+        }
 
-    .card h2 { margin-bottom: 14px; }
-    .hint { color: #666; margin-bottom: 16px; font-size: 0.95em; line-height: 1.35; }
+        /* Tela de Login */
+        #loginContainer {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-top: 10px;
-    }
+        #loginContainer h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+        }
 
-    .form-group { display: flex; flex-direction: column; position: relative; }
-    .form-group label { margin-bottom: 6px; font-weight: 600; color: #444; }
-    .form-group input {
-      padding: 12px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      transition: all 0.2s;
-      font-size: 1em;
-    }
-    .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.12); }
+        .login-form .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
 
-    .btn {
-      padding: 12px 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: 0.2s;
-    }
-    .btn-primary { background: #667eea; color: white; }
-    .btn-primary:hover { filter: brightness(0.95); transform: translateY(-1px); }
-    .btn-secondary { background: #6c757d; color: white; }
-    .btn-secondary:hover { filter: brightness(0.95); }
-    .btn-danger { background: #dc3545; color: white; }
-    .btn-danger:hover { filter: brightness(0.95); }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
 
-    .alert {
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid;
-      margin: 12px 0 0;
-      font-size: 0.95em;
-      line-height: 1.35;
-    }
-    .alert-error { background: #f8d7da; border-color: #f5c2c7; color: #842029; }
-    .alert-info { background: #cff4fc; border-color: #b6effb; color: #055160; }
+        .btn-logout {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            text-decoration: none;
+            border: 1px solid white;
+        }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      padding: 24px 30px;
-      background: #f8f9fa;
-    }
-    .stat-card {
-      background: white;
-      padding: 18px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    .stat-card h3 { color: #667eea; font-size: 2em; margin-bottom: 8px; }
-    .stat-card p { color: #666; font-size: 0.9em; }
+        .btn-logout:hover {
+            background: white;
+            color: #764ba2;
+        }
 
-    .form-section {
-      background: #f8f9fa;
-      padding: 25px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-    }
-    .form-section h2 { margin-bottom: 16px; }
-    .form-grid-app {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
-      margin-bottom: 16px;
-    }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
 
-    .autocomplete-items {
-      position: absolute;
-      border: 1px solid #d4d4d4;
-      z-index: 99;
-      top: 100%;
-      left: 0;
-      right: 0;
-      max-height: 220px;
-      overflow-y: auto;
-      background: white;
-      border-radius: 0 0 8px 8px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-    }
-    .autocomplete-items div {
-      padding: 10px;
-      cursor: pointer;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .autocomplete-items div:hover { background: #667eea; color: white; }
+        .content {
+            padding: 30px;
+        }
 
-    .actions-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn-info { background: #17a2b8; color: white; }
-    .btn-info:hover { filter: brightness(0.95); }
-    .base-status { margin-left: 10px; padding: 6px 10px; background: #28a745; color: white; border-radius: 999px; font-size: 0.85em; }
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-    thead { background: #667eea; color: white; }
-    th, td { padding: 14px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
-    .btn-delete { background: #dc3545; color: white; border: none; padding: 8px 10px; border-radius: 7px; cursor: pointer; }
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
 
-    .footer-note {
-      color: #666;
-      font-size: 0.9em;
-      margin-top: 14px;
-      line-height: 1.35;
-    }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
 
-    .hidden { display: none !important; }
-  </style>
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.85em;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .table-section {
+            margin-top: 30px;
+        }
+
+        .table-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .actions-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .base-status {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Controle de Multas (Vercel + Supabase)</h1>
-      <div class="header-right">
-        <span id="userBadge" class="badge hidden"></span>
-        <button id="btnSair" class="btn btn-danger hidden" type="button">Sair</button>
-      </div>
-    </header>
 
-    <!-- LOGIN VIEW -->
-    <div id="loginView" class="content">
-      <div class="card">
-        <h2>Login</h2>
-        <p class="hint">
-          Entre com seu <strong>RE</strong> e <strong>Senha</strong>.
-          <br />
-          Importante: por segurane7a, a senha <strong>ne3o</strong> fica em tabela. Ela fica no <strong>Supabase Auth</strong> (hash).
-        </p>
-
-        <form id="loginForm">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="reLogin">RE</label>
-              <input id="reLogin" type="text" inputmode="numeric" autocomplete="username" placeholder="Ex: 123456" required />
-            </div>
-            <div class="form-group">
-              <label for="senhaLogin">Senha</label>
-              <input id="senhaLogin" type="password" autocomplete="current-password" required />
-            </div>
-            <button id="btnEntrar" class="btn btn-primary" type="submit">Entrar</button>
-            <button id="btnTestarSupabase" class="btn btn-info" type="button" style="margin-top:10px;">🔍 Testar Conexão Supabase</button>
-          </div>
-          <div id="loginMsg" class="alert alert-error hidden"></div>
-          <div id="testeResultado" class="alert alert-info hidden" style="white-space:pre-wrap; font-family:monospace; font-size:0.85em; max-height:300px; overflow-y:auto;"></div>
-        </form>
-
-        <div class="alert alert-info" style="margin-top:14px;">
-          <strong>Como criar usue1rios:</strong> No Supabase, ve1 em <em>Authentication bb Users bb Add user</em>.
-          Use o e-mail no formato <code>RE@multas.local</code> (ex: <code>123456@multas.local</code>) e defina a senha.
-          Depois, insira/atualize o cadastro do usue1rio na tabela <code>usuarios</code> com o mesmo <code>id</code> do Auth.
+<!-- Tela de Login -->
+<div id="loginContainer">
+    <h2>Acesso ao Sistema</h2>
+    <form id="loginForm" class="login-form">
+        <div class="form-group">
+            <label for="loginEmail">E-mail</label>
+            <input type="email" id="loginEmail" placeholder="seu@email.com" required>
         </div>
-      </div>
+        <div class="form-group">
+            <label for="loginPassword">Senha</label>
+            <input type="password" id="loginPassword" placeholder="******" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Entrar</button>
+    </form>
+    <p id="loginError" style="color: #dc3545; margin-top: 15px; font-size: 0.9em; display: none;"></p>
+</div>
+
+<div class="container" id="appContainer">
+    <div class="header">
+        <a href="#" class="btn-logout" onclick="logout()">Sair 🚪</a>
+        <h1>🚗 Sistema de Controle de Multas</h1>
+        <p>Gerenciamento completo de infrações de trânsito</p>
     </div>
 
-    <!-- APP VIEW -->
-    <div id="appView" class="hidden">
-      <div class="stats">
-        <div class="stat-card"><h3 id="totalMultas">0</h3><p>Total de Multas</p></div>
-        <div class="stat-card"><h3 id="multasMes">0</h3><p>Este Meas</p></div>
-        <div class="stat-card"><h3 id="infracoesUnicas">0</h3><p>Infrae7f5es danicas</p></div>
-      </div>
+    <div class="content">
+        <!-- Estatísticas -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3 id="totalMultas">0</h3>
+                <p>Total de Multas</p>
+            </div>
+        </div>
 
-      <div class="content">
+        <!-- Formulário -->
         <div class="form-section">
-          <h2>Cadastrar Nova Multa</h2>
-          <form id="multaForm">
-            <div class="form-grid-app">
-              <div class="form-group">
-                <label for="placa">Placa *</label>
-                <input type="text" id="placa" required maxlength="8" placeholder="ABC1D23 ou ABC1234" />
-              </div>
-              <div class="form-group">
-                <label for="marca">Marca *</label>
-                <input type="text" id="marca" required />
-              </div>
-              <div class="form-group">
-                <label for="modelo">Modelo *</label>
-                <input type="text" id="modelo" required />
-              </div>
-              <div class="form-group">
-                <label for="codigoInfracao">Cf3digo da Infrae7e3o *</label>
-                <input type="text" id="codigoInfracao" required autocomplete="off" placeholder="Digite o cf3digo" />
-                <input type="hidden" id="descricaoInfracao" />
-              </div>
-              <div class="form-group">
-                <label for="agenteAutuador">Agente Autuador *</label>
-                <input type="text" id="agenteAutuador" required />
-              </div>
-              <div class="form-group">
-                <label for="data">Data *</label>
-                <input type="date" id="data" required />
-              </div>
-            </div>
-            <div class="actions-buttons">
-              <button type="submit" class="btn btn-primary">a0 Adicionar Multa</button>
-              <button type="button" class="btn btn-secondary" onclick="exportarCSV()">f Exportar CSV</button>
-              <button type="button" class="btn btn-info" onclick="document.getElementById('baseFile').click()">Importar Base de Infrae7f5es (JSON)</button>
-              <input type="file" id="baseFile" accept=".json" style="display:none" />
-              <span id="baseStatus" class="base-status hidden"></span>
-            </div>
-            <div id="appMsg" class="alert alert-error hidden"></div>
-          </form>
-          <p class="footer-note">
-            Dica: o sistema salva as multas por usue1rio (por <code>user_id</code>) via RLS no Supabase.
-          </p>
+            <h2>📝 Cadastrar Nova Multa</h2>
+            <form id="multaForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="placa">Placa do Veículo *</label>
+                        <input type="text" id="placa" placeholder="AAA1A11 ou AAA1111" maxlength="7" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="marca">Marca *</label>
+                        <input type="text" id="marca" placeholder="Ex: Volkswagen" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelo">Modelo *</label>
+                        <input type="text" id="modelo" placeholder="Ex: Gol" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="codigoInfracao">Código da Infração *</label>
+                        <input type="text" id="codigoInfracao" placeholder="Ex: 50295" required>
+                        <input type="hidden" id="descricaoInfracao">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="agenteAutuador">Agente Autuador *</label>
+                        <input type="text" id="agenteAutuador" placeholder="Nome do agente" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="data">Data da Infração *</label>
+                        <input type="date" id="data" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">💾 Salvar Multa</button>
+            </form>
         </div>
 
-        <h2>Lista de Multas</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Placa</th>
-              <th>Marca/Modelo</th>
-              <th>Infrae7e3o</th>
-              <th>Agente</th>
-              <th>Data</th>
-              <th>Ae7f5es</th>
-            </tr>
-          </thead>
-          <tbody id="multasBody"></tbody>
-        </table>
-      </div>
+        <!-- Ações -->
+        <div class="actions-buttons">
+            <button class="btn btn-success" onclick="exportarCSV()">📥 Exportar CSV</button>
+            <button class="btn btn-success" onclick="document.getElementById('importFile').click()">📤 Importar CSV</button>
+            <input type="file" id="importFile" accept=".csv" style="display: none;" onchange="importarCSV(event)">
+            
+            <button class="btn btn-info" onclick="document.getElementById('baseFile').click()">📚 Atualizar Base de Infrações (JSON)</button>
+            <input type="file" id="baseFile" accept=".json" style="display: none;" onchange="importarBaseInfracoes(event)">
+            <span id="baseStatus" class="base-status">Base: Padrão (Reduzida)</span>
+        </div>
+
+        <!-- Tabela -->
+        <div class="table-section">
+            <h2>📋 Multas Registradas</h2>
+            <div class="table-wrapper">
+                <table id="tabelaMultas">
+                    <thead>
+                        <tr>
+                            <th>Placa</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Código Infração</th>
+                            <th>Descrição</th>
+                            <th>Agente Autuador</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
 
-  <script>
-    // --- CONFIGURAc7c3O SUPABASE ---
+<script>
     const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
-    // -----------------------------
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI'; // Substitua pela sua chave real
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const sbLib = window.supabase;
-    const supa = sbLib?.createClient ? sbLib.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
-    let infracoesCTB = [];
-    let currentUser = null;
-
-    const elLoginView = document.getElementById('loginView');
-    const elAppView = document.getElementById('appView');
-    const elUserBadge = document.getElementById('userBadge');
-    const elBtnSair = document.getElementById('btnSair');
-
-    const elLoginMsg = document.getElementById('loginMsg');
-    const elAppMsg = document.getElementById('appMsg');
-    const elTesteResultado = document.getElementById('testeResultado');
-
-    function show(el) { el.classList.remove('hidden'); }
-    function hide(el) { el.classList.add('hidden'); }
-
-    function setLoginError(msg) {
-      elLoginMsg.textContent = msg;
-      show(elLoginMsg);
-    }
-
-    function setAppError(msg) {
-      elAppMsg.textContent = msg;
-      show(elAppMsg);
-    }
-
-    function clearMsgs() {
-      hide(elLoginMsg);
-      hide(elAppMsg);
-      hide(elTesteResultado);
-      elLoginMsg.textContent = '';
-      elAppMsg.textContent = '';
-      elTesteResultado.textContent = '';
-    }
-
-    function reToEmail(re) {
-      const clean = String(re || '').trim();
-      return `${clean}@multas.local`;
-    }
-
-    async function init() {
-      if (!supa) {
-        setLoginError('Falha ao carregar a biblioteca do Supabase. Verifique sua conexe3o e tente novamente.');
-        return;
-      }
-
-      // Se je1 existe sesse3o, entra direto
-      const { data: sessionData, error: sessionErr } = await supa.auth.getSession();
-      if (sessionErr) {
-        setLoginError('Erro ao verificar sesse3o: ' + sessionErr.message);
-        return;
-      }
-
-      if (sessionData?.session?.user) {
-        currentUser = sessionData.session.user;
-        await onLoggedIn();
-      } else {
-        onLoggedOut();
-      }
-
-      // Listener de alterae7e3o de auth (login/logout)
-      supa.auth.onAuthStateChange(async (_event, session) => {
-        if (session?.user) {
-          currentUser = session.user;
-          await onLoggedIn();
+    // Monitorar estado da sessão
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.body.style.alignItems = 'flex-start'; // Ajuste para o sistema
+            listarMultas();
+            atualizarEstatisticas();
         } else {
-          currentUser = null;
-          onLoggedOut();
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('appContainer').style.display = 'none';
+            document.body.style.alignItems = 'center'; // Centralizar login
         }
-      });
+    });
 
-      // Import infrae7f5es
-      document.getElementById('baseFile').addEventListener('change', importarBaseInfracoes);
+    // Lógica de Login
+    document.getElementById('loginForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorMsg = document.getElementById('loginError');
 
-      // Me1scara placa
-      aplicarMascaraPlaca();
+        errorMsg.style.display = 'none';
 
-      // Data default
-      document.getElementById('data').valueAsDate = new Date();
-    }
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    function onLoggedOut() {
-      clearMsgs();
-      show(elLoginView);
-      hide(elAppView);
-      hide(elBtnSair);
-      hide(elUserBadge);
-      elUserBadge.textContent = '';
-    }
-
-    async function onLoggedIn() {
-      clearMsgs();
-      hide(elLoginView);
-      show(elAppView);
-      show(elBtnSair);
-      show(elUserBadge);
-
-      // Carrega perfil (graduacao/re/nome)
-      const { data: perfil, error: perfilErr } = await supa
-        .from('usuarios')
-        .select('graduacao, re, nome_completo')
-        .eq('id', currentUser.id)
-        .maybeSingle();
-
-      if (perfilErr) {
-        elUserBadge.textContent = `Logado`;
-      } else if (perfil) {
-        const parts = [];
-        if (perfil.graduacao) parts.push(perfil.graduacao);
-        if (perfil.re) parts.push('RE ' + perfil.re);
-        if (perfil.nome_completo) parts.push(perfil.nome_completo);
-        elUserBadge.textContent = parts.join(' b7 ') || 'Logado';
-      } else {
-        elUserBadge.textContent = 'Logado';
-      }
-
-      await carregarInfracoes();
-      await listarMultas();
-      await atualizarEstatisticas();
-    }
-
-    // LOGIN
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsgs();
-
-      const re = document.getElementById('reLogin').value.trim();
-      const senha = document.getElementById('senhaLogin').value;
-      if (!re || !senha) {
-        setLoginError('Informe RE e Senha.');
-        return;
-      }
-
-      const email = reToEmail(re);
-
-      const btn = document.getElementById('btnEntrar');
-      btn.disabled = true;
-      btn.textContent = 'Entrando...';
-
-      try {
-        const { data, error } = await supa.auth.signInWithPassword({ email, password: senha });
         if (error) {
-          setLoginError(error.message);
-          return;
+            errorMsg.textContent = "Erro: " + error.message;
+            errorMsg.style.display = 'block';
         }
-        if (!data?.user) {
-          setLoginError('Ne3o foi possedvel autenticar.');
-          return;
-        }
-        // onAuthStateChange vai cuidar do resto
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Entrar';
-      }
-    });
-
-    // SAIR
-    elBtnSair.addEventListener('click', async () => {
-      await supa.auth.signOut();
-    });
-
-    // APP
-    async function carregarInfracoes() {
-      const { data, error } = await supa.from('infracoes').select('id,codigo,descricao').order('codigo');
-      if (error) {
-        // Infrae7f5es podem ser opcionais
-        infracoesCTB = [];
-        return;
-      }
-      infracoesCTB = data || [];
-      autocomplete(document.getElementById('codigoInfracao'), () => infracoesCTB);
-
-      const baseStatus = document.getElementById('baseStatus');
-      if (infracoesCTB.length > 0) {
-        baseStatus.textContent = `${infracoesCTB.length} cf3digos`;
-        show(baseStatus);
-      } else {
-        hide(baseStatus);
-      }
-    }
-
-    document.getElementById('multaForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsgs();
-
-      if (!currentUser?.id) {
-        setAppError('Sesse3o inve1lida. Fae7a login novamente.');
-        return;
-      }
-
-      const payload = {
-        user_id: currentUser.id,
-        placa: document.getElementById('placa').value.trim().toUpperCase(),
-        marca: document.getElementById('marca').value.trim(),
-        modelo: document.getElementById('modelo').value.trim(),
-        codigo_infracao: document.getElementById('codigoInfracao').value.trim(),
-        descricao_infracao: document.getElementById('descricaoInfracao').value.trim(),
-        agente_autuador: document.getElementById('agenteAutuador').value.trim(),
-        data: document.getElementById('data').value
-      };
-
-      const { error } = await supa.from('multas').insert([payload]);
-      if (error) {
-        setAppError('Erro ao cadastrar: ' + error.message);
-        return;
-      }
-
-      alert(' Multa cadastrada com sucesso!');
-      document.getElementById('multaForm').reset();
-      document.getElementById('descricaoInfracao').value = '';
-      document.getElementById('data').valueAsDate = new Date();
-
-      await listarMultas();
-      await atualizarEstatisticas();
-    });
-
-    async function listarMultas() {
-      const tbody = document.getElementById('multasBody');
-      tbody.innerHTML = '';
-
-      const { data, error } = await supa
-        .from('multas')
-        .select('id, placa, marca, modelo, codigo_infracao, descricao_infracao, agente_autuador, data, user_id')
-        .eq('user_id', currentUser.id)
-        .order('data', { ascending: false });
-
-      if (error) {
-        setAppError('Erro ao listar: ' + error.message);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:#999;">Nenhuma multa cadastrada</td></tr>';
-        return;
-      }
-
-      data.forEach(m => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${m.placa}</td>
-          <td>${m.marca} ${m.modelo}</td>
-          <td><strong>${m.codigo_infracao}</strong><br><small>${m.descricao_infracao || ''}</small></td>
-          <td>${m.agente_autuador}</td>
-          <td>${new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-          <td><button class="btn-delete" type="button" onclick="deletarMulta(${m.id})">Excluir</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    window.deletarMulta = async function (id) {
-      clearMsgs();
-      if (!confirm('Tem certeza que deseja excluir esta multa?')) return;
-      const { error } = await supa.from('multas').delete().eq('id', id).eq('user_id', currentUser.id);
-      if (error) {
-        setAppError('Erro ao excluir: ' + error.message);
-        return;
-      }
-      await listarMultas();
-      await atualizarEstatisticas();
     };
 
-    async function atualizarEstatisticas() {
-      // Total
-      const { count: totalCount } = await supa
-        .from('multas')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', currentUser.id);
-
-      // Meas atual
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-      const { count: mesCount } = await supa
-        .from('multas')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', currentUser.id)
-        .gte('data', firstDay);
-
-      // Infrae7f5es fanicas
-      const { data: cods } = await supa
-        .from('multas')
-        .select('codigo_infracao')
-        .eq('user_id', currentUser.id);
-
-      document.getElementById('totalMultas').textContent = totalCount || 0;
-      document.getElementById('multasMes').textContent = mesCount || 0;
-      document.getElementById('infracoesUnicas').textContent = cods ? new Set(cods.map(c => c.codigo_infracao)).size : 0;
+    // Lógica de Logout
+    async function logout() {
+        if (confirm('Deseja realmente sair?')) {
+            await supabase.auth.signOut();
+        }
     }
 
-    async function importarBaseInfracoes(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
+    let db;
+    let infracoesCTB = [
+        { codigo: "50100", descricao: "Dirigir veículo sem possuir CNH/PPD/ACC" },
+        { codigo: "50295", descricao: "Dirigir veículo com CNH/PPD/ACC cassada" },
+        { codigo: "50371", descricao: "Dirigir veículo com CNH/PPD de categoria diferente" },
+        { codigo: "50450", descricao: "Dirigir veículo com validade de CNH vencida há mais de 30 dias" },
+        { codigo: "50531", descricao: "Dirigir veículo sem usar lentes corretoras de visão" },
+        { codigo: "51180", descricao: "Entregar veículo a pessoa sem CNH/PPD/ACC" },
+        { codigo: "51611", descricao: "Dirigir sob influência de álcool" },
+        { codigo: "51851", descricao: "Deixar o condutor de usar o cinto segurança" },
+        { codigo: "51852", descricao: "Deixar o passageiro de usar o cinto segurança" },
+        { codigo: "51930", descricao: "Transportar criança sem observância das normas" },
+        { codigo: "52070", descricao: "Dirigir sem atenção ou sem os cuidados indispensáveis à segurança" },
+        { codigo: "53800", descricao: "Estacionar nas esquinas a menos de 5m do bordo do alinhamento" },
+        { codigo: "54521", descricao: "Estacionar no passeio ou sobre faixa destinada a pedestre" },
+        { codigo: "55412", descricao: "Estacionar em desacordo com a regulamentação - Estacionamento Rotativo" },
+        { codigo: "56732", descricao: "Passar pelo sinal vermelho do semáforo - fiscalização eletrônica" },
+        { codigo: "57380", descricao: "Transitar pela contramão de direção em via com sinalização de regulamentação de sentido único" },
+        { codigo: "58191", descricao: "Transitar com o veículo em calçadas, passeios" },
+        { codigo: "58350", descricao: "Transitar em marcha à ré, salvo na distância necessária a pequenas manobras" },
+        { codigo: "59670", descricao: "Ultrapassar pela contramão linha de divisão de fluxos opostos, contínua amarela" },
+        { codigo: "60411", descricao: "Executar retorno em locais proibidos pela sinalização" },
+        { codigo: "60501", descricao: "Avançar o sinal vermelho do semáforo ou o de parada obrigatória" },
+        { codigo: "61220", descricao: "Transitar em velocidade superior à máxima permitida em até 20%" },
+        { codigo: "61300", descricao: "Transitar em velocidade superior à máxima permitida em mais de 20% até 50%" },
+        { codigo: "61490", descricao: "Transitar em velocidade superior à máxima permitida em mais de 50%" },
+        { codigo: "65300", descricao: "Conduzir veículo em mau estado de conservação (segurança)" },
+        { codigo: "65992", descricao: "Conduzir o veículo registrado que não esteja devidamente licenciado" },
+        { codigo: "70301", descricao: "Conduzir motocicleta, motoneta e ciclomotor sem uso de capacete" },
+        { codigo: "70481", descricao: "Conduzir motocicleta, motoneta e ciclomotor transportando passageiro sem capacete" },
+        { codigo: "73662", descricao: "Dirigir veículo utilizando-se de telefone celular" },
+        { codigo: "76331", descricao: "Dirigir veículo segurando telefone celular" },
+        { codigo: "76332", descricao: "Dirigir veículo manuseando telefone celular" }
+    ];
 
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
+    const request = indexedDB.open("ControleMultasDB", 1);
 
-        if (!Array.isArray(json) || !json[0]?.codigo || !json[0]?.descricao) {
-          alert('Formato inve1lido! Esperado: [{"codigo":"...","descricao":"..."}, ...]');
-          return;
+    // Criar o banco de dados
+    request.onupgradeneeded = (event) => {
+        db = event.target.result;
+        
+        // Store de multas
+        if (!db.objectStoreNames.contains("multas")) {
+            const objectStore = db.createObjectStore("multas", { keyPath: "id", autoIncrement: true });
+            objectStore.createIndex("placa", "placa", { unique: false });
         }
-
-        // Observae7e3o: esta operae7e3o costuma ser "admin". Se quiser, eu restrinjo depois.
-        await supa.from('infracoes').delete().neq('id', 0);
-        const { error } = await supa.from('infracoes').insert(json);
-        if (error) {
-          alert('Erro ao importar: ' + error.message);
-          return;
+        
+        // Store de base de infrações (para persistir a lista importada)
+        if (!db.objectStoreNames.contains("base_infracoes")) {
+            db.createObjectStore("base_infracoes", { keyPath: "id" });
         }
+    };
 
-        alert(`Base atualizada! ${json.length} infrae7f5es importadas.`);
-        await carregarInfracoes();
-      } catch (err) {
-        alert('Erro ao processar arquivo: ' + err.message);
-      } finally {
+    request.onsuccess = (event) => {
+        db = event.target.result;
+        carregarBaseInfracoes();
+        // listarMultas e atualizarEstatisticas agora são chamados pelo onAuthStateChange
+    };
+
+    request.onerror = () => {
+        alert("Erro ao abrir o banco de dados!");
+    };
+
+    // Máscara para placa
+    document.getElementById('placa').addEventListener('input', function(e) {
+        let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+        if (value.length <= 7) {
+            e.target.value = value;
+        }
+    });
+
+    document.getElementById('placa').addEventListener('blur', function(e) {
+        let value = e.target.value;
+
+        // Validar formato AAA1A11 ou AAA1111
+        const mercosul = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
+        const antiga = /^[A-Z]{3}[0-9]{4}$/;
+
+        if (value && !mercosul.test(value) && !antiga.test(value)) {
+            alert('Placa inválida! Use o formato AAA1A11 (Mercosul) ou AAA1111 (Antiga)');
+            e.target.value = '';
+        }
+    });
+
+    // Definir data atual como padrão
+    document.getElementById('data').valueAsDate = new Date();
+
+    // Autocomplete para código de infração
+    autocomplete(document.getElementById('codigoInfracao'), () => infracoesCTB);
+
+    function autocomplete(inp, getArr) {
+        let currentFocus;
+        
+        inp.addEventListener('input', function(e) {
+            let a, b, i, val = this.value;
+            let arr = getArr();
+            closeAllLists();
+            if (!val) { return false; }
+            currentFocus = -1;
+            
+            a = document.createElement('DIV');
+            a.setAttribute('id', this.id + 'autocomplete-list');
+            a.setAttribute('class', 'autocomplete-items');
+            this.parentNode.appendChild(a);
+            
+            // Limitar a 10 sugestões para performance
+            let count = 0;
+            for (i = 0; i < arr.length; i++) {
+                if (count >= 10) break;
+                if (arr[i].codigo.toUpperCase().includes(val.toUpperCase()) || 
+                    arr[i].descricao.toUpperCase().includes(val.toUpperCase())) {
+                    count++;
+                    b = document.createElement('DIV');
+                    b.innerHTML = '<strong>' + arr[i].codigo + '</strong> - ' + arr[i].descricao;
+                    b.innerHTML += '<input type="hidden" value="' + arr[i].codigo + '">';
+                    b.innerHTML += '<input type="hidden" class="desc-hidden" value="' + arr[i].descricao + '">';
+                    b.addEventListener('click', function(e) {
+                        const inputs = this.getElementsByTagName('input');
+                        inp.value = inputs[0].value;
+                        document.getElementById('descricaoInfracao').value = inputs[1].value;
+                        closeAllLists();
+                    });
+                    a.appendChild(b);
+                }
+            }
+        });
+        
+        inp.addEventListener('keydown', function(e) {
+            let x = document.getElementById(this.id + 'autocomplete-list');
+            if (x) x = x.getElementsByTagName('div');
+            if (e.keyCode == 40) {
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode == 38) {
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    if (x) x[currentFocus].click();
+                }
+            }
+        });
+        
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add('autocomplete-active');
+        }
+        
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove('autocomplete-active');
+            }
+        }
+        
+        function closeAllLists(elmnt) {
+            let x = document.getElementsByClassName('autocomplete-items');
+            for (let i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != inp) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+        
+        document.addEventListener('click', function (e) {
+            closeAllLists(e.target);
+        });
+    }
+
+    // Adicionar multa
+    document.getElementById('multaForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const novaMulta = {
+            placa: document.getElementById('placa').value.toUpperCase(),
+            marca: document.getElementById('marca').value,
+            modelo: document.getElementById('modelo').value,
+            codigoInfracao: document.getElementById('codigoInfracao').value,
+            agenteAutuador: document.getElementById('agenteAutuador').value,
+            data: document.getElementById('data').value
+        };
+
+        const transaction = db.transaction(["multas"], "readwrite");
+        const store = transaction.objectStore("multas");
+        store.add(novaMulta);
+
+        transaction.oncomplete = () => {
+            document.getElementById('multaForm').reset();
+            document.getElementById('data').valueAsDate = new Date();
+            listarMultas();
+            atualizarEstatisticas();
+            alert('Multa cadastrada com sucesso!');
+        };
+
+        transaction.onerror = () => {
+            alert('Erro ao cadastrar multa!');
+        };
+    };
+
+    // Listar multas
+    function listarMultas() {
+        const tbody = document.querySelector("#tabelaMultas tbody");
+        tbody.innerHTML = "";
+
+        const store = db.transaction("multas").objectStore("multas");
+        const multas = [];
+
+        store.openCursor().onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                multas.push(cursor.value);
+                cursor.continue();
+            } else {
+                // Ordenar por data (mais recente primeiro)
+                multas.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+                if (multas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma multa cadastrada</td></tr>';
+                } else {
+                    multas.forEach(multa => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td><strong>${multa.placa}</strong></td>
+                            <td>${multa.marca}</td>
+                            <td>${multa.modelo}</td>
+                            <td>${multa.codigoInfracao}</td>
+                            <td>${multa.agenteAutuador}</td>
+                            <td>${new Date(multa.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                            <td><button class="btn btn-danger" onclick="excluirMulta(${multa.id})">🗑️ Excluir</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            }
+        };
+    }
+
+    // Excluir multa
+    window.excluirMulta = (id) => {
+        if (confirm('Tem certeza que deseja excluir esta multa?')) {
+            const transaction = db.transaction(["multas"], "readwrite");
+            transaction.objectStore("multas").delete(id);
+            transaction.oncomplete = () => {
+                listarMultas();
+                atualizarEstatisticas();
+                alert('Multa excluída com sucesso!');
+            };
+        }
+    };
+
+    // Atualizar estatísticas
+    function atualizarEstatisticas() {
+        const store = db.transaction("multas").objectStore("multas");
+        let total = 0;
+
+        store.openCursor().onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                total++;
+                cursor.continue();
+            } else {
+                document.getElementById('totalMultas').textContent = total;
+            }
+        };
+    }
+
+    // Exportar para CSV
+    function exportarCSV() {
+        const store = db.transaction("multas").objectStore("multas");
+        const multas = [];
+
+        store.openCursor().onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                multas.push(cursor.value);
+                cursor.continue();
+            } else {
+                if (multas.length === 0) {
+                    alert('Não há multas para exportar!');
+                    return;
+                }
+
+                // Criar CSV
+                let csv = 'Placa;Marca;Modelo;Codigo Infracao;Agente Autuador;Data\n';
+                multas.forEach(m => {
+                    csv += `${m.placa};${m.marca};${m.modelo};${m.codigoInfracao};${m.agenteAutuador};${m.data}\n`;
+                });
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `multas_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+        };
+    }
+
+    // Importar CSV
+    function importarCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target.result;
+            const lines = text.split('\n');
+
+            // Pular cabeçalho
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const [placa, marca, modelo, codigoInfracao, agenteAutuador, data] = line.split(';');
+
+                const multa = {
+                    placa: placa.trim(),
+                    marca: marca.trim(),
+                    modelo: modelo.trim(),
+                    codigoInfracao: codigoInfracao.trim(),
+                    agenteAutuador: agenteAutuador.trim(),
+                    data: data.trim()
+                };
+
+                const transaction = db.transaction(["multas"], "readwrite");
+                transaction.objectStore("multas").add(multa);
+            }
+
+            setTimeout(() => {
+                listarMultas();
+                atualizarEstatisticas();
+                alert('Dados importados com sucesso!');
+            }, 500);
+        };
+
+        reader.readAsText(file);
         event.target.value = '';
-      }
     }
 
-    function aplicarMascaraPlaca() {
-      const el = document.getElementById('placa');
-      el.addEventListener('input', (e) => {
-        let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        e.target.value = v.substring(0, 8);
-      });
+    // Funções para Base de Infrações
+    function carregarBaseInfracoes() {
+        const transaction = db.transaction("base_infracoes", "readonly");
+        const store = transaction.objectStore("base_infracoes");
+        const request = store.get("lista_atual");
+
+        request.onsuccess = (event) => {
+            if (event.target.result) {
+                infracoesCTB = event.target.result.dados;
+                document.getElementById('baseStatus').textContent = `Base: Customizada (${infracoesCTB.length} itens)`;
+            }
+        };
     }
 
-    function autocomplete(inp, arrFunc) {
-      let currentList = null;
+    function importarBaseInfracoes(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-      inp.addEventListener('input', function () {
-        const val = this.value.toLowerCase();
-        if (currentList) currentList.remove();
-        if (!val) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const dados = JSON.parse(e.target.result);
+                if (!Array.isArray(dados)) throw new Error("O arquivo deve ser um array JSON");
+                
+                // Validar estrutura básica
+                if (dados.length > 0 && (!dados[0].codigo || !dados[0].descricao)) {
+                    throw new Error("Cada item deve ter 'codigo' e 'descricao'");
+                }
 
-        const list = document.createElement('div');
-        list.className = 'autocomplete-items';
-        this.parentNode.appendChild(list);
-        currentList = list;
+                const transaction = db.transaction("base_infracoes", "readwrite");
+                const store = transaction.objectStore("base_infracoes");
+                store.put({ id: "lista_atual", dados: dados });
 
-        const filtered = arrFunc()
-          .filter(i => i.codigo.toLowerCase().includes(val) || i.descricao.toLowerCase().includes(val))
-          .slice(0, 10);
-
-        filtered.forEach(item => {
-          const div = document.createElement('div');
-          div.innerHTML = `<strong>${item.codigo}</strong> - ${item.descricao}`;
-          div.onclick = () => {
-            inp.value = item.codigo;
-            document.getElementById('descricaoInfracao').value = item.descricao;
-            list.remove();
-          };
-          list.appendChild(div);
-        });
-      });
-
-      document.addEventListener('click', (e) => {
-        if (currentList && e.target !== inp) {
-          currentList.remove();
-          currentList = null;
-        }
-      });
+                transaction.oncomplete = () => {
+                    infracoesCTB = dados;
+                    document.getElementById('baseStatus').textContent = `Base: Customizada (${dados.length} itens)`;
+                    alert('Base de infrações atualizada com sucesso!');
+                };
+            } catch (err) {
+                alert('Erro ao processar JSON: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
     }
+</script>
 
-    window.exportarCSV = async function () {
-      clearMsgs();
-      const { data, error } = await supa
-        .from('multas')
-        .select('placa, marca, modelo, codigo_infracao, descricao_infracao, agente_autuador, data')
-        .eq('user_id', currentUser.id)
-        .order('data', { ascending: false });
-
-      if (error) {
-        setAppError('Erro ao exportar: ' + error.message);
-        return;
-      }
-
-      const header = ['Placa','Marca','Modelo','Cf3digo Infrae7e3o','Descrie7e3o Infrae7e3o','Agente Autuador','Data'];
-      const rows = (data || []).map(m => [
-        m.placa,
-        m.marca,
-        m.modelo,
-        m.codigo_infracao,
-        (m.descricao_infracao || '').replace(/\r?\n/g, ' '),
-        m.agente_autuador,
-        new Date(m.data + 'T00:00:00').toLocaleDateString('pt-BR')
-      ]);
-
-      const escapeCsv = (v) => {
-        const s = String(v ?? '');
-        if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-        return s;
-      };
-
-      const csv = [header, ...rows].map(r => r.map(escapeCsv).join(',')).join('\n');
-      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `multas_${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-    };
-
-    // TESTE SUPABASE (botão)
-    document.getElementById('btnTestarSupabase').addEventListener('click', async () => {
-      clearMsgs();
-      const btn = document.getElementById('btnTestarSupabase');
-      btn.disabled = true;
-      btn.textContent = 'Testando...';
-
-      let resultado = '=== TESTE DE CONEXÃO SUPABASE ===\n\n';
-
-      // 1) Verifica se a lib carregou
-      resultado += '1️⃣ Biblioteca supabase-js:\n';
-      if (!window.supabase?.createClient) {
-        resultado += '❌ NÃO carregou (window.supabase.createClient indefinido)\n';
-        resultado += `   window.supabase = ${JSON.stringify(window.supabase)}\n\n`;
-        elTesteResultado.textContent = resultado;
-        show(elTesteResultado);
-        btn.disabled = false;
-        btn.textContent = '🔍 Testar Conexão Supabase';
-        console.error('TESTE SUPABASE:', resultado);
-        return;
-      }
-      resultado += '✅ Carregou com sucesso\n\n';
-
-      // 2) Teste via fetch (REST direto)
-      resultado += '2️⃣ Teste via fetch (REST API):\n';
-      resultado += `   URL: ${SUPABASE_URL}/rest/v1/\n`;
-      try {
-        const resFetch = await fetch(`${SUPABASE_URL}/rest/v1/?select=1`, {
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`
-          }
-        });
-        const textFetch = await resFetch.text();
-        resultado += `   Status HTTP: ${resFetch.status}\n`;
-        resultado += `   Resposta: ${textFetch.substring(0, 300)}\n`;
-        if (resFetch.ok) {
-          resultado += '✅ Fetch OK - Supabase está acessível\n\n';
-        } else {
-          resultado += '⚠️ Fetch retornou erro HTTP (veja status acima)\n\n';
-        }
-      } catch (errFetch) {
-        resultado += `❌ Erro no fetch: ${errFetch.message}\n`;
-        resultado += '   (Possível bloqueio de rede, CORS, ou URL errada)\n\n';
-      }
-
-      // 3) Teste via supabase-js client
-      resultado += '3️⃣ Teste via supabase-js (client):\n';
-      try {
-        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        resultado += '   Client criado com sucesso\n';
-
-        // Tenta select na tabela 'multas'
-        resultado += '   Testando: SELECT id FROM multas LIMIT 1\n';
-        const { data: dataMultas, error: errorMultas } = await client.from('multas').select('id').limit(1);
-        if (errorMultas) {
-          resultado += `   ⚠️ Erro no select (multas): ${errorMultas.message}\n`;
-          resultado += `      code: ${errorMultas.code || 'N/A'}\n`;
-          resultado += `      hint: ${errorMultas.hint || 'N/A'}\n`;
-        } else {
-          resultado += `   ✅ Select OK (multas): ${JSON.stringify(dataMultas)}\n`;
-        }
-
-        // Tenta select na tabela 'usuarios'
-        resultado += '\n   Testando: SELECT id FROM usuarios LIMIT 1\n';
-        const { data: dataUsuarios, error: errorUsuarios } = await client.from('usuarios').select('id').limit(1);
-        if (errorUsuarios) {
-          resultado += `   ⚠️ Erro no select (usuarios): ${errorUsuarios.message}\n`;
-          resultado += `      code: ${errorUsuarios.code || 'N/A'}\n`;
-          resultado += `      hint: ${errorUsuarios.hint || 'N/A'}\n`;
-        } else {
-          resultado += `   ✅ Select OK (usuarios): ${JSON.stringify(dataUsuarios)}\n`;
-        }
-
-        // Tenta select na tabela 'infracoes'
-        resultado += '\n   Testando: SELECT id FROM infracoes LIMIT 1\n';
-        const { data: dataInfracoes, error: errorInfracoes } = await client.from('infracoes').select('id').limit(1);
-        if (errorInfracoes) {
-          resultado += `   ⚠️ Erro no select (infracoes): ${errorInfracoes.message}\n`;
-          resultado += `      code: ${errorInfracoes.code || 'N/A'}\n`;
-          resultado += `      hint: ${errorInfracoes.hint || 'N/A'}\n`;
-        } else {
-          resultado += `   ✅ Select OK (infracoes): ${JSON.stringify(dataInfracoes)}\n`;
-        }
-
-      } catch (errClient) {
-        resultado += `❌ Erro ao criar/usar client: ${errClient.message}\n`;
-      }
-
-      resultado += '\n=== FIM DO TESTE ===\n';
-      resultado += '\n📋 Copie este resultado e envie para diagnóstico.';
-
-      elTesteResultado.textContent = resultado;
-      show(elTesteResultado);
-      console.log('TESTE SUPABASE COMPLETO:', resultado);
-
-      btn.disabled = false;
-      btn.textContent = '🔍 Testar Conexão Supabase';
-    });
-
-    init();
-  </script>
 </body>
 </html>
