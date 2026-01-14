@@ -324,16 +324,14 @@
                             <th>Modelo</th>
                             <th>Código</th>
                             <th>Descrição</th>
-                            <th>Posto/Grad</th>
-                            <th>RE</th>
-                            <th>Agente</th>
+                            <th>RE do Autuador</th>
                             <th>Data</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
+                            <td colspan="8" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
                         </tr>
                     </tbody>
                 </table>
@@ -659,7 +657,7 @@
             tbody.innerHTML = '';
 
             if (multas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td></tr>';
                 return;
             }
 
@@ -671,9 +669,7 @@
                     <td>${multa.modelo}</td>
                     <td>${multa.codigo_infracao}</td>
                     <td>${multa.descricao_infracao || '-'}</td>
-                    <td>${multa.agente_posto || '-'}</td>
                     <td>${multa.agente_re || '-'}</td>
-                    <td>${multa.agente_nome || '-'}</td>
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
                     <td>
                         <button class="btn btn-danger" onclick="excluirMulta('${multa.id}')">🗑️</button>
@@ -791,3 +787,6 @@
     </script>
 </body>
 </html>
+
+
+esse é codigo certo e princiapl, quereo trabalhar somente com ele
