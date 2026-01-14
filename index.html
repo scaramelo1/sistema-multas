@@ -239,22 +239,176 @@
             font-size: 0.9em;
             opacity: 0.9;
         }
+
+        /* Estilos de Login/Cadastro */
+        .auth-container {
+            max-width: 450px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .auth-content {
+            padding: 30px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .user-info span {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- Tela de Login/Cadastro -->
+<div id="authScreen" class="auth-container">
+    <div class="auth-header">
+        <h1>🚗 Sistema de Multas</h1>
+        <p>Faça login ou cadastre-se</p>
+    </div>
+    <div class="auth-content">
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+            <button class="auth-tab" onclick="switchTab('cadastro')">Cadastro</button>
+        </div>
+
+        <!-- Formulário de Login -->
+        <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+                <label for="loginEmail">E-mail</label>
+                <input type="email" id="loginEmail" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="loginSenha">Senha</label>
+                <input type="password" id="loginSenha" placeholder="Sua senha" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Entrar</button>
+        </form>
+
+        <!-- Formulário de Cadastro -->
+        <form id="cadastroForm" class="auth-form">
+            <div class="form-group">
+                <label for="cadastroNome">Nome Completo</label>
+                <input type="text" id="cadastroNome" placeholder="Seu nome" required>
+            </div>
+            <div class="form-group">
+                <label for="cadastroEmail">E-mail</label>
+                <input type="email" id="cadastroEmail" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="cadastroSenha">Senha</label>
+                <input type="password" id="cadastroSenha" placeholder="Mínimo 6 caracteres" minlength="6" required>
+            </div>
+            <div class="form-group">
+                <label for="cadastroSenhaConfirm">Confirmar Senha</label>
+                <input type="password" id="cadastroSenhaConfirm" placeholder="Repita a senha" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Cadastrar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Sistema Principal -->
+<div id="mainSystem" class="container hidden">
     <div class="header">
         <h1>🚗 Sistema de Controle de Multas</h1>
         <p>Gerenciamento completo de infrações de trânsito</p>
     </div>
 
     <div class="content">
+        <!-- Info do Usuário -->
+        <div class="user-info">
+            <span>👤 <span id="nomeUsuario"></span></span>
+            <button class="btn-logout" onclick="logout()">Sair</button>
+        </div>
+
         <!-- Estatísticas -->
         <div class="stats">
             <div class="stat-card">
                 <h3 id="totalMultas">0</h3>
                 <p>Total de Multas</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="multasSemana">0</h3>
+                <p>Multas desta Semana</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="multasMes">0</h3>
+                <p>Multas deste Mês</p>
             </div>
         </div>
 
@@ -336,6 +490,7 @@
 
 <script>
     let db;
+    let usuarioAtual = null;
     let infracoesCTB = [
         { codigo: "50100", descricao: "Dirigir veículo sem possuir CNH/PPD/ACC" },
         { codigo: "50295", descricao: "Dirigir veículo com CNH/PPD/ACC cassada" },
@@ -376,10 +531,17 @@
     request.onupgradeneeded = (event) => {
         db = event.target.result;
         
+        // Store de usuários
+        if (!db.objectStoreNames.contains("usuarios")) {
+            const userStore = db.createObjectStore("usuarios", { keyPath: "email" });
+            userStore.createIndex("email", "email", { unique: true });
+        }
+        
         // Store de multas
         if (!db.objectStoreNames.contains("multas")) {
             const objectStore = db.createObjectStore("multas", { keyPath: "id", autoIncrement: true });
             objectStore.createIndex("placa", "placa", { unique: false });
+            objectStore.createIndex("usuario", "usuario", { unique: false });
         }
         
         // Store de base de infrações (para persistir a lista importada)
@@ -390,9 +552,7 @@
 
     request.onsuccess = (event) => {
         db = event.target.result;
-        carregarBaseInfracoes();
-        listarMultas();
-        atualizarEstatisticas();
+        verificarLogin();
     };
 
     request.onerror = () => {
@@ -520,7 +680,8 @@
             codigoInfracao: document.getElementById('codigoInfracao').value,
             descricaoInfracao: document.getElementById('descricaoInfracao').value || '',
             agenteAutuador: document.getElementById('agenteAutuador').value,
-            data: document.getElementById('data').value
+            data: document.getElementById('data').value,
+            usuario: usuarioAtual.email
         };
 
         const transaction = db.transaction(["multas"], "readwrite");
@@ -551,7 +712,10 @@
         store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                multas.push(cursor.value);
+                // Filtrar apenas multas do usuário logado
+                if (cursor.value.usuario === usuarioAtual.email) {
+                    multas.push(cursor.value);
+                }
                 cursor.continue();
             } else {
                 // Ordenar por data (mais recente primeiro)
@@ -596,14 +760,50 @@
     function atualizarEstatisticas() {
         const store = db.transaction("multas").objectStore("multas");
         let total = 0;
+        let semana = 0;
+        let mes = 0;
+
+        // Obter data atual
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+        const mesAtual = hoje.getMonth();
+        
+        // Calcular início e fim da semana (domingo a sábado)
+        const diaSemana = hoje.getDay(); // 0 = domingo, 6 = sábado
+        const inicioSemana = new Date(hoje);
+        inicioSemana.setDate(hoje.getDate() - diaSemana);
+        inicioSemana.setHours(0, 0, 0, 0);
+        
+        const fimSemana = new Date(inicioSemana);
+        fimSemana.setDate(inicioSemana.getDate() + 6);
+        fimSemana.setHours(23, 59, 59, 999);
 
         store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                total++;
+                // Filtrar apenas multas do usuário logado
+                if (cursor.value.usuario === usuarioAtual.email) {
+                    total++;
+                    
+                    // Converter data da multa
+                    const dataMulta = new Date(cursor.value.data + 'T00:00:00');
+                    
+                    // Contar multas do mês atual
+                    if (dataMulta.getFullYear() === anoAtual && dataMulta.getMonth() === mesAtual) {
+                        mes++;
+                    }
+                    
+                    // Contar multas da semana atual
+                    if (dataMulta >= inicioSemana && dataMulta <= fimSemana) {
+                        semana++;
+                    }
+                }
+                
                 cursor.continue();
             } else {
                 document.getElementById('totalMultas').textContent = total;
+                document.getElementById('multasSemana').textContent = semana;
+                document.getElementById('multasMes').textContent = mes;
             }
         };
     }
@@ -616,7 +816,10 @@
         store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                multas.push(cursor.value);
+                // Filtrar apenas multas do usuário logado
+                if (cursor.value.usuario === usuarioAtual.email) {
+                    multas.push(cursor.value);
+                }
                 cursor.continue();
             } else {
                 if (multas.length === 0) {
@@ -726,6 +929,143 @@
         };
         reader.readAsText(file);
         event.target.value = '';
+    }
+
+    // ========== SISTEMA DE AUTENTICAÇÃO ==========
+
+    // Verificar se há usuário logado
+    function verificarLogin() {
+        const emailLogado = localStorage.getItem('usuarioLogado');
+        if (emailLogado) {
+            const transaction = db.transaction("usuarios", "readonly");
+            const store = transaction.objectStore("usuarios");
+            const request = store.get(emailLogado);
+
+            request.onsuccess = (event) => {
+                if (event.target.result) {
+                    usuarioAtual = event.target.result;
+                    mostrarSistema();
+                } else {
+                    localStorage.removeItem('usuarioLogado');
+                    mostrarLogin();
+                }
+            };
+        } else {
+            mostrarLogin();
+        }
+    }
+
+    // Alternar entre abas de login e cadastro
+    function switchTab(tab) {
+        const tabs = document.querySelectorAll('.auth-tab');
+        const forms = document.querySelectorAll('.auth-form');
+
+        tabs.forEach(t => t.classList.remove('active'));
+        forms.forEach(f => f.classList.remove('active'));
+
+        if (tab === 'login') {
+            tabs[0].classList.add('active');
+            document.getElementById('loginForm').classList.add('active');
+        } else {
+            tabs[1].classList.add('active');
+            document.getElementById('cadastroForm').classList.add('active');
+        }
+    }
+
+    // Formulário de Cadastro
+    document.getElementById('cadastroForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const nome = document.getElementById('cadastroNome').value;
+        const email = document.getElementById('cadastroEmail').value;
+        const senha = document.getElementById('cadastroSenha').value;
+        const senhaConfirm = document.getElementById('cadastroSenhaConfirm').value;
+
+        if (senha !== senhaConfirm) {
+            alert('As senhas não coincidem!');
+            return;
+        }
+
+        const transaction = db.transaction("usuarios", "readwrite");
+        const store = transaction.objectStore("usuarios");
+
+        // Verificar se o email já existe
+        const checkRequest = store.get(email);
+        checkRequest.onsuccess = (event) => {
+            if (event.target.result) {
+                alert('Este e-mail já está cadastrado!');
+            } else {
+                const novoUsuario = { email, nome, senha };
+                store.add(novoUsuario);
+
+                transaction.oncomplete = () => {
+                    alert('Cadastro realizado com sucesso! Faça login.');
+                    document.getElementById('cadastroForm').reset();
+                    switchTab('login');
+                };
+            }
+        };
+
+        transaction.onerror = () => {
+            alert('Erro ao cadastrar usuário!');
+        };
+    };
+
+    // Formulário de Login
+    document.getElementById('loginForm').onsubmit = (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('loginEmail').value;
+        const senha = document.getElementById('loginSenha').value;
+
+        const transaction = db.transaction("usuarios", "readonly");
+        const store = transaction.objectStore("usuarios");
+        const request = store.get(email);
+
+        request.onsuccess = (event) => {
+            const usuario = event.target.result;
+
+            if (!usuario) {
+                alert('Usuário não encontrado!');
+            } else if (usuario.senha !== senha) {
+                alert('Senha incorreta!');
+            } else {
+                usuarioAtual = usuario;
+                localStorage.setItem('usuarioLogado', email);
+                document.getElementById('loginForm').reset();
+                mostrarSistema();
+            }
+        };
+
+        request.onerror = () => {
+            alert('Erro ao fazer login!');
+        };
+    };
+
+    // Mostrar tela de login
+    function mostrarLogin() {
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.getElementById('mainSystem').classList.add('hidden');
+    }
+
+    // Mostrar sistema principal
+    function mostrarSistema() {
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('mainSystem').classList.remove('hidden');
+        document.getElementById('nomeUsuario').textContent = usuarioAtual.nome;
+        
+        carregarBaseInfracoes();
+        listarMultas();
+        atualizarEstatisticas();
+    }
+
+    // Logout
+    function logout() {
+        if (confirm('Deseja realmente sair?')) {
+            localStorage.removeItem('usuarioLogado');
+            usuarioAtual = null;
+            mostrarLogin();
+        }
     }
 </script>
 
