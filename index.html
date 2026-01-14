@@ -333,10 +333,10 @@
             <!-- Informações do Usuário Logado -->
             <div id="userInfo" class="user-info hidden">
                 <div>
-                    <strong>Usuário:</strong> <span id="userEmail"></span> 
+                    <strong>Usuário:</strong> <span id="userName" style="font-weight: bold; color: #333;"></span> 
                     <span id="userBadge" class="badge"></span>
                     <br>
-                    <small><strong>RE:</strong> <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small>
+                    <small><strong>E-mail:</strong> <span id="userEmail"></span> | <strong>RE:</strong> <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small>
                 </div>
                 <button class="btn btn-danger" onclick="fazerLogout()">Sair</button>
             </div>
@@ -577,6 +577,7 @@
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('userInfo').classList.remove('hidden');
             document.getElementById('multasSection').classList.remove('hidden');
+            document.getElementById('userName').textContent = perfil.nome_completo;
             document.getElementById('userEmail').textContent = user.email;
             document.getElementById('userRE').textContent = perfil.re;
             document.getElementById('userPosto').textContent = perfil.cargo;
