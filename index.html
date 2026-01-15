@@ -969,8 +969,6 @@
                 const val = this.value.trim();
                 list.innerHTML = '';
                 if (val.length < 1) return;
-                // Aqui você pode buscar de uma tabela de infrações se tiver, ou usar uma lista fixa
-                // Por enquanto, vamos simular ou buscar se houver tabela
                 const { data } = await supabaseClient.from('infracoes').select('*').or(`codigo.ilike.%${val}%,descricao.ilike.%${val}%`).limit(5);
                 if (data) {
                     data.forEach(i => {
@@ -1054,15 +1052,13 @@
             doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 33);
             doc.text(`Responsável: ${perfilUsuario.nome_completo} (RE: ${perfilUsuario.re})`, 14, 38);
 
-            // Preparar dados para a tabela
-            const colunas = ["Placa", "Auto Infração", "Cód.", "Descrição", "RE Agente", "Inserido por", "Data"];
+            // Preparar dados para a tabela (sem 'Descrição' e 'Inserido por')
+            const colunas = ["Placa", "Auto Infração", "Cód.", "RE Agente", "Data"];
             const linhas = multasFiltradas.map(m => [
                 m.placa,
                 m.numero_auto_infracao || '-',
                 m.codigo_infracao,
-                m.descricao_infracao || '-',
                 m.agente_re || '-',
-                m.perfis ? m.perfis.re : '-',
                 new Date(m.data).toLocaleDateString('pt-BR')
             ]);
 
@@ -1075,7 +1071,7 @@
                 headStyles: { fillColor: [102, 126, 234] },
                 styles: { fontSize: 8 },
                 columnStyles: {
-                    3: { cellWidth: 60 }
+                    2: { cellWidth: 30 }
                 }
             });
 
