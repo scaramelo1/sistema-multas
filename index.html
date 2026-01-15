@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Controle de Multas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Bibliotecas para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -473,9 +476,7 @@
                 </form>
 
                 <div class="actions-buttons">
-                    <button class="btn btn-success" onclick="exportarCSV()">📥 Exportar CSV</button>
-                    <button id="btnImportar" class="btn btn-info admin-only" onclick="document.getElementById('csvFile').click()">📤 Importar CSV</button>
-                    <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="importarCSV(event)">
+                    <button id="btnRelatorioPDF" class="btn btn-danger admin-only hidden" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
                 </div>
 
                 <table id="multasTable">
@@ -556,6 +557,7 @@
         let supabaseClient;
         let usuarioLogado = null;
         let perfilUsuario = null;
+        let multasAtuais = [];
 
         window.addEventListener('load', function() {
             if (typeof window.supabase === 'undefined') {
@@ -583,7 +585,7 @@
                 if (isRegister) {
                     document.getElementById('authTitle').textContent = '📝 Cadastro de Novo Usuário';
                     document.getElementById('registerFields').classList.remove('hidden');
-                    document.getElementById('loginFields').classList.remove('hidden'); // Mantém e-mail e senha visíveis
+                    document.getElementById('loginFields').classList.remove('hidden');
                     document.getElementById('btnLogin').classList.add('hidden');
                     document.getElementById('btnRegister').classList.remove('hidden');
                     document.getElementById('btnBackToLogin').classList.remove('hidden');
@@ -745,7 +747,6 @@
         }
 
         async function carregarMultas() {
-            // Fazemos um JOIN com a tabela perfis para pegar o RE de quem inseriu
             let query = supabaseClient
                 .from('multas')
                 .select(`
@@ -757,7 +758,10 @@
                 .order('data', { ascending: false });
 
             const { data, error } = await query;
-            if (!error) listarMultas(data || []);
+            if (!error) {
+                multasAtuais = data || [];
+                listarMultas(multasAtuais);
+            }
             else console.error("Erro ao carregar multas:", error);
         }
 
@@ -775,8 +779,6 @@
             multas.forEach(multa => {
                 const tr = document.createElement('tr');
                 const podeEditar = isAdmin || multa.user_id === usuarioLogado.id;
-
-                // O RE de quem inseriu vem do objeto 'perfis' (resultado do join)
                 const reInseriu = multa.perfis ? multa.perfis.re : '-';
 
                 tr.innerHTML = `
@@ -927,15 +929,50 @@
             });
         }
 
-        async function exportarCSV() {
-            const { data } = await supabaseClient.from('multas').select('*');
-            let csv = 'Placa,Número do Auto de Infração,Codigo,Descricao,Posto,RE,Agente,Data\n';
-            data.forEach(m => csv += `${m.placa},${m.numero_auto_infracao},${m.codigo_infracao},"${m.descricao_infracao}",${m.agente_posto},${m.agente_re},${m.agente_nome},${m.data}\n`);
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'multas.csv';
-            a.click();
+        function gerarRelatorioPDF() {
+            if (multasAtuais.length === 0) {
+                alert("Não há dados para gerar o relatório.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber mais colunas
+
+            // Título e Cabeçalho
+            doc.setFontSize(18);
+            doc.text("Relatório Geral de Multas de Trânsito", 14, 20);
+            
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+            doc.text(`Responsável: ${perfilUsuario.nome_completo} (RE: ${perfilUsuario.re})`, 14, 33);
+
+            // Preparar dados para a tabela
+            const colunas = ["Placa", "Auto Infração", "Cód.", "Descrição", "RE Agente", "Inserido por", "Data"];
+            const linhas = multasAtuais.map(m => [
+                m.placa,
+                m.numero_auto_infracao || '-',
+                m.codigo_infracao,
+                m.descricao_infracao || '-',
+                m.agente_re || '-',
+                m.perfis ? m.perfis.re : '-',
+                new Date(m.data).toLocaleDateString('pt-BR')
+            ]);
+
+            // Gerar Tabela
+            doc.autoTable({
+                startY: 40,
+                head: [colunas],
+                body: linhas,
+                theme: 'grid',
+                headStyles: { fillColor: [102, 126, 234] },
+                styles: { fontSize: 8 },
+                columnStyles: {
+                    3: { cellWidth: 60 } // Descrição um pouco mais larga
+                }
+            });
+
+            // Salvar
+            doc.save(`relatorio_multas_${new Date().getTime()}.pdf`);
         }
 
         async function testarConexao() {
