@@ -216,6 +216,7 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 20px;
+            align-items: flex-end;
         }
 
         .user-info {
@@ -349,6 +350,17 @@
             display: flex;
             gap: 5px;
         }
+
+        .filter-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -475,8 +487,19 @@
                     <button type="submit" class="btn btn-primary">Adicionar Multa</button>
                 </form>
 
-                <div class="actions-buttons">
-                    <button id="btnRelatorioPDF" class="btn btn-danger admin-only hidden" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
+                <div class="admin-only hidden">
+                    <h2>📄 Relatório PDF por Período</h2>
+                    <div class="filter-group">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="dataInicio">Data Início:</label>
+                            <input type="date" id="dataInicio">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="dataFim">Data Fim:</label>
+                            <input type="date" id="dataFim">
+                        </div>
+                        <button id="btnRelatorioPDF" class="btn btn-danger" onclick="gerarRelatorioPDF()" style="margin-bottom: 0;">📄 Gerar Relatório PDF</button>
+                    </div>
                 </div>
 
                 <table id="multasTable">
@@ -665,6 +688,13 @@
             document.getElementById('placa').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
             document.getElementById('editPlaca').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
             document.getElementById('data').valueAsDate = new Date();
+
+            // Set default dates for PDF filter
+            const hoje = new Date();
+            const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            document.getElementById('dataInicio').valueAsDate = primeiroDiaMes;
+            document.getElementById('dataFim').valueAsDate = hoje;
+
             setupAutocompleteAgente();
             setupAutocompleteAgenteEdit();
         }
@@ -930,25 +960,50 @@
         }
 
         function gerarRelatorioPDF() {
-            if (multasAtuais.length === 0) {
-                alert("Não há dados para gerar o relatório.");
+            const dataInicioStr = document.getElementById('dataInicio').value;
+            const dataFimStr = document.getElementById('dataFim').value;
+
+            if (!dataInicioStr || !dataFimStr) {
+                alert("Por favor, selecione o período (Data Início e Data Fim).");
+                return;
+            }
+
+            const dataInicio = new Date(dataInicioStr);
+            dataInicio.setHours(0, 0, 0, 0);
+            const dataFim = new Date(dataFimStr);
+            dataFim.setHours(23, 59, 59, 999);
+
+            if (dataInicio > dataFim) {
+                alert("A Data Início não pode ser maior que a Data Fim.");
+                return;
+            }
+
+            // Filtrar multas pelo período (baseado na data de inserção/multa)
+            const multasFiltradas = multasAtuais.filter(m => {
+                const dataMulta = new Date(m.data);
+                return dataMulta >= dataInicio && dataMulta <= dataFim;
+            });
+
+            if (multasFiltradas.length === 0) {
+                alert("Não há multas registradas no período selecionado.");
                 return;
             }
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber mais colunas
+            const doc = new jsPDF('l', 'mm', 'a4');
 
             // Título e Cabeçalho
             doc.setFontSize(18);
-            doc.text("Relatório Geral de Multas de Trânsito", 14, 20);
-            
+            doc.text("Relatório de Multas de Trânsito por Período", 14, 20);
+
             doc.setFontSize(10);
-            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
-            doc.text(`Responsável: ${perfilUsuario.nome_completo} (RE: ${perfilUsuario.re})`, 14, 33);
+            doc.text(`Período: ${new Date(dataInicioStr).toLocaleDateString('pt-BR')} até ${new Date(dataFimStr).toLocaleDateString('pt-BR')}`, 14, 28);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 33);
+            doc.text(`Responsável: ${perfilUsuario.nome_completo} (RE: ${perfilUsuario.re})`, 14, 38);
 
             // Preparar dados para a tabela
             const colunas = ["Placa", "Auto Infração", "Cód.", "Descrição", "RE Agente", "Inserido por", "Data"];
-            const linhas = multasAtuais.map(m => [
+            const linhas = multasFiltradas.map(m => [
                 m.placa,
                 m.numero_auto_infracao || '-',
                 m.codigo_infracao,
@@ -960,19 +1015,19 @@
 
             // Gerar Tabela
             doc.autoTable({
-                startY: 40,
+                startY: 45,
                 head: [colunas],
                 body: linhas,
                 theme: 'grid',
                 headStyles: { fillColor: [102, 126, 234] },
                 styles: { fontSize: 8 },
                 columnStyles: {
-                    3: { cellWidth: 60 } // Descrição um pouco mais larga
+                    3: { cellWidth: 60 }
                 }
             });
 
             // Salvar
-            doc.save(`relatorio_multas_${new Date().getTime()}.pdf`);
+            doc.save(`relatorio_multas_${dataInicioStr}_a_${dataFimStr}.pdf`);
         }
 
         async function testarConexao() {
