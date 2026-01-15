@@ -445,13 +445,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="marca">Marca:</label>
-                        <input type="text" id="marca" placeholder="Ex: Toyota" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="modelo">Modelo:</label>
-                        <input type="text" id="modelo" placeholder="Ex: Corolla" required>
+                        <label for="numeroAutoInfracao">Número do Auto de Infração:</label>
+                        <input type="text" id="numeroAutoInfracao" placeholder="Número do Auto de Infração" required>
                     </div>
 
                     <div class="form-group">
@@ -487,8 +482,7 @@
                     <thead>
                         <tr>
                             <th>Placa</th>
-                            <th>Marca</th>
-                            <th>Modelo</th>
+                            <th>Número do Auto de Infração</th>
                             <th>Código</th>
                             <th>Descrição</th>
                             <th>RE Agente</th>
@@ -499,7 +493,7 @@
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="9" style="text-align: center; color: #999;">Nenhuma multa cadastrada</td>
+                            <td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td>
                         </tr>
                     </tbody>
                 </table>
@@ -523,13 +517,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="editMarca">Marca:</label>
-                    <input type="text" id="editMarca" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="editModelo">Modelo:</label>
-                    <input type="text" id="editModelo" required>
+                    <label for="editNumeroAutoInfracao">Número do Auto de Infração:</label>
+                    <input type="text" id="editNumeroAutoInfracao" required>
                 </div>
 
                 <div class="form-group">
@@ -643,8 +632,7 @@
                 e.preventDefault();
                 const novaMulta = {
                     placa: document.getElementById('placa').value.toUpperCase(),
-                    marca: document.getElementById('marca').value,
-                    modelo: document.getElementById('modelo').value,
+                    numero_auto_infracao: document.getElementById('numeroAutoInfracao').value,
                     codigo_infracao: document.getElementById('codigoInfracao').value,
                     descricao_infracao: document.getElementById('descricaoInfracao').value,
                     agente_posto: document.getElementById('agentePosto').value,
@@ -706,7 +694,7 @@
             }
 
             if (authData.user) {
-                const { error: profileError } = await supabaseClient.from('perfis').insert([{
+                const { error: profileError } = await supabaseClient.from('perfis').insert([{ 
                     id: authData.user.id,
                     nome_completo: nome,
                     re: re,
@@ -779,7 +767,7 @@
             const isAdmin = perfilUsuario.nivel_acesso === 'admin';
 
             if (multas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
                 atualizarEstatisticas([]);
                 return;
             }
@@ -793,8 +781,7 @@
 
                 tr.innerHTML = `
                     <td>${multa.placa}</td>
-                    <td>${multa.marca}</td>
-                    <td>${multa.modelo}</td>
+                    <td>${multa.numero_auto_infracao || '-'}</td>
                     <td>${multa.codigo_infracao}</td>
                     <td>${multa.descricao_infracao || '-'}</td>
                     <td>${multa.agente_re || '-'}</td>
@@ -830,8 +817,7 @@
         function abrirModalEdicao(multa) {
             document.getElementById('editId').value = multa.id;
             document.getElementById('editPlaca').value = multa.placa;
-            document.getElementById('editMarca').value = multa.marca;
-            document.getElementById('editModelo').value = multa.modelo;
+            document.getElementById('editNumeroAutoInfracao').value = multa.numero_auto_infracao || '';
             document.getElementById('editCodigoInfracao').value = multa.codigo_infracao;
             document.getElementById('editDescricaoInfracao').value = multa.descricao_infracao || '';
             document.getElementById('editAgenteRE').value = multa.agente_re;
@@ -851,8 +837,7 @@
             const id = document.getElementById('editId').value;
             const multaAtualizada = {
                 placa: document.getElementById('editPlaca').value.toUpperCase(),
-                marca: document.getElementById('editMarca').value,
-                modelo: document.getElementById('editModelo').value,
+                numero_auto_infracao: document.getElementById('editNumeroAutoInfracao').value,
                 codigo_infracao: document.getElementById('editCodigoInfracao').value,
                 descricao_infracao: document.getElementById('editDescricaoInfracao').value,
                 agente_posto: document.getElementById('editAgentePosto').value,
@@ -944,8 +929,8 @@
 
         async function exportarCSV() {
             const { data } = await supabaseClient.from('multas').select('*');
-            let csv = 'Placa,Marca,Modelo,Codigo,Descricao,Posto,RE,Agente,Data\n';
-            data.forEach(m => csv += `${m.placa},${m.marca},${m.modelo},${m.codigo_infracao},"${m.descricao_infracao}",${m.agente_posto},${m.agente_re},${m.agente_nome},${m.data}\n`);
+            let csv = 'Placa,Número do Auto de Infração,Codigo,Descricao,Posto,RE,Agente,Data\n';
+            data.forEach(m => csv += `${m.placa},${m.numero_auto_infracao},${m.codigo_infracao},"${m.descricao_infracao}",${m.agente_posto},${m.agente_re},${m.agente_nome},${m.data}\n`);
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
