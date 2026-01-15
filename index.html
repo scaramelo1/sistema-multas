@@ -242,6 +242,7 @@
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
         }
 
         .autocomplete-item {
@@ -697,6 +698,8 @@
 
             setupAutocompleteAgente();
             setupAutocompleteAgenteEdit();
+            setupAutocompleteInfracao();
+            setupAutocompleteInfracaoEdit();
         }
 
         async function cadastrarUsuario() {
@@ -916,16 +919,16 @@
                 const val = this.value.trim();
                 list.innerHTML = '';
                 if (val.length < 1) return;
-                const { data } = await supabaseClient.from('perfis').select('*').or(`re.ilike.%${val}%,nome_completo.ilike.%${val}%`).limit(5);
+                const { data } = await supabaseClient.from('agentes').select('*').or(`re.ilike.%${val}%,nome.ilike.%${val}%`).limit(5);
                 if (data) {
                     data.forEach(p => {
                         const d = document.createElement('div');
                         d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome_completo}`;
+                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome}`;
                         d.onclick = () => {
                             input.value = p.re;
-                            document.getElementById('agenteNome').value = p.nome_completo;
-                            document.getElementById('agentePosto').value = p.cargo;
+                            document.getElementById('agenteNome').value = p.nome;
+                            document.getElementById('agentePosto').value = p.posto;
                             list.innerHTML = '';
                         };
                         list.appendChild(d);
@@ -941,16 +944,66 @@
                 const val = this.value.trim();
                 list.innerHTML = '';
                 if (val.length < 1) return;
-                const { data } = await supabaseClient.from('perfis').select('*').or(`re.ilike.%${val}%,nome_completo.ilike.%${val}%`).limit(5);
+                const { data } = await supabaseClient.from('agentes').select('*').or(`re.ilike.%${val}%,nome.ilike.%${val}%`).limit(5);
                 if (data) {
                     data.forEach(p => {
                         const d = document.createElement('div');
                         d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome_completo}`;
+                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome}`;
                         d.onclick = () => {
                             input.value = p.re;
-                            document.getElementById('editAgenteNome').value = p.nome_completo;
-                            document.getElementById('editAgentePosto').value = p.cargo;
+                            document.getElementById('editAgenteNome').value = p.nome;
+                            document.getElementById('editAgentePosto').value = p.posto;
+                            list.innerHTML = '';
+                        };
+                        list.appendChild(d);
+                    });
+                }
+            });
+        }
+
+        async function setupAutocompleteInfracao() {
+            const input = document.getElementById('codigoInfracao');
+            const list = document.getElementById('autocomplete-list');
+            input.addEventListener('input', async function() {
+                const val = this.value.trim();
+                list.innerHTML = '';
+                if (val.length < 1) return;
+                // Aqui você pode buscar de uma tabela de infrações se tiver, ou usar uma lista fixa
+                // Por enquanto, vamos simular ou buscar se houver tabela
+                const { data } = await supabaseClient.from('infracoes').select('*').or(`codigo.ilike.%${val}%,descricao.ilike.%${val}%`).limit(5);
+                if (data) {
+                    data.forEach(i => {
+                        const d = document.createElement('div');
+                        d.className = 'autocomplete-item';
+                        d.innerHTML = `<strong>${i.codigo}</strong> - ${i.descricao}`;
+                        d.onclick = () => {
+                            input.value = i.codigo;
+                            document.getElementById('descricaoInfracao').value = i.descricao;
+                            list.innerHTML = '';
+                        };
+                        list.appendChild(d);
+                    });
+                }
+            });
+        }
+
+        async function setupAutocompleteInfracaoEdit() {
+            const input = document.getElementById('editCodigoInfracao');
+            const list = document.getElementById('autocomplete-edit-list');
+            input.addEventListener('input', async function() {
+                const val = this.value.trim();
+                list.innerHTML = '';
+                if (val.length < 1) return;
+                const { data } = await supabaseClient.from('infracoes').select('*').or(`codigo.ilike.%${val}%,descricao.ilike.%${val}%`).limit(5);
+                if (data) {
+                    data.forEach(i => {
+                        const d = document.createElement('div');
+                        d.className = 'autocomplete-item';
+                        d.innerHTML = `<strong>${i.codigo}</strong> - ${i.descricao}`;
+                        d.onclick = () => {
+                            input.value = i.codigo;
+                            document.getElementById('editDescricaoInfracao').value = i.descricao;
                             list.innerHTML = '';
                         };
                         list.appendChild(d);
