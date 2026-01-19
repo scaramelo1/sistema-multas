@@ -574,6 +574,11 @@
         function configurarEventos() {
             document.getElementById('multaForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                const dataInput = document.getElementById('data').value; // "YYYY-MM-DD"
+                const partes = dataInput.split('-');
+                const dataLocal = new Date(partes[0], partes[1] - 1, partes[2]);
+
                 const novaMulta = {
                     placa: document.getElementById('placa').value.toUpperCase(),
                     numero_auto_infracao: document.getElementById('numeroAutoInfracao').value,
@@ -582,7 +587,7 @@
                     agente_posto: document.getElementById('agentePosto').value,
                     agente_re: document.getElementById('agenteRE').value,
                     agente_nome: document.getElementById('agenteNome').value,
-                    data: document.getElementById('data').value,
+                    data: dataLocal.toISOString(),
                     user_id: usuarioLogado.id,
                 };
 
@@ -836,6 +841,11 @@
 
         async function salvarEdicao() {
             const id = document.getElementById('editId').value;
+
+            const dataInput = document.getElementById('editData').value; // "YYYY-MM-DD"
+            const partes = dataInput.split('-');
+            const dataLocal = new Date(partes[0], partes[1] - 1, partes[2]);
+
             const multaAtualizada = {
                 placa: document.getElementById('editPlaca').value.toUpperCase(),
                 numero_auto_infracao: document.getElementById('editNumeroAutoInfracao').value,
@@ -844,7 +854,7 @@
                 agente_posto: document.getElementById('editAgentePosto').value,
                 agente_re: document.getElementById('editAgenteRE').value,
                 agente_nome: document.getElementById('editAgenteNome').value,
-                data: document.getElementById('editData').value,
+                data: dataLocal.toISOString(),
             };
 
             const { error } = await supabaseClient.from('multas').update(multaAtualizada).eq('id', id);
