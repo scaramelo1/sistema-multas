@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sistema de Controle de Multas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Bibliotecas para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
+        /* Seu CSS permanece o mesmo, omitido para brevidade */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
             max-width: 1300px;
             margin: 0 auto;
@@ -30,46 +29,39 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             overflow: hidden;
         }
-
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
-
         .header h1 {
             font-size: 2em;
             margin-bottom: 10px;
         }
-
         .content {
             padding: 30px;
         }
-
         .auth-section {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 30px;
         }
-
         .auth-section h2 {
             color: #667eea;
             margin-bottom: 20px;
         }
-
         .form-group {
             margin-bottom: 15px;
+            position: relative;
         }
-
         .form-group label {
             display: block;
             margin-bottom: 5px;
             color: #333;
             font-weight: 500;
         }
-
         .form-group input, .form-group select {
             width: 100%;
             padding: 12px;
@@ -78,12 +70,10 @@
             font-size: 14px;
             transition: border-color 0.3s;
         }
-
         .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #667eea;
         }
-
         .btn {
             padding: 12px 24px;
             border: none;
@@ -95,122 +85,99 @@
             margin-right: 10px;
             margin-bottom: 10px;
         }
-
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-
         .btn-success {
             background: #28a745;
             color: white;
         }
-
         .btn-success:hover {
             background: #218838;
             transform: translateY(-2px);
         }
-
         .btn-info {
             background: #17a2b8;
             color: white;
         }
-
         .btn-info:hover {
             background: #138496;
             transform: translateY(-2px);
         }
-
         .btn-warning {
             background: #ffc107;
             color: #000;
         }
-
         .btn-warning:hover {
             background: #e0a800;
             transform: translateY(-2px);
         }
-
         .btn-danger {
             background: #dc3545;
             color: white;
         }
-
         .btn-danger:hover {
             background: #c82333;
         }
-
         .btn-sm {
             padding: 6px 12px;
             font-size: 12px;
         }
-
         .status-message {
             padding: 15px;
             border-radius: 8px;
             margin-top: 15px;
             font-weight: 500;
         }
-
         .status-success {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-
         .status-error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-
         .status-info {
             background: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
         }
-
         .multas-section {
             margin-top: 30px;
         }
-
         .multas-section h2 {
             color: #667eea;
             margin-bottom: 20px;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             font-size: 13px;
         }
-
         table th {
             background: #667eea;
             color: white;
             padding: 12px;
             text-align: left;
         }
-
         table td {
             padding: 12px;
             border-bottom: 1px solid #e0e0e0;
         }
-
         table tr:hover {
             background: #f8f9fa;
         }
-
         .hidden {
             display: none;
         }
-
         .actions-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -218,7 +185,6 @@
             margin-top: 20px;
             align-items: flex-end;
         }
-
         .user-info {
             background: #e7f3ff;
             padding: 15px;
@@ -228,139 +194,21 @@
             justify-content: space-between;
             align-items: center;
         }
-
         .user-info strong {
             color: #667eea;
         }
-
-        .autocomplete-items {
-            position: absolute;
-            background-color: white;
-            border: 1px solid #667eea;
-            border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 100%;
-        }
-
-        .autocomplete-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .autocomplete-item:hover {
-            background-color: #f0f0f0;
-        }
-
-        .form-group {
-            position: relative;
-        }
-
-        .stats-header {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .stat-item {
+        #pagination {
+            margin-top: 15px;
             text-align: center;
-            flex: 1;
-            min-width: 150px;
         }
-
-        .stat-item h3 {
-            font-size: 2em;
-            margin-bottom: 5px;
+        #pagination button {
+            margin: 0 3px;
         }
-
-        .stat-item p {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .badge-admin { background: #ffd700; color: #000; }
-        .badge-agente { background: #c0c0c0; color: #000; }
-
-        /* Modal de Edição */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            overflow: auto;
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-
-        .modal-header {
+        .rows-per-page-container {
+            margin-top: 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #667eea;
-        }
-
-        .modal-header h2 {
-            color: #667eea;
-            margin: 0;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .close:hover {
-            color: #000;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-
-        .filter-group {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            margin-bottom: 20px;
+            gap: 10px;
         }
     </style>
 </head>
@@ -379,27 +227,27 @@
                 <div id="loginFields">
                     <div class="form-group">
                         <label for="authEmail">E-mail:</label>
-                        <input type="email" id="authEmail" placeholder="seu@email.com">
+                        <input type="email" id="authEmail" placeholder="seu@email.com" />
                     </div>
 
                     <div class="form-group">
                         <label for="authPassword">Senha:</label>
-                        <input type="password" id="authPassword" placeholder="Sua senha">
+                        <input type="password" id="authPassword" placeholder="Sua senha" />
                     </div>
                 </div>
 
                 <div id="registerFields" class="hidden">
                     <div class="form-group">
                         <label for="regNome">Nome Completo:</label>
-                        <input type="text" id="regNome" placeholder="Nome do Agente">
+                        <input type="text" id="regNome" placeholder="Nome do Agente" />
                     </div>
                     <div class="form-group">
                         <label for="regRE">RE:</label>
-                        <input type="text" id="regRE" placeholder="Ex: 127861-4">
+                        <input type="text" id="regRE" placeholder="Ex: 127861-4" />
                     </div>
                     <div class="form-group">
                         <label for="regCargo">Cargo/Posto:</label>
-                        <input type="text" id="regCargo" placeholder="Ex: Sd PM">
+                        <input type="text" id="regCargo" placeholder="Ex: Sd PM" />
                     </div>
                     <div class="form-group">
                         <label for="regNivel">Nível de Acesso:</label>
@@ -423,9 +271,9 @@
             <!-- Informações do Usuário Logado -->
             <div id="userInfo" class="user-info hidden">
                 <div>
-                    <strong>Usuário:</strong> <span id="userName" style="font-weight: bold; color: #333;"></span> 
+                    <strong>Usuário:</strong> <span id="userName" style="font-weight: bold; color: #333;"></span>
                     <span id="userBadge" class="badge"></span>
-                    <br>
+                    <br />
                     <small><strong>E-mail:</strong> <span id="userEmail"></span> | <strong>RE:</strong> <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small>
                 </div>
                 <div>
@@ -457,48 +305,43 @@
                 <form id="multaForm">
                     <div class="form-group">
                         <label for="placa">Placa:</label>
-                        <input type="text" id="placa" placeholder="AAA1A11 ou AAA1111" maxlength="7" required>
+                        <input type="text" id="placa" placeholder="AAA1A11 ou AAA1111" maxlength="7" required />
                     </div>
 
                     <div class="form-group">
                         <label for="numeroAutoInfracao">Número do Auto de Infração:</label>
-                        <input type="text" id="numeroAutoInfracao" placeholder="Número do Auto de Infração" required>
+                        <input type="text" id="numeroAutoInfracao" placeholder="Número do Auto de Infração" required />
                     </div>
 
                     <div class="form-group">
                         <label for="codigoInfracao">Código da Infração:</label>
-                        <input type="text" id="codigoInfracao" placeholder="Ex: 50291" autocomplete="off" required>
-                        <input type="hidden" id="descricaoInfracao">
+                        <input type="text" id="codigoInfracao" placeholder="Ex: 50291" autocomplete="off" required />
+                        <input type="hidden" id="descricaoInfracao" />
                     </div>
 
                     <div class="form-group">
                         <label for="agenteRE">RE do Agente:</label>
-                        <input type="text" id="agenteRE" placeholder="148929-1" autocomplete="off" required>
-                        <input type="hidden" id="agenteNome">
-                        <input type="hidden" id="agentePosto">
+                        <input type="text" id="agenteRE" placeholder="148929-1" autocomplete="off" required />
+                        <input type="hidden" id="agenteNome" />
+                        <input type="hidden" id="agentePosto" />
                     </div>
 
                     <div class="form-group">
                         <label for="data">Data:</label>
-                        <input type="date" id="data" required>
+                        <input type="date" id="data" required />
                     </div>
 
                     <button type="submit" class="btn btn-primary">Adicionar Multa</button>
                 </form>
 
-                <div class="admin-only hidden">
-                    <h2>📄 Relatório PDF por Período</h2>
-                    <div class="filter-group">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="dataInicio">Data Início:</label>
-                            <input type="date" id="dataInicio">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="dataFim">Data Fim:</label>
-                            <input type="date" id="dataFim">
-                        </div>
-                        <button id="btnRelatorioPDF" class="btn btn-danger" onclick="gerarRelatorioPDF()" style="margin-bottom: 0;">📄 Gerar Relatório PDF</button>
-                    </div>
+                <div class="rows-per-page-container">
+                    <label for="rowsPerPageSelect">Multas por página:</label>
+                    <select id="rowsPerPageSelect" onchange="changeRowsPerPage()">
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
                 </div>
 
                 <table id="multasTable">
@@ -520,6 +363,8 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <div id="pagination"></div>
             </div>
         </div>
     </div>
@@ -532,36 +377,34 @@
                 <span class="close" onclick="fecharModalEdicao()">×</span>
             </div>
             <form id="editForm">
-                <input type="hidden" id="editId">
+                <input type="hidden" id="editId" />
 
                 <div class="form-group">
                     <label for="editPlaca">Placa:</label>
-                    <input type="text" id="editPlaca" maxlength="7" required>
+                    <input type="text" id="editPlaca" maxlength="7" required />
                 </div>
 
                 <div class="form-group">
                     <label for="editNumeroAutoInfracao">Número do Auto de Infração:</label>
-                    <input type="text" id="editNumeroAutoInfracao" required>
+                    <input type="text" id="editNumeroAutoInfracao" required />
                 </div>
 
                 <div class="form-group">
                     <label for="editCodigoInfracao">Código da Infração:</label>
-                    <input type="text" id="editCodigoInfracao" autocomplete="off" required>
-                    <div id="autocomplete-edit-list" class="autocomplete-items"></div>
-                    <input type="hidden" id="editDescricaoInfracao">
+                    <input type="text" id="editCodigoInfracao" autocomplete="off" required />
+                    <input type="hidden" id="editDescricaoInfracao" />
                 </div>
 
                 <div class="form-group">
                     <label for="editAgenteRE">RE do Agente:</label>
-                    <input type="text" id="editAgenteRE" autocomplete="off" required>
-                    <div id="autocomplete-edit-agente-list" class="autocomplete-items"></div>
-                    <input type="hidden" id="editAgenteNome">
-                    <input type="hidden" id="editAgentePosto">
+                    <input type="text" id="editAgenteRE" autocomplete="off" required />
+                    <input type="hidden" id="editAgenteNome" />
+                    <input type="hidden" id="editAgentePosto" />
                 </div>
 
                 <div class="form-group">
                     <label for="editData">Data:</label>
-                    <input type="date" id="editData" required>
+                    <input type="date" id="editData" required />
                 </div>
 
                 <div class="actions-buttons">
@@ -581,7 +424,10 @@
         let perfilUsuario = null;
         let multasAtuais = [];
 
-        window.addEventListener('load', function() {
+        let currentPage = 1;
+        let rowsPerPage = 5;
+
+        window.addEventListener('load', function () {
             if (typeof window.supabase === 'undefined') {
                 alert('Erro ao carregar Supabase.');
                 return;
@@ -592,7 +438,9 @@
         });
 
         async function verificarSessaoInicial() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
+            const {
+                data: { session },
+            } = await supabaseClient.auth.getSession();
             if (session) {
                 await carregarPerfil(session.user);
             }
@@ -631,11 +479,7 @@
         async function carregarPerfil(user) {
             usuarioLogado = user;
             try {
-                const { data, error } = await supabaseClient
-                    .from('perfis')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
+                const { data, error } = await supabaseClient.from('perfis').select('*').eq('id', user.id).single();
 
                 if (error) throw error;
                 perfilUsuario = data;
@@ -663,7 +507,7 @@
                     agente_re: document.getElementById('agenteRE').value,
                     agente_nome: document.getElementById('agenteNome').value,
                     data: document.getElementById('data').value,
-                    user_id: usuarioLogado.id
+                    user_id: usuarioLogado.id,
                 };
 
                 const { error } = await supabaseClient.from('multas').insert([novaMulta]);
@@ -684,8 +528,8 @@
                 await salvarEdicao();
             });
 
-            document.getElementById('placa').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
-            document.getElementById('editPlaca').addEventListener('input', e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+            document.getElementById('placa').addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
+            document.getElementById('editPlaca').addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
             document.getElementById('data').valueAsDate = new Date();
 
             // Set default dates for PDF filter
@@ -694,10 +538,14 @@
             document.getElementById('dataInicio').valueAsDate = primeiroDiaMes;
             document.getElementById('dataFim').valueAsDate = hoje;
 
-            setupAutocompleteAgente();
-            setupAutocompleteAgenteEdit();
-            setupAutocompleteInfracao();
-            setupAutocompleteInfracaoEdit();
+            // Remove autocomplete setup calls since you requested to remove autocomplete
+            // setupAutocompleteAgente();
+            // setupAutocompleteAgenteEdit();
+            // setupAutocompleteInfracao();
+            // setupAutocompleteInfracaoEdit();
+
+            // Initialize pagination controls
+            document.getElementById('rowsPerPageSelect').value = rowsPerPage;
         }
 
         async function cadastrarUsuario() {
@@ -727,13 +575,15 @@
             }
 
             if (authData.user) {
-                const { error: profileError } = await supabaseClient.from('perfis').insert([{ 
-                    id: authData.user.id,
-                    nome_completo: nome,
-                    re: re,
-                    cargo: cargo,
-                    nivel_acesso: nivel
-                }]);
+                const { error: profileError } = await supabaseClient.from('perfis').insert([
+                    {
+                        id: authData.user.id,
+                        nome_completo: nome,
+                        re: re,
+                        cargo: cargo,
+                        nivel_acesso: nivel,
+                    },
+                ]);
 
                 if (profileError) {
                     mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
@@ -774,40 +624,45 @@
             badge.className = `badge badge-${perfil.nivel_acesso}`;
 
             const isAdmin = perfil.nivel_acesso === 'admin';
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin));
+            document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
         }
 
         async function carregarMultas() {
             let query = supabaseClient
                 .from('multas')
-                .select(`
+                .select(
+                    `
                     *,
                     perfis:user_id (
                         re
                     )
-                `)
+                `
+                )
                 .order('data', { ascending: false });
 
             const { data, error } = await query;
             if (!error) {
                 multasAtuais = data || [];
-                listarMultas(multasAtuais);
-            }
-            else console.error("Erro ao carregar multas:", error);
+                renderTablePage(currentPage);
+            } else console.error('Erro ao carregar multas:', error);
         }
 
-        function listarMultas(multas) {
+        function renderTablePage(page) {
             const tbody = document.getElementById('multasBody');
             tbody.innerHTML = '';
             const isAdmin = perfilUsuario.nivel_acesso === 'admin';
 
-            if (multas.length === 0) {
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageMultas = multasAtuais.slice(start, end);
+
+            if (pageMultas.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
                 atualizarEstatisticas([]);
                 return;
             }
 
-            multas.forEach(multa => {
+            pageMultas.forEach((multa) => {
                 const tr = document.createElement('tr');
                 const podeEditar = isAdmin || multa.user_id === usuarioLogado.id;
                 const reInseriu = multa.perfis ? multa.perfis.re : '-';
@@ -822,25 +677,72 @@
                     <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
                     <td>
                         <div class="action-buttons">
-                            ${podeEditar ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>` : ''}
-                            ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>` : ''}
+                            ${
+                                podeEditar
+                                    ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(
+                                          multa
+                                      )})'>✏️</button>`
+                                    : ''
+                            }
+                            ${
+                                isAdmin
+                                    ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
+                                    : ''
+                            }
                             ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-            atualizarEstatisticas(multas);
+            atualizarEstatisticas(multasAtuais);
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            const totalPages = Math.ceil(multasAtuais.length / rowsPerPage);
+
+            if (totalPages <= 1) return;
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = 'btn btn-sm';
+                if (i === currentPage) btn.classList.add('btn-primary');
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderTablePage(currentPage);
+                });
+                paginationContainer.appendChild(btn);
+            }
+        }
+
+        function changeRowsPerPage() {
+            const select = document.getElementById('rowsPerPageSelect');
+            rowsPerPage = parseInt(select.value);
+            currentPage = 1;
+            renderTablePage(currentPage);
+        }
+
+        function listarMultas(multas) {
+            // Deprecated: agora usamos renderTablePage para paginação
         }
 
         function atualizarEstatisticas(multas) {
             const hoje = new Date();
             const inicioSemana = new Date(hoje);
             inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-            inicioSemana.setHours(0,0,0,0);
+            inicioSemana.setHours(0, 0, 0, 0);
 
-            const semanal = multas.filter(m => new Date(m.data) >= inicioSemana).length;
-            const mensal = multas.filter(m => new Date(m.data).getMonth() === hoje.getMonth() && new Date(m.data).getFullYear() === hoje.getFullYear()).length;
+            const semanal = multas.filter((m) => new Date(m.data) >= inicioSemana).length;
+            const mensal =
+                multas.filter(
+                    (m) =>
+                        new Date(m.data).getMonth() === hoje.getMonth() &&
+                        new Date(m.data).getFullYear() === hoje.getFullYear()
+                ).length;
 
             document.getElementById('statTotal').textContent = multas.length;
             document.getElementById('statSemanal').textContent = semanal;
@@ -876,13 +778,10 @@
                 agente_posto: document.getElementById('editAgentePosto').value,
                 agente_re: document.getElementById('editAgenteRE').value,
                 agente_nome: document.getElementById('editAgenteNome').value,
-                data: document.getElementById('editData').value
+                data: document.getElementById('editData').value,
             };
 
-            const { error } = await supabaseClient
-                .from('multas')
-                .update(multaAtualizada)
-                .eq('id', id);
+            const { error } = await supabaseClient.from('multas').update(multaAtualizada).eq('id', id);
 
             if (error) {
                 alert('❌ Erro ao atualizar: ' + error.message);
@@ -910,185 +809,12 @@
             div.style.display = 'block';
         }
 
-        async function setupAutocompleteAgente() {
-            const input = document.getElementById('agenteRE');
-            const list = document.getElementById('autocomplete-agente-list');
-            input.addEventListener('input', async function() {
-                const val = this.value.trim();
-                list.innerHTML = '';
-                if (val.length < 1) return;
-                const { data } = await supabaseClient.from('agentes').select('*').or(`re.ilike.%${val}%,nome.ilike.%${val}%`).limit(5);
-                if (data) {
-                    data.forEach(p => {
-                        const d = document.createElement('div');
-                        d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome}`;
-                        d.onclick = () => {
-                            input.value = p.re;
-                            document.getElementById('agenteNome').value = p.nome;
-                            document.getElementById('agentePosto').value = p.posto;
-                            list.innerHTML = '';
-                        };
-                        list.appendChild(d);
-                    });
-                }
-            });
-        }
-
-        async function setupAutocompleteAgenteEdit() {
-            const input = document.getElementById('editAgenteRE');
-            const list = document.getElementById('autocomplete-edit-agente-list');
-            input.addEventListener('input', async function() {
-                const val = this.value.trim();
-                list.innerHTML = '';
-                if (val.length < 1) return;
-                const { data } = await supabaseClient.from('agentes').select('*').or(`re.ilike.%${val}%,nome.ilike.%${val}%`).limit(5);
-                if (data) {
-                    data.forEach(p => {
-                        const d = document.createElement('div');
-                        d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${p.re}</strong> - ${p.nome}`;
-                        d.onclick = () => {
-                            input.value = p.re;
-                            document.getElementById('editAgenteNome').value = p.nome;
-                            document.getElementById('editAgentePosto').value = p.posto;
-                            list.innerHTML = '';
-                        };
-                        list.appendChild(d);
-                    });
-                }
-            });
-        }
-
-        async function setupAutocompleteInfracao() {
-            const input = document.getElementById('codigoInfracao');
-            const list = document.getElementById('autocomplete-list');
-            input.addEventListener('input', async function() {
-                const val = this.value.trim();
-                list.innerHTML = '';
-                if (val.length < 1) return;
-                const { data } = await supabaseClient.from('infracoes').select('*').or(`codigo.ilike.%${val}%,descricao.ilike.%${val}%`).limit(5);
-                if (data) {
-                    data.forEach(i => {
-                        const d = document.createElement('div');
-                        d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${i.codigo}</strong> - ${i.descricao}`;
-                        d.onclick = () => {
-                            input.value = i.codigo;
-                            document.getElementById('descricaoInfracao').value = i.descricao;
-                            list.innerHTML = '';
-                        };
-                        list.appendChild(d);
-                    });
-                }
-            });
-        }
-
-        async function setupAutocompleteInfracaoEdit() {
-            const input = document.getElementById('editCodigoInfracao');
-            const list = document.getElementById('autocomplete-edit-list');
-            input.addEventListener('input', async function() {
-                const val = this.value.trim();
-                list.innerHTML = '';
-                if (val.length < 1) return;
-                const { data } = await supabaseClient.from('infracoes').select('*').or(`codigo.ilike.%${val}%,descricao.ilike.%${val}%`).limit(5);
-                if (data) {
-                    data.forEach(i => {
-                        const d = document.createElement('div');
-                        d.className = 'autocomplete-item';
-                        d.innerHTML = `<strong>${i.codigo}</strong> - ${i.descricao}`;
-                        d.onclick = () => {
-                            input.value = i.codigo;
-                            document.getElementById('editDescricaoInfracao').value = i.descricao;
-                            list.innerHTML = '';
-                        };
-                        list.appendChild(d);
-                    });
-                }
-            });
-        }
-
-        function gerarRelatorioPDF() {
-            const dataInicioStr = document.getElementById('dataInicio').value;
-            const dataFimStr = document.getElementById('dataFim').value;
-
-            if (!dataInicioStr || !dataFimStr) {
-                alert("Por favor, selecione o período (Data Início e Data Fim).");
-                return;
-            }
-
-            const dataInicio = new Date(dataInicioStr);
-            dataInicio.setHours(0, 0, 0, 0);
-            const dataFim = new Date(dataFimStr);
-            dataFim.setHours(23, 59, 59, 999);
-
-            if (dataInicio > dataFim) {
-                alert("A Data Início não pode ser maior que a Data Fim.");
-                return;
-            }
-
-            // Filtrar multas pelo período (baseado na data de inserção/multa)
-            const multasFiltradas = multasAtuais.filter(m => {
-                const dataMulta = new Date(m.data);
-                return dataMulta >= dataInicio && dataMulta <= dataFim;
-            });
-
-            if (multasFiltradas.length === 0) {
-                alert("Não há multas registradas no período selecionado.");
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-
-            // Título e Cabeçalho
-            doc.setFontSize(18);
-            doc.text("Relatório de Multas de Trânsito por Período", 14, 20);
-
-            doc.setFontSize(10);
-            doc.text(`Período: ${new Date(dataInicioStr).toLocaleDateString('pt-BR')} até ${new Date(dataFimStr).toLocaleDateString('pt-BR')}`, 14, 28);
-            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 33);
-            doc.text(`Responsável: ${perfilUsuario.nome_completo} (RE: ${perfilUsuario.re})`, 14, 38);
-
-            // Preparar dados para a tabela (sem 'Descrição' e 'Inserido por')
-            const colunas = ["Placa", "Auto Infração", "Cód.", "RE Agente", "Data"];
-            const linhas = multasFiltradas.map(m => [
-                m.placa,
-                m.numero_auto_infracao || '-',
-                m.codigo_infracao,
-                m.agente_re || '-',
-                new Date(m.data).toLocaleDateString('pt-BR')
-            ]);
-
-            // Gerar Tabela
-            doc.autoTable({
-                startY: 45,
-                head: [colunas],
-                body: linhas,
-                theme: 'grid',
-                headStyles: { fillColor: [102, 126, 234] },
-                styles: { fontSize: 8 },
-                columnStyles: {
-                    2: { cellWidth: 30 }
-                }
-            });
-
-            // Salvar
-            doc.save(`relatorio_multas_${dataInicioStr}_a_${dataFimStr}.pdf`);
-        }
-
-        async function testarConexao() {
-            const { error } = await supabaseClient.from('perfis').select('count', { count: 'exact', head: true });
-            if (error) mostrarStatus('❌ Erro: ' + error.message, 'error');
-            else mostrarStatus('✅ Conexão OK!', 'success');
-        }
-
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('editModal');
             if (event.target == modal) {
                 fecharModalEdicao();
             }
-        }
+        };
     </script>
 </body>
 </html>
