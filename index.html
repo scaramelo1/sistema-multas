@@ -10,7 +10,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Seu CSS permanece o mesmo, omitido para brevidade */
-        * {
+        *.stats-header {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    background: #667eea;
+    color: white;
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    flex: 1 1 150px;
+    text-align: center;
+    font-weight: 700;
+    user-select: none;
+    transition: transform 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: scale(1.05);
+}
+
+.stat-item h3 {
+    font-size: 2.5rem;
+    margin-bottom: 5px;
+    font-weight: 900;
+    font-family: 'Segoe UI Black', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.stat-item p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    opacity: 0.9;
+} 
+        {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
