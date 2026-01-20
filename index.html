@@ -491,404 +491,506 @@
         </div>
     </div>
 
-<script>
-    const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
+    <script>
+        const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
 
-    let supabaseClient;
-    let usuarioLogado = null;
-    let perfilUsuario = null;
-    let multasAtuais = [];
+        let supabaseClient;
+        let usuarioLogado = null;
+        let perfilUsuario = null;
+        let multasAtuais = [];
 
-    let currentPage = 1;
-    let rowsPerPage = 5;
+        let currentPage = 1;
+        let rowsPerPage = 5;
 
-    window.addEventListener('load', function () {
-        if (typeof window.supabase === 'undefined') {
-            alert('Erro ao carregar Supabase.');
-            return;
-        }
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        verificarSessaoInicial();
-        configurarEventos();
-    });
-
-    async function verificarSessaoInicial() {
-        const {
-            data: { session },
-        } = await supabaseClient.auth.getSession();
-        if (session) {
-            await carregarPerfil(session.user);
-        }
-    }
-
-    function toggleAuthMode(isRegister) {
-        if (usuarioLogado && perfilUsuario && perfilUsuario.nivel_acesso === 'admin') {
-            document.getElementById('authSection').classList.toggle('hidden', !isRegister);
-            document.getElementById('userInfo').classList.toggle('hidden', isRegister);
-            document.getElementById('multasSection').classList.toggle('hidden', isRegister);
-
-            if (isRegister) {
-                document.getElementById('authTitle').textContent = '📝 Cadastro de Novo Usuário';
-                document.getElementById('registerFields').classList.remove('hidden');
-                document.getElementById('loginFields').classList.remove('hidden');
-                document.getElementById('btnLogin').classList.add('hidden');
-                document.getElementById('btnRegister').classList.remove('hidden');
-                document.getElementById('btnBackToLogin').classList.remove('hidden');
-                document.getElementById('authEmail').value = '';
-                document.getElementById('authPassword').value = '';
-                document.getElementById('regNome').value = '';
-                document.getElementById('regRE').value = '';
-                document.getElementById('regCargo').value = '';
-                document.getElementById('regNivel').value = 'agente';
+        window.addEventListener('load', function () {
+            if (typeof window.supabase === 'undefined') {
+                alert('Erro ao carregar Supabase.');
+                return;
             }
-        } else {
-            document.getElementById('authTitle').textContent = isRegister ? '📝 Cadastro de Novo Usuário' : '🔐 Autenticação';
-            document.getElementById('registerFields').classList.toggle('hidden', !isRegister);
-            document.getElementById('loginFields').classList.toggle('hidden', isRegister);
-            document.getElementById('btnLogin').classList.toggle('hidden', isRegister);
-            document.getElementById('btnRegister').classList.toggle('hidden', !isRegister);
-            document.getElementById('btnBackToLogin').classList.toggle('hidden', !isRegister);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            verificarSessaoInicial();
+            configurarEventos();
+        });
+
+        async function verificarSessaoInicial() {
+            try {
+                const {
+                    data: { session },
+                } = await supabaseClient.auth.getSession();
+                if (session) {
+                    await carregarPerfil(session.user);
+                }
+            } catch (err) {
+                console.error('Erro ao verificar sessão:', err);
+            }
         }
-    }
 
-    async function carregarPerfil(user) {
-        usuarioLogado = user;
-        try {
-            const { data, error } = await supabaseClient.from('perfis').select('*').eq('id', user.id).single();
+        function toggleAuthMode(isRegister) {
+            if (usuarioLogado && perfilUsuario && perfilUsuario.nivel_acesso === 'admin') {
+                document.getElementById('authSection').classList.toggle('hidden', !isRegister);
+                document.getElementById('userInfo').classList.toggle('hidden', isRegister);
+                document.getElementById('multasSection').classList.toggle('hidden', isRegister);
 
-            if (error) throw error;
-            perfilUsuario = data;
-            mostrarUsuarioLogado(user, data);
-            carregarMultas();
-
-            document.getElementById('agenteRE').value = data.re;
-            document.getElementById('agenteNome').value = data.nome_completo;
-            document.getElementById('agentePosto').value = data.cargo;
-        } catch (error) {
-            console.error('Erro ao carregar perfil:', error);
-            mostrarStatus('Erro ao carregar dados do perfil.', 'error');
+                if (isRegister) {
+                    document.getElementById('authTitle').textContent = '📝 Cadastro de Novo Usuário';
+                    document.getElementById('registerFields').classList.remove('hidden');
+                    document.getElementById('loginFields').classList.remove('hidden');
+                    document.getElementById('btnLogin').classList.add('hidden');
+                    document.getElementById('btnRegister').classList.remove('hidden');
+                    document.getElementById('btnBackToLogin').classList.remove('hidden');
+                    document.getElementById('authEmail').value = '';
+                    document.getElementById('authPassword').value = '';
+                    document.getElementById('regNome').value = '';
+                    document.getElementById('regRE').value = '';
+                    document.getElementById('regCargo').value = '';
+                    document.getElementById('regNivel').value = 'agente';
+                }
+            } else {
+                document.getElementById('authTitle').textContent = isRegister ? '📝 Cadastro de Novo Usuário' : '🔐 Autenticação';
+                document.getElementById('registerFields').classList.toggle('hidden', !isRegister);
+                document.getElementById('loginFields').classList.toggle('hidden', isRegister);
+                document.getElementById('btnLogin').classList.toggle('hidden', isRegister);
+                document.getElementById('btnRegister').classList.toggle('hidden', !isRegister);
+                document.getElementById('btnBackToLogin').classList.toggle('hidden', !isRegister);
+            }
         }
-    }
 
-    function configurarEventos() {
-        document.getElementById('multaForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        async function carregarPerfil(user) {
+            usuarioLogado = user;
+            try {
+                const { data, error } = await supabaseClient.from('perfis').select('*').eq('id', user.id).single();
 
-            const dataInput = document.getElementById('data').value; // "YYYY-MM-DD"
+                if (error) throw error;
+                perfilUsuario = data;
+                mostrarUsuarioLogado(user, data);
+                carregarMultas();
+
+                document.getElementById('agenteRE').value = data.re;
+                document.getElementById('agenteNome').value = data.nome_completo;
+                document.getElementById('agentePosto').value = data.cargo;
+            } catch (error) {
+                console.error('Erro ao carregar perfil:', error);
+                mostrarStatus('Erro ao carregar dados do perfil.', 'error');
+            }
+        }
+
+        function configurarEventos() {
+            const multaForm = document.getElementById('multaForm');
+            if (multaForm) {
+                multaForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    if (!usuarioLogado) {
+                        alert('Você precisa estar logado para adicionar multas.');
+                        return;
+                    }
+
+                    const dataInput = document.getElementById('data').value; // "YYYY-MM-DD"
+                    if (!dataInput) {
+                        alert('Selecione uma data válida.');
+                        return;
+                    }
+                    // Forçamos horário ao meio-dia para evitar deslocamento por fuso horário
+                    const dataParaSalvar = dataInput + "T12:00:00";
+
+                    const novaMulta = {
+                        placa: document.getElementById('placa').value.toUpperCase(),
+                        numero_auto_infracao: document.getElementById('numeroAutoInfracao').value,
+                        codigo_infracao: document.getElementById('codigoInfracao').value,
+                        descricao_infracao: document.getElementById('descricaoInfracao').value,
+                        agente_posto: document.getElementById('agentePosto') ? document.getElementById('agentePosto').value : '',
+                        agente_re: document.getElementById('agenteRE').value,
+                        agente_nome: document.getElementById('agenteNome').value,
+                        data: dataParaSalvar,
+                        user_id: usuarioLogado.id,
+                    };
+
+                    try {
+                        const { error } = await supabaseClient.from('multas').insert([novaMulta]);
+                        if (error) {
+                            alert('Erro: ' + error.message);
+                        } else {
+                            alert('✅ Multa adicionada!');
+                            document.getElementById('multaForm').reset();
+                            document.getElementById('data').valueAsDate = new Date();
+                            if (perfilUsuario) {
+                                document.getElementById('agenteRE').value = perfilUsuario.re;
+                                document.getElementById('agenteNome').value = perfilUsuario.nome_completo;
+                                document.getElementById('agentePosto').value = perfilUsuario.cargo;
+                            }
+                            carregarMultas();
+                        }
+                    } catch (err) {
+                        console.error('Erro ao inserir multa:', err);
+                        alert('Erro ao inserir multa. Veja o console.');
+                    }
+                });
+            }
+
+            const editForm = document.getElementById('editForm');
+            if (editForm) {
+                editForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await salvarEdicao();
+                });
+            }
+
+            const placa = document.getElementById('placa');
+            if (placa) placa.addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
+            const editPlaca = document.getElementById('editPlaca');
+            if (editPlaca) editPlaca.addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
+
+            const dataElem = document.getElementById('data');
+            if (dataElem) dataElem.valueAsDate = new Date();
+
+            // Set default dates for PDF filter if elements exist
+            try {
+                const hoje = new Date();
+                const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                const dataInicio = document.getElementById('dataInicio');
+                const dataFim = document.getElementById('dataFim');
+                if (dataInicio) dataInicio.valueAsDate = primeiroDiaMes;
+                if (dataFim) dataFim.valueAsDate = hoje;
+            } catch (err) {
+                // silencioso
+            }
+
+            // Initialize pagination controls
+            const rowsSelect = document.getElementById('rowsPerPageSelect');
+            if (rowsSelect) rowsSelect.value = rowsPerPage;
+        }
+
+        async function cadastrarUsuario() {
+            if (!usuarioLogado || !perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
+                mostrarStatus('❌ Apenas administradores podem criar contas!', 'error');
+                return;
+            }
+
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const nome = document.getElementById('regNome').value;
+            const re = document.getElementById('regRE').value;
+            const cargo = document.getElementById('regCargo').value;
+            const nivel = document.getElementById('regNivel').value;
+
+            if (!email || !password || !nome || !re) {
+                mostrarStatus('❌ Preencha todos os campos!', 'error');
+                return;
+            }
+
+            mostrarStatus('🔄 Criando conta...', 'info');
+            const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
+
+            if (authError) {
+                mostrarStatus('❌ Erro: ' + authError.message, 'error');
+                return;
+            }
+
+            if (authData.user) {
+                const { error: profileError } = await supabaseClient.from('perfis').insert([
+                    {
+                        id: authData.user.id,
+                        nome_completo: nome,
+                        re: re,
+                        cargo: cargo,
+                        nivel_acesso: nivel,
+                    },
+                ]);
+
+                if (profileError) {
+                    mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
+                } else {
+                    mostrarStatus('✅ Conta criada com sucesso!', 'success');
+                    setTimeout(() => {
+                        toggleAuthMode(false);
+                    }, 2000);
+                }
+            }
+        }
+
+        async function fazerLogin() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            mostrarStatus('🔄 Entrando...', 'info');
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) mostrarStatus('❌ ' + error.message, 'error');
+            else await carregarPerfil(data.user);
+        }
+
+        async function fazerLogout() {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        }
+
+        function mostrarUsuarioLogado(user, perfil) {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('userInfo').classList.remove('hidden');
+            document.getElementById('multasSection').classList.remove('hidden');
+            document.getElementById('userName').textContent = perfil.nome_completo;
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userRE').textContent = perfil.re;
+            document.getElementById('userPosto').textContent = perfil.cargo;
+
+            const badge = document.getElementById('userBadge');
+            badge.textContent = perfil.nivel_acesso;
+            badge.className = `badge badge-${perfil.nivel_acesso}`;
+
+            const isAdmin = perfil.nivel_acesso === 'admin';
+            document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
+        }
+
+        async function carregarMultas() {
+            try {
+                let query = supabaseClient
+                    .from('multas')
+                    .select(
+                        `
+                        *,
+                        perfis:user_id (
+                            re
+                        )
+                    `
+                    )
+                    .order('data', { ascending: false });
+
+                const { data, error } = await query;
+                if (!error) {
+                    multasAtuais = data || [];
+                    renderTablePage(currentPage);
+                } else console.error('Erro ao carregar multas:', error);
+            } catch (err) {
+                console.error('Erro na consulta de multas:', err);
+            }
+        }
+
+        function renderTablePage(page) {
+            const tbody = document.getElementById('multasBody');
+            tbody.innerHTML = '';
+            const isAdmin = perfilUsuario && perfilUsuario.nivel_acesso === 'admin';
+
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageMultas = multasAtuais.slice(start, end);
+
+            if (pageMultas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+                atualizarEstatisticas([]);
+                return;
+            }
+
+            pageMultas.forEach((multa) => {
+                const tr = document.createElement('tr');
+                const podeEditar = isAdmin || multa.user_id === (usuarioLogado && usuarioLogado.id);
+                const reInseriu = multa.perfis ? multa.perfis.re : '-';
+
+                // EXIBIÇÃO: Extrai a data diretamente do texto (YYYY-MM-DD) e inverte para DD/MM/YYYY
+                let dataFormatada = '';
+                try {
+                    if (multa.data) {
+                        const dataISO = multa.data.split('T')[0];
+                        dataFormatada = dataISO.split('-').reverse().join('/');
+                    }
+                } catch (err) {
+                    dataFormatada = '';
+                }
+
+                tr.innerHTML = `
+                    <td>${multa.placa}</td>
+                    <td>${multa.numero_auto_infracao || '-'}</td>
+                    <td>${multa.codigo_infracao}</td>
+                    <td>${multa.descricao_infracao || '-'}</td>
+                    <td>${multa.agente_re || '-'}</td>
+                    <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
+                    <td>${dataFormatada}</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${
+                                podeEditar
+                                    ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(
+                                          multa
+                                      )})'>✏️</button>`
+                                    : ''
+                            }
+                            ${
+                                isAdmin
+                                    ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
+                                    : ''
+                            }
+                            ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            atualizarEstatisticas(multasAtuais);
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            const totalPages = Math.ceil(multasAtuais.length / rowsPerPage);
+
+            if (totalPages <= 1) return;
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = 'btn btn-sm';
+                if (i === currentPage) btn.classList.add('btn-primary');
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderTablePage(currentPage);
+                });
+                paginationContainer.appendChild(btn);
+            }
+        }
+
+        function changeRowsPerPage() {
+            const select = document.getElementById('rowsPerPageSelect');
+            rowsPerPage = parseInt(select.value);
+            currentPage = 1;
+            renderTablePage(currentPage);
+        }
+
+        function atualizarEstatisticas(multas) {
+            const hoje = new Date();
+            const inicioSemana = new Date(hoje);
+            inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+            inicioSemana.setHours(0, 0, 0, 0);
+
+            const semanal = multas.filter((m) => {
+                try {
+                    // comparar usando a parte YYYY-MM-DD para evitar problemas de fuso
+                    const dataISO = (m.data || '').split('T')[0];
+                    if (!dataISO) return false;
+                    const parts = dataISO.split('-');
+                    const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+                    return dt >= inicioSemana;
+                } catch {
+                    return false;
+                }
+            }).length;
+
+            const mensal = multas.filter((m) => {
+                try {
+                    const dataISO = (m.data || '').split('T')[0];
+                    if (!dataISO) return false;
+                    const parts = dataISO.split('-');
+                    const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+                    return dt.getMonth() === hoje.getMonth() && dt.getFullYear() === hoje.getFullYear();
+                } catch {
+                    return false;
+                }
+            }).length;
+
+            document.getElementById('statTotal').textContent = multas.length;
+            document.getElementById('statSemanal').textContent = semanal;
+            document.getElementById('statMensal').textContent = mensal;
+        }
+
+        function abrirModalEdicao(multa) {
+            document.getElementById('editId').value = multa.id;
+            document.getElementById('editPlaca').value = multa.placa;
+            document.getElementById('editNumeroAutoInfracao').value = multa.numero_auto_infracao || '';
+            document.getElementById('editCodigoInfracao').value = multa.codigo_infracao;
+            document.getElementById('editDescricaoInfracao').value = multa.descricao_infracao || '';
+            document.getElementById('editAgenteRE').value = multa.agente_re || '';
+            document.getElementById('editAgenteNome').value = multa.agente_nome || '';
+            document.getElementById('editAgentePosto').value = multa.agente_posto || '';
+
+            // MODAL: coloca YYYY-MM-DD (parte da string) no input date, evitando conversão de fuso
+            try {
+                document.getElementById('editData').value = multa.data ? multa.data.split('T')[0] : '';
+            } catch {
+                document.getElementById('editData').value = '';
+            }
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function fecharModalEdicao() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('editForm').reset();
+        }
+
+        async function salvarEdicao() {
+            const id = document.getElementById('editId').value;
+            const dataInput = document.getElementById('editData').value; // "YYYY-MM-DD"
+            if (!dataInput) {
+                alert('Selecione uma data válida.');
+                return;
+            }
             const dataParaSalvar = dataInput + "T12:00:00";
 
-            const novaMulta = {
-                placa: document.getElementById('placa').value.toUpperCase(),
-                numero_auto_infracao: document.getElementById('numeroAutoInfracao').value,
-                codigo_infracao: document.getElementById('codigoInfracao').value,
-                descricao_infracao: document.getElementById('descricaoInfracao').value,
-                agente_posto: document.getElementById('agentePosto').value,
-                agente_re: document.getElementById('agenteRE').value,
-                agente_nome: document.getElementById('agenteNome').value,
+            const multaAtualizada = {
+                placa: document.getElementById('editPlaca').value.toUpperCase(),
+                numero_auto_infracao: document.getElementById('editNumeroAutoInfracao').value,
+                codigo_infracao: document.getElementById('editCodigoInfracao').value,
+                descricao_infracao: document.getElementById('editDescricaoInfracao').value,
+                agente_posto: document.getElementById('editAgentePosto') ? document.getElementById('editAgentePosto').value : '',
+                agente_re: document.getElementById('editAgenteRE').value,
+                agente_nome: document.getElementById('editAgenteNome').value,
                 data: dataParaSalvar,
-                user_id: usuarioLogado.id,
             };
 
-            const { error } = await supabaseClient.from('multas').insert([novaMulta]);
-            if (error) alert('Erro: ' + error.message);
-            else {
-                alert('✅ Multa adicionada!');
-                document.getElementById('multaForm').reset();
-                document.getElementById('data').valueAsDate = new Date();
-                document.getElementById('agenteRE').value = perfilUsuario.re;
-                document.getElementById('agenteNome').value = perfilUsuario.nome_completo;
-                document.getElementById('agentePosto').value = perfilUsuario.cargo;
-                carregarMultas();
-            }
-        });
+            try {
+                const { error } = await supabaseClient.from('multas').update(multaAtualizada).eq('id', id);
 
-        document.getElementById('editForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await salvarEdicao();
-        });
-
-        document.getElementById('placa').addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
-        document.getElementById('editPlaca').addEventListener('input', (e) => (e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
-        document.getElementById('data').valueAsDate = new Date();
-
-        // Set default dates for PDF filter
-        const hoje = new Date();
-        const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        document.getElementById('dataInicio').valueAsDate = primeiroDiaMes;
-        document.getElementById('dataFim').valueAsDate = hoje;
-
-        // Initialize pagination controls
-        document.getElementById('rowsPerPageSelect').value = rowsPerPage;
-    }
-
-    async function cadastrarUsuario() {
-        if (!usuarioLogado || !perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
-            mostrarStatus('❌ Apenas administradores podem criar contas!', 'error');
-            return;
-        }
-
-        const email = document.getElementById('authEmail').value;
-        const password = document.getElementById('authPassword').value;
-        const nome = document.getElementById('regNome').value;
-        const re = document.getElementById('regRE').value;
-        const cargo = document.getElementById('regCargo').value;
-        const nivel = document.getElementById('regNivel').value;
-
-        if (!email || !password || !nome || !re) {
-            mostrarStatus('❌ Preencha todos os campos!', 'error');
-            return;
-        }
-
-        mostrarStatus('🔄 Criando conta...', 'info');
-        const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
-
-        if (authError) {
-            mostrarStatus('❌ Erro: ' + authError.message, 'error');
-            return;
-        }
-
-        if (authData.user) {
-            const { error: profileError } = await supabaseClient.from('perfis').insert([
-                {
-                    id: authData.user.id,
-                    nome_completo: nome,
-                    re: re,
-                    cargo: cargo,
-                    nivel_acesso: nivel,
-                },
-            ]);
-
-            if (profileError) {
-                mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
-            } else {
-                mostrarStatus('✅ Conta criada com sucesso!', 'success');
-                setTimeout(() => {
-                    toggleAuthMode(false);
-                }, 2000);
+                if (error) {
+                    alert('❌ Erro ao atualizar: ' + error.message);
+                } else {
+                    alert('✅ Multa atualizada com sucesso!');
+                    fecharModalEdicao();
+                    carregarMultas();
+                }
+            } catch (err) {
+                console.error('Erro ao atualizar multa:', err);
+                alert('Erro ao atualizar multa. Veja o console.');
             }
         }
-    }
 
-    async function fazerLogin() {
-        const email = document.getElementById('authEmail').value;
-        const password = document.getElementById('authPassword').value;
-        mostrarStatus('🔄 Entrando...', 'info');
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) mostrarStatus('❌ ' + error.message, 'error');
-        else await carregarPerfil(data.user);
-    }
-
-    async function fazerLogout() {
-        await supabaseClient.auth.signOut();
-        location.reload();
-    }
-
-    function mostrarUsuarioLogado(user, perfil) {
-        document.getElementById('authSection').classList.add('hidden');
-        document.getElementById('userInfo').classList.remove('hidden');
-        document.getElementById('multasSection').classList.remove('hidden');
-        document.getElementById('userName').textContent = perfil.nome_completo;
-        document.getElementById('userEmail').textContent = user.email;
-        document.getElementById('userRE').textContent = perfil.re;
-        document.getElementById('userPosto').textContent = perfil.cargo;
-
-        const badge = document.getElementById('userBadge');
-        badge.textContent = perfil.nivel_acesso;
-        badge.className = `badge badge-${perfil.nivel_acesso}`;
-
-        const isAdmin = perfil.nivel_acesso === 'admin';
-        document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
-    }
-
-    async function carregarMultas() {
-        let query = supabaseClient
-            .from('multas')
-            .select(
-                `
-                *,
-                perfis:user_id (
-                    re
-                )
-            `
-            )
-            .order('data', { ascending: false });
-
-        const { data, error } = await query;
-        if (!error) {
-            multasAtuais = data || [];
-            renderTablePage(currentPage);
-        } else console.error('Erro ao carregar multas:', error);
-    }
-
-    function renderTablePage(page) {
-        const tbody = document.getElementById('multasBody');
-        tbody.innerHTML = '';
-        const isAdmin = perfilUsuario.nivel_acesso === 'admin';
-
-        const start = (page - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        const pageMultas = multasAtuais.slice(start, end);
-
-        if (pageMultas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
-            atualizarEstatisticas([]);
-            return;
+        async function excluirMulta(id) {
+            if (!confirm('⚠️ Tem certeza que deseja excluir esta multa?')) return;
+            try {
+                const { error } = await supabaseClient.from('multas').delete().eq('id', id);
+                if (error) alert('❌ Erro ao excluir: ' + error.message);
+                else {
+                    alert('✅ Multa excluída!');
+                    carregarMultas();
+                }
+            } catch (err) {
+                console.error('Erro ao excluir:', err);
+                alert('Erro ao excluir. Veja o console.');
+            }
         }
 
-        pageMultas.forEach((multa) => {
-            const tr = document.createElement('tr');
-            const podeEditar = isAdmin || multa.user_id === usuarioLogado.id;
-            const reInseriu = multa.perfis ? multa.perfis.re : '-';
-
-            tr.innerHTML = `
-                <td>${multa.placa}</td>
-                <td>${multa.numero_auto_infracao || '-'}</td>
-                <td>${multa.codigo_infracao}</td>
-                <td>${multa.descricao_infracao || '-'}</td>
-                <td>${multa.agente_re || '-'}</td>
-                <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
-                <td>${new Date(multa.data).toLocaleDateString('pt-BR')}</td>
-                <td>
-                    <div class="action-buttons">
-                        ${
-                            podeEditar
-                                ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(
-                                      multa
-                                  )})'>✏️</button>`
-                                : ''
-                        }
-                        ${
-                            isAdmin
-                                ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
-                                : ''
-                        }
-                        ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-        atualizarEstatisticas(multasAtuais);
-        renderPagination();
-    }
-
-    function renderPagination() {
-        const paginationContainer = document.getElementById('pagination');
-        paginationContainer.innerHTML = '';
-        const totalPages = Math.ceil(multasAtuais.length / rowsPerPage);
-
-        if (totalPages <= 1) return;
-
-        for (let i = 1; i <= totalPages; i++) {
-            const btn = document.createElement('button');
-            btn.textContent = i;
-            btn.className = 'btn btn-sm';
-            if (i === currentPage) btn.classList.add('btn-primary');
-            btn.addEventListener('click', () => {
-                currentPage = i;
-                renderTablePage(currentPage);
-            });
-            paginationContainer.appendChild(btn);
+        function mostrarStatus(msg, tipo) {
+            const div = document.getElementById('authStatus');
+            if (!div) return;
+            div.className = `status-message status-${tipo}`;
+            div.textContent = msg;
+            div.style.display = 'block';
         }
-    }
 
-    function changeRowsPerPage() {
-        const select = document.getElementById('rowsPerPageSelect');
-        rowsPerPage = parseInt(select.value);
-        currentPage = 1;
-        renderTablePage(currentPage);
-    }
+        // teste simples de conexão (opcional)
+        async function testarConexao() {
+            try {
+                const { data, error } = await supabaseClient.from('perfis').select('id').limit(1);
+                if (error) mostrarStatus('❌ Erro ao conectar: ' + error.message, 'error');
+                else mostrarStatus('✅ Conexão OK', 'success');
+            } catch (err) {
+                mostrarStatus('❌ Erro ao testar conexão', 'error');
+            }
+        }
 
-    function atualizarEstatisticas(multas) {
-        const hoje = new Date();
-        const inicioSemana = new Date(hoje);
-        inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-        inicioSemana.setHours(0, 0, 0, 0);
-
-        const semanal = multas.filter((m) => new Date(m.data) >= inicioSemana).length;
-        const mensal =
-            multas.filter(
-                (m) =>
-                    new Date(m.data).getMonth() === hoje.getMonth() &&
-                    new Date(m.data).getFullYear() === hoje.getFullYear()
-            ).length;
-
-        document.getElementById('statTotal').textContent = multas.length;
-        document.getElementById('statSemanal').textContent = semanal;
-        document.getElementById('statMensal').textContent = mensal;
-    }
-
-    function abrirModalEdicao(multa) {
-        document.getElementById('editId').value = multa.id;
-        document.getElementById('editPlaca').value = multa.placa;
-        document.getElementById('editNumeroAutoInfracao').value = multa.numero_auto_infracao || '';
-        document.getElementById('editCodigoInfracao').value = multa.codigo_infracao;
-        document.getElementById('editDescricaoInfracao').value = multa.descricao_infracao || '';
-        document.getElementById('editAgenteRE').value = multa.agente_re;
-        document.getElementById('editAgenteNome').value = multa.agente_nome;
-        document.getElementById('editAgentePosto').value = multa.agente_posto;
-        document.getElementById('editData').value = multa.data.split('T')[0];
-
-        document.getElementById('editModal').style.display = 'block';
-    }
-
-    function fecharModalEdicao() {
-        document.getElementById('editModal').style.display = 'none';
-        document.getElementById('editForm').reset();
-    }
-
-    async function salvarEdicao() {
-        const id = document.getElementById('editId').value;
-
-        const dataInput = document.getElementById('editData').value; // "YYYY-MM-DD"
-        const dataParaSalvar = dataInput + "T12:00:00";
-
-        const multaAtualizada = {
-            placa: document.getElementById('editPlaca').value.toUpperCase(),
-            numero_auto_infracao: document.getElementById('editNumeroAutoInfracao').value,
-            codigo_infracao: document.getElementById('editCodigoInfracao').value,
-            descricao_infracao: document.getElementById('editDescricaoInfracao').value,
-            agente_posto: document.getElementById('editAgentePosto').value,
-            agente_re: document.getElementById('editAgenteRE').value,
-            agente_nome: document.getElementById('editAgenteNome').value,
-            data: dataParaSalvar,
+        window.onclick = function (event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                fecharModalEdicao();
+            }
         };
-
-        const { error } = await supabaseClient.from('multas').update(multaAtualizada).eq('id', id);
-
-        if (error) {
-            alert('❌ Erro ao atualizar: ' + error.message);
-        } else {
-            alert('✅ Multa atualizada com sucesso!');
-            fecharModalEdicao();
-            carregarMultas();
-        }
-    }
-
-    async function excluirMulta(id) {
-        if (!confirm('⚠️ Tem certeza que deseja excluir esta multa?')) return;
-        const { error } = await supabaseClient.from('multas').delete().eq('id', id);
-        if (error) alert('❌ Erro ao excluir: ' + error.message);
-        else {
-            alert('✅ Multa excluída!');
-            carregarMultas();
-        }
-    }
-
-    function mostrarStatus(msg, tipo) {
-        const div = document.getElementById('authStatus');
-        div.className = `status-message status-${tipo}`;
-        div.textContent = msg;
-        div.style.display = 'block';
-    }
-
-    window.onclick = function (event) {
-        const modal = document.getElementById('editModal');
-        if (event.target == modal) {
-            fecharModalEdicao();
-        }
-    };
-</script>
+    </script>
 </body>
 </html>
