@@ -10,11 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Reset e estilos gerais */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -35,257 +31,66 @@
             padding: 30px;
             text-align: center;
         }
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        .content {
-            padding: 30px;
-        }
-        .auth-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-        .auth-section h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-            position: relative;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
+        .header h1 { font-size: 2em; margin-bottom: 10px; }
+        .content { padding: 30px; }
+        .auth-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+        .auth-section h2 { color: #667eea; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; position: relative; }
+        .form-group label { display: block; margin-bottom: 5px; color: #333; font-weight: 500; }
         .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
+            width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
         }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
         .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
+            padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+            margin-right: 10px; margin-bottom: 10px;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        .btn-success:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-        .btn-info {
-            background: #17a2b8;
-            color: white;
-        }
-        .btn-info:hover {
-            background: #138496;
-            transform: translateY(-2px);
-        }
-        .btn-warning {
-            background: #ffc107;
-            color: #000;
-        }
-        .btn-warning:hover {
-            background: #e0a800;
-            transform: translateY(-2px);
-        }
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #c82333;
-        }
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        .status-message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-weight: 500;
-        }
-        .status-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .status-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        .multas-section {
-            margin-top: 30px;
-        }
-        .multas-section h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 13px;
-        }
-        table th {
-            background: #667eea;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-        table td {
-            padding: 12px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        table tr:hover {
-            background: #f8f9fa;
-        }
-        .hidden {
-            display: none;
-        }
-        .actions-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
-            align-items: flex-end;
-        }
-        .user-info {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .user-info strong {
-            color: #667eea;
-        }
-        #pagination {
-            margin-top: 15px;
-            text-align: center;
-        }
-        #pagination button {
-            margin: 0 3px;
-        }
-        .rows-per-page-container {
-            margin-top: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        /* Estatísticas */
-        .stats-header {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .stat-item {
-            background: #667eea;
-            color: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-            flex: 1 1 150px;
-            text-align: center;
-            font-weight: 700;
-            user-select: none;
-            transition: transform 0.3s ease;
-        }
-        .stat-item:hover {
-            transform: scale(1.05);
-        }
-        .stat-item h3 {
-            font-size: 2.5rem;
-            margin-bottom: 5px;
-            font-weight: 900;
-            font-family: 'Segoe UI Black', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .stat-item p {
-            font-size: 1.1rem;
-            font-weight: 600;
-            opacity: 0.9;
-        }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; transform: translateY(-2px); }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #138496; transform: translateY(-2px); }
+        .btn-warning { background: #ffc107; color: #000; }
+        .btn-warning:hover { background: #e0a800; transform: translateY(-2px); }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .status-message { padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: 500; }
+        .status-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .multas-section { margin-top: 30px; }
+        .multas-section h2 { color: #667eea; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        table th { background: #667eea; color: white; padding: 12px; text-align: left; }
+        table td { padding: 12px; border-bottom: 1px solid #e0e0e0; }
+        table tr:hover { background: #f8f9fa; }
+        .hidden { display: none; }
+        .actions-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; align-items: flex-end; }
+        .user-info { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; }
+        .user-info strong { color: #667eea; }
+        #pagination { margin-top: 15px; text-align: center; }
+        #pagination button { margin: 0 3px; }
+        .rows-per-page-container { margin-top: 15px; display:flex; align-items:center; gap:10px; }
+        .stats-header { display:flex; justify-content:space-around; margin-bottom:30px; gap:20px; flex-wrap:wrap; }
+        .stat-item { background: #667eea; color: white; padding: 20px 30px; border-radius: 15px; box-shadow: 0 8px 20px rgba(102,126,234,0.4); flex:1 1 150px; text-align:center; font-weight:700; user-select:none; transition: transform .3s; }
+        .stat-item:hover { transform: scale(1.05); }
+        .stat-item h3 { font-size:2.5rem; margin-bottom:5px; font-weight:900; }
+        .stat-item p { font-size:1.1rem; font-weight:600; opacity:0.9; }
 
         /* Modal styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
-        }
+        .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.5); }
+        .modal-content { background-color:#6a5acd; margin:10% auto; padding:20px; border-radius:10px; width:90%; max-width:600px; color:white; box-shadow:0 5px 15px rgba(0,0,0,0.3); position:relative; }
+        .modal-header { font-weight:bold; font-size:1.2rem; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; }
+        .modal-header .close { cursor:pointer; font-size:1.5rem; font-weight:bold; color:white; user-select:none; }
 
-        .modal-content {
-            background-color: #6a5acd;
-            margin: 10% auto; /* 10% from the top and centered */
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 600px;
-            color: white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
-        }
+        /* Seleção coluna */
+        .select-col { width: 48px; text-align: center; }
+        .select-col input[type="checkbox"] { transform: scale(1.1); }
 
-        .modal-header {
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header .close {
-            cursor: pointer;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: white;
-            user-select: none;
-        }
+        /* Layout do botão de gerar relatório selecionados */
+        .report-actions { display:flex; justify-content:flex-end; margin-top:12px; gap:10px; }
     </style>
 </head>
 <body>
@@ -410,9 +215,6 @@
                     <button type="submit" class="btn btn-primary">Adicionar Multa</button>
                 </form>
 
-                <!-- Botão para abrir modal do relatório -->
-                <button class="btn btn-info" onclick="abrirModalRelatorio()">📄 Gerar Relatório PDF</button>
-
                 <div class="rows-per-page-container">
                     <label for="rowsPerPageSelect">Multas por página:</label>
                     <select id="rowsPerPageSelect" onchange="changeRowsPerPage()">
@@ -426,6 +228,7 @@
                 <table id="multasTable">
                     <thead>
                         <tr>
+                            <th class="select-col">Selecionar</th>
                             <th>Placa</th>
                             <th>Número do Auto de Infração</th>
                             <th>Código</th>
@@ -438,10 +241,14 @@
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td>
+                            <td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div class="report-actions">
+                    <button id="btnGerarSelecionados" class="btn btn-info admin-only hidden" onclick="gerarRelatorioSelecionados()">📄 Gerar Relatório (selecionados)</button>
+                </div>
 
                 <div id="pagination"></div>
             </div>
@@ -494,8 +301,8 @@
         </div>
     </div>
 
-    <!-- Modal para filtro de datas do relatório -->
-    <div id="relatorioModal" class="modal">
+    <!-- Modal para filtro de datas do relatório (mantido caso queira) -->
+    <div id="relatorioModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>📅 Gerar Relatório de Multas</h2>
@@ -510,7 +317,7 @@
                     <label for="relDataFim">Data Fim:</label>
                     <input type="date" id="relDataFim" required />
                 </div>
-                <div class="actions-buttons" style="justify-content: flex-end;">
+                <div class="actions-buttons" style="justify-content:flex-end">
                     <button type="submit" class="btn btn-primary">Gerar PDF</button>
                     <button type="button" class="btn btn-danger" onclick="fecharModalRelatorio()">Cancelar</button>
                 </div>
@@ -671,18 +478,6 @@
             const dataElem = document.getElementById('data');
             if (dataElem) dataElem.valueAsDate = new Date();
 
-            // Set default dates for PDF filter if elements exist
-            try {
-                const hoje = new Date();
-                const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                const dataInicio = document.getElementById('dataInicio');
-                const dataFim = document.getElementById('dataFim');
-                if (dataInicio) dataInicio.valueAsDate = primeiroDiaMes;
-                if (dataFim) dataFim.valueAsDate = hoje;
-            } catch (err) {
-                // silencioso
-            }
-
             // Initialize pagination controls
             const rowsSelect = document.getElementById('rowsPerPageSelect');
             if (rowsSelect) rowsSelect.value = rowsPerPage;
@@ -729,9 +524,7 @@
                     mostrarStatus('⚠️ Conta criada, mas erro no perfil: ' + profileError.message, 'error');
                 } else {
                     mostrarStatus('✅ Conta criada com sucesso!', 'success');
-                    setTimeout(() => {
-                        toggleAuthMode(false);
-                    }, 2000);
+                    setTimeout(() => { toggleAuthMode(false); }, 2000);
                 }
             }
         }
@@ -765,6 +558,13 @@
 
             const isAdmin = perfil.nivel_acesso === 'admin';
             document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
+
+            // Se admin, garantir que a coluna de seleção esteja visível (caso queira mostrar/ocultar via CSS)
+            const selectHeader = document.querySelector('#multasTable thead tr th.select-col');
+            if (selectHeader) selectHeader.style.display = isAdmin ? 'table-cell' : 'none';
+
+            // Re-renderiza a tabela para garantir checkboxes corretos
+            renderTablePage(currentPage);
         }
 
         async function carregarMultas() {
@@ -801,7 +601,7 @@
             const pageMultas = multasAtuais.slice(start, end);
 
             if (pageMultas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
                 atualizarEstatisticas([]);
                 return;
             }
@@ -822,7 +622,13 @@
                     dataFormatada = '';
                 }
 
+                // Checkbox apenas para admins (se não admin, célula vazia)
+                const checkboxCell = isAdmin
+                    ? `<td class="select-col"><input type="checkbox" class="select-multa" data-id="${multa.id}"></td>`
+                    : `<td class="select-col"></td>`;
+
                 tr.innerHTML = `
+                    ${checkboxCell}
                     <td>${multa.placa}</td>
                     <td>${multa.numero_auto_infracao || '-'}</td>
                     <td>${multa.codigo_infracao}</td>
@@ -834,9 +640,7 @@
                         <div class="action-buttons">
                             ${
                                 podeEditar
-                                    ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(
-                                          multa
-                                      )})'>✏️</button>`
+                                    ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>`
                                     : ''
                             }
                             ${
@@ -850,6 +654,10 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Mostrar/ocultar botão de gerar relatório conforme admin
+            document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !(perfilUsuario && perfilUsuario.nivel_acesso === 'admin')));
+
             atualizarEstatisticas(multasAtuais);
             renderPagination();
         }
@@ -889,7 +697,6 @@
 
             const semanal = multas.filter((m) => {
                 try {
-                    // comparar usando a parte YYYY-MM-DD para evitar problemas de fuso
                     const dataISO = (m.data || '').split('T')[0];
                     if (!dataISO) return false;
                     const parts = dataISO.split('-');
@@ -927,7 +734,6 @@
             document.getElementById('editAgenteNome').value = multa.agente_nome || '';
             document.getElementById('editAgentePosto').value = multa.agente_posto || '';
 
-            // MODAL: coloca YYYY-MM-DD (parte da string) no input date, evitando conversão de fuso
             try {
                 document.getElementById('editData').value = multa.data ? multa.data.split('T')[0] : '';
             } catch {
@@ -1001,7 +807,6 @@
             div.style.display = 'block';
         }
 
-        // teste simples de conexão (opcional)
         async function testarConexao() {
             try {
                 const { data, error } = await supabaseClient.from('perfis').select('id').limit(1);
@@ -1012,9 +817,80 @@
             }
         }
 
-        // Modal Relatório PDF
+        // Gera relatório apenas com multas selecionadas (apenas admin vê o botão e checkboxes)
+        async function gerarRelatorioSelecionados() {
+            if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
+                alert('Apenas administradores podem gerar este relatório.');
+                return;
+            }
+
+            // Coleta IDs selecionados
+            const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
+            if (checkboxes.length === 0) {
+                alert('Selecione pelo menos uma multa para gerar o relatório.');
+                return;
+            }
+            const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
+
+            // Recupera objetos das multas selecionadas a partir de multasAtuais
+            const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
+
+            if (multasSelecionadas.length === 0) {
+                alert('Erro: não foi possível localizar as multas selecionadas.');
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.setFontSize(18);
+                doc.text('Relatório de Multas', 14, 22);
+
+                // Nome do usuário que gerou o relatório
+                const nomeUsuario = perfilUsuario ? perfilUsuario.nome_completo : 'Usuário desconhecido';
+                doc.setFontSize(12);
+                doc.text(`Gerado por: ${nomeUsuario}`, 14, 30);
+
+                const tabelaDados = multasSelecionadas.map(multa => {
+                    const dataISO = multa.data ? multa.data.split('T')[0] : '';
+                    return [
+                        multa.placa,
+                        multa.numero_auto_infracao || '-',
+                        multa.codigo_infracao,
+                        multa.descricao_infracao || '-',
+                        multa.agente_re || '-',
+                        formatarData(dataISO),
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+                    body: tabelaDados,
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [102, 126, 234] },
+                    margin: { left: 14, right: 14 },
+                });
+
+                // Quantidade total ao final
+                const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 40;
+                doc.setFontSize(12);
+                doc.text(`Quantidade total de multas: ${multasSelecionadas.length}`, 14, finalY + 10);
+
+                // Nome do arquivo com timestamp para evitar sobreposição
+                const ts = new Date().toISOString().replace(/[:.]/g, '-');
+                doc.save(`relatorio_multas_selecionadas_${ts}.pdf`);
+            } catch (err) {
+                console.error('Erro ao gerar PDF:', err);
+                alert('Erro ao gerar relatório. Veja o console.');
+            }
+        }
+
+        // Mantive a função de gerar relatório por período (modal) caso queira reutilizar
         function abrirModalRelatorio() {
             document.getElementById('relatorioModal').style.display = 'block';
+            document.getElementById('relatorioModal').classList.remove('hidden');
             const hoje = new Date();
             const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
             document.getElementById('relDataInicio').valueAsDate = primeiroDiaMes;
@@ -1023,94 +899,96 @@
 
         function fecharModalRelatorio() {
             document.getElementById('relatorioModal').style.display = 'none';
+            document.getElementById('relatorioModal').classList.add('hidden');
             document.getElementById('relatorioForm').reset();
         }
 
-async function gerarRelatorioPDFModal() {
-    const dataInicio = document.getElementById('relDataInicio').value;
-    const dataFim = document.getElementById('relDataFim').value;
+        async function gerarRelatorioPDFModal() {
+            // Função mantida (gera baseado em período). Não altera seu pedido principal.
+            const dataInicio = document.getElementById('relDataInicio').value;
+            const dataFim = document.getElementById('relDataFim').value;
 
-    if (!dataInicio || !dataFim) {
-        alert('Por favor, selecione as duas datas.');
-        return;
-    }
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione as duas datas.');
+                return;
+            }
 
-    if (dataFim < dataInicio) {
-        alert('A data final deve ser maior ou igual à data inicial.');
-        return;
-    }
+            if (dataFim < dataInicio) {
+                alert('A data final deve ser maior ou igual à data inicial.');
+                return;
+            }
 
-    fecharModalRelatorio();
+            fecharModalRelatorio();
 
-    const dataInicioISO = dataInicio + "T00:00:00";
-    const dataFimISO = dataFim + "T23:59:59";
+            const dataInicioISO = dataInicio + "T00:00:00";
+            const dataFimISO = dataFim + "T23:59:59";
 
-    try {
-        const { data: multasFiltradas, error } = await supabaseClient
-            .from('multas')
-            .select('*')
-            .gte('data', dataInicioISO)
-            .lte('data', dataFimISO)
-            .order('data', { ascending: true });
+            try {
+                const { data: multasFiltradas, error } = await supabaseClient
+                    .from('multas')
+                    .select('*')
+                    .gte('data', dataInicioISO)
+                    .lte('data', dataFimISO)
+                    .order('data', { ascending: true });
 
-        if (error) {
-            alert('Erro ao buscar multas: ' + error.message);
-            return;
+                if (error) {
+                    alert('Erro ao buscar multas: ' + error.message);
+                    return;
+                }
+
+                if (!multasFiltradas || multasFiltradas.length === 0) {
+                    alert('Nenhuma multa encontrada no período selecionado.');
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.setFontSize(18);
+                doc.text('Relatório de Multas', 14, 22);
+
+                const nomeUsuario = perfilUsuario ? perfilUsuario.nome_completo : 'Usuário desconhecido';
+                doc.setFontSize(12);
+                doc.text(`Gerado por: ${nomeUsuario}`, 14, 30);
+
+                const tabelaDados = multasFiltradas.map(multa => [
+                    multa.placa,
+                    multa.numero_auto_infracao || '-',
+                    multa.codigo_infracao,
+                    multa.descricao_infracao || '-',
+                    multa.agente_re || '-',
+                    formatarData(multa.data ? multa.data.split('T')[0] : ''),
+                ]);
+
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+                    body: tabelaDados,
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [102, 126, 234] },
+                    margin: { left: 14, right: 14 },
+                });
+
+                const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 40;
+                doc.setFontSize(12);
+                doc.text(`Quantidade total de multas: ${multasFiltradas.length}`, 14, finalY + 10);
+
+                const ts = new Date().toISOString().replace(/[:.]/g, '-');
+                doc.save(`relatorio_multas_periodo_${ts}.pdf`);
+            } catch (err) {
+                alert('Erro ao gerar relatório. Veja o console.');
+                console.error(err);
+            }
         }
-
-        if (!multasFiltradas || multasFiltradas.length === 0) {
-            alert('Nenhuma multa encontrada no período selecionado.');
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        doc.setFontSize(18);
-        doc.text('Relatório de Multas', 14, 22);
-
-        // Adiciona o nome do usuário que gerou o relatório
-        const nomeUsuario = perfilUsuario ? perfilUsuario.nome_completo : 'Usuário desconhecido';
-        doc.setFontSize(12);
-        doc.text(`Gerado por: ${nomeUsuario}`, 14, 30);
-
-        const tabelaDados = multasFiltradas.map(multa => [
-            multa.placa,
-            multa.numero_auto_infracao || '-',
-            multa.codigo_infracao,
-            multa.descricao_infracao || '-',
-            multa.agente_re || '-',
-            formatarData(multa.data.split('T')[0]),
-        ]);
-
-        doc.autoTable({
-            startY: 40,
-            head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-            body: tabelaDados,
-            styles: { fontSize: 8 },
-            headStyles: { fillColor: [102, 126, 234] },
-            margin: { left: 14, right: 14 },
-        });
-
-        // Adiciona a quantidade total de multas no final do PDF
-        const finalY = doc.lastAutoTable.finalY || 40;
-        doc.setFontSize(12);
-        doc.text(`Quantidade total de multas: ${multasFiltradas.length}`, 14, finalY + 10);
-
-        doc.save(`relatorio_multas_${dataInicio}_a_${dataFim}.pdf`);
-    } catch (err) {
-        alert('Erro ao gerar relatório. Veja o console.');
-        console.error(err);
-    }
-}
 
         function formatarData(dataISO) {
             if (!dataISO) return '';
             const partes = dataISO.split('-');
+            if (partes.length < 3) return dataISO;
             return `${partes[2]}/${partes[1]}/${partes[0]}`;
         }
 
-        // Fecha o modal se clicar fora do conteúdo
+        // Fecha modais ao clicar fora
         window.onclick = function (event) {
             const modalRel = document.getElementById('relatorioModal');
             if (event.target == modalRel) {
