@@ -1026,75 +1026,83 @@
             document.getElementById('relatorioForm').reset();
         }
 
-        async function gerarRelatorioPDFModal() {
-            const dataInicio = document.getElementById('relDataInicio').value;
-            const dataFim = document.getElementById('relDataFim').value;
+async function gerarRelatorioPDFModal() {
+    const dataInicio = document.getElementById('relDataInicio').value;
+    const dataFim = document.getElementById('relDataFim').value;
 
-            if (!dataInicio || !dataFim) {
-                alert('Por favor, selecione as duas datas.');
-                return;
-            }
+    if (!dataInicio || !dataFim) {
+        alert('Por favor, selecione as duas datas.');
+        return;
+    }
 
-            if (dataFim < dataInicio) {
-                alert('A data final deve ser maior ou igual à data inicial.');
-                return;
-            }
+    if (dataFim < dataInicio) {
+        alert('A data final deve ser maior ou igual à data inicial.');
+        return;
+    }
 
-            fecharModalRelatorio();
+    fecharModalRelatorio();
 
-            const dataInicioISO = dataInicio + "T00:00:00";
-            const dataFimISO = dataFim + "T23:59:59";
+    const dataInicioISO = dataInicio + "T00:00:00";
+    const dataFimISO = dataFim + "T23:59:59";
 
-            try {
-                const { data: multasFiltradas, error } = await supabaseClient
-                    .from('multas')
-                    .select('*')
-                    .gte('data', dataInicioISO)
-                    .lte('data', dataFimISO)
-                    .order('data', { ascending: true });
+    try {
+        const { data: multasFiltradas, error } = await supabaseClient
+            .from('multas')
+            .select('*')
+            .gte('data', dataInicioISO)
+            .lte('data', dataFimISO)
+            .order('data', { ascending: true });
 
-                if (error) {
-                    alert('Erro ao buscar multas: ' + error.message);
-                    return;
-                }
-
-                if (!multasFiltradas || multasFiltradas.length === 0) {
-                    alert('Nenhuma multa encontrada no período selecionado.');
-                    return;
-                }
-
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-
-                doc.setFontSize(18);
-                doc.text('Relatório de Multas', 14, 22);
-                doc.setFontSize(12);
-                doc.text(`Período: ${formatarData(dataInicio)} até ${formatarData(dataFim)}`, 14, 30);
-
-                const tabelaDados = multasFiltradas.map(multa => [
-                    multa.placa,
-                    multa.numero_auto_infracao || '-',
-                    multa.codigo_infracao,
-                    multa.descricao_infracao || '-',
-                    multa.agente_re || '-',
-                    formatarData(multa.data.split('T')[0]),
-                ]);
-
-                doc.autoTable({
-                    startY: 40,
-                    head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-                    body: tabelaDados,
-                    styles: { fontSize: 8 },
-                    headStyles: { fillColor: [102, 126, 234] },
-                    margin: { left: 14, right: 14 },
-                });
-
-                doc.save(`relatorio_multas_${dataInicio}_a_${dataFim}.pdf`);
-            } catch (err) {
-                alert('Erro ao gerar relatório. Veja o console.');
-                console.error(err);
-            }
+        if (error) {
+            alert('Erro ao buscar multas: ' + error.message);
+            return;
         }
+
+        if (!multasFiltradas || multasFiltradas.length === 0) {
+            alert('Nenhuma multa encontrada no período selecionado.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text('Relatório de Multas', 14, 22);
+
+        // Adiciona o nome do usuário que gerou o relatório
+        const nomeUsuario = perfilUsuario ? perfilUsuario.nome_completo : 'Usuário desconhecido';
+        doc.setFontSize(12);
+        doc.text(`Gerado por: ${nomeUsuario}`, 14, 30);
+
+        const tabelaDados = multasFiltradas.map(multa => [
+            multa.placa,
+            multa.numero_auto_infracao || '-',
+            multa.codigo_infracao,
+            multa.descricao_infracao || '-',
+            multa.agente_re || '-',
+            formatarData(multa.data.split('T')[0]),
+        ]);
+
+        doc.autoTable({
+            startY: 40,
+            head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+            body: tabelaDados,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [102, 126, 234] },
+            margin: { left: 14, right: 14 },
+        });
+
+        // Adiciona a quantidade total de multas no final do PDF
+        const finalY = doc.lastAutoTable.finalY || 40;
+        doc.setFontSize(12);
+        doc.text(`Quantidade total de multas: ${multasFiltradas.length}`, 14, finalY + 10);
+
+        doc.save(`relatorio_multas_${dataInicio}_a_${dataFim}.pdf`);
+    } catch (err) {
+        alert('Erro ao gerar relatório. Veja o console.');
+        console.error(err);
+    }
+}
 
         function formatarData(dataISO) {
             if (!dataISO) return '';
