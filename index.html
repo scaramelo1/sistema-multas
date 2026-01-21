@@ -853,62 +853,48 @@ async function gerarRelatorioSelecionados() {
     const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número, sem prefixos):', '');
     if (oficioNum === null) return;
 
-    // Função para carregar imagem como dataURL
-    async function loadImageAsDataURL(url) {
-        const res = await fetch(url, { mode: 'cors' });
-        if (!res.ok) throw new Error('Não foi possível carregar a imagem do logo.');
-        const blob = await res.blob();
-        return await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onerror = () => reject('Erro ao converter imagem em dataURL');
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(blob);
-        });
-    }
-
     try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
 
-        // Nova imagem do logo (substitua pela URL pública da imagem enviada)
-        const logoUrl = 'https://cdn.abacus.ai/images/0a7a3a3a-7a3a-4a3a-9a3a-0a7a3a3a3a3a.png'; // Atualize com a URL correta da nova imagem
-        let logoDataUrl = null;
-        try {
-            logoDataUrl = await loadImageAsDataURL(logoUrl);
-        } catch (err) {
-            console.warn('Não foi possível carregar o logo, gerando sem logo:', err);
-        }
-
         const pageWidth = doc.internal.pageSize.getWidth();
-        let y = 20;
 
+        // Reservar espaço para logo (80x80) no canto superior esquerdo, mas sem desenhar a imagem
+        const logoX = 40;
+        const logoY = 60;
+        const logoW = 80;
+        const logoH = 80;
+        // Desenhar um retângulo vazio para marcar o espaço do logo (opcional, pode comentar)
+        // doc.setDrawColor(200);
+        // doc.rect(logoX, logoY, logoW, logoH);
+
+        // Texto de contato à esquerda, abaixo do espaço reservado para logo
+        const contatoX = logoX;
+        const contatoStartY = logoY + logoH + 10; // 10pt abaixo do espaço do logo
+        doc.setFont('Times', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 255);
+        doc.text('24bpmilcia@policiamilitar.sp.gov.br', contatoX, contatoStartY);
+        doc.text('Av. Sen. Marcos Freire, nº 169,', contatoX, contatoStartY + 12);
+        doc.text('Jd. Aeroporto, SJB/Vista/SP.', contatoX, contatoStartY + 24);
+        doc.setTextColor(0, 0, 128);
+        doc.text('Fone-(19) 3623-3623', contatoX, contatoStartY + 36);
+
+        // Texto do cabeçalho centralizado (SECRETARIA, POLÍCIA MILITAR)
+        let y = 20;
         doc.setFont('Times', 'bold');
         doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
         doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', pageWidth / 2, y + 6, { align: 'center' });
-
-        doc.setFontSize(16);
         y += 22;
         doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', pageWidth / 2, y + 6, { align: 'center' });
 
-        if (logoDataUrl) {
-            const logoW = 80;
-            const logoH = 80;
-            doc.addImage(logoDataUrl, 'PNG', 40, 60, logoW, logoH);
-        }
-
-        const contatoX = 40;
-        const contatoY = 160;
+        // Texto do ofício alinhado à direita, começando próximo ao topo, alinhado com o topo do espaço do logo
+        const rightX = pageWidth - 40;
+        let rightY = logoY; // alinhado com o topo do espaço do logo
         doc.setFont('Times', 'normal');
-        doc.setFontSize(9);
-        doc.text('24bpmilcia@policiamilitar.sp.gov.br', contatoX, contatoY);
-        doc.text('Av. Sen. Marcos Freire, nº 169,', contatoX, contatoY + 12);
-        doc.text('Jd. Aeroporto, SJB/Vista/SP.', contatoX, contatoY + 24);
-        doc.text('Fone-(19) 3623-3623', contatoX, contatoY + 36);
-
-        const rightX = logoDataUrl ? 160 : 40;
-        let rightY = 80;
-
         doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
 
         // Data formatada no estilo "23 de janeiro de 2025"
         const meses = [
@@ -918,33 +904,34 @@ async function gerarRelatorioSelecionados() {
         const hoje = new Date();
         const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
 
-        doc.setFont('Times', 'normal');
-        doc.text(`São João da Boa Vista, ${dataFormatada}.`, rightX, rightY);
+        doc.text(`São João da Boa Vista, ${dataFormatada}.`, rightX, rightY, { align: 'right' });
         rightY += 18;
 
-        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, rightX, rightY);
+        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, rightX, rightY, { align: 'right' });
         rightY += 18;
 
-        doc.text('Do Comandante da 1ª Cia PM', rightX, rightY);
+        doc.text('Do Comandante da 1ª Cia PM', rightX, rightY, { align: 'right' });
         rightY += 18;
-        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', rightX, rightY);
+
+        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', rightX, rightY, { align: 'right' });
         rightY += 18;
-        doc.text('DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.', rightX, rightY);
+
+        doc.text('DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.', rightX, rightY, { align: 'right' });
         rightY += 18;
+
         doc.setFont('Times', 'bold');
-        doc.text('Assunto: Autos de Infração Municipais.', rightX, rightY);
+        doc.text('Assunto: Autos de Infração Municipais.', rightX, rightY, { align: 'right' });
         rightY += 20;
 
         doc.setFont('Times', 'normal');
-        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, rightX, rightY);
+        doc.setTextColor(255, 0, 0);
+        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, rightX, rightY, { align: 'right' });
         rightY += 26;
 
-        // Texto fixo "Gerado por: Fellipe Scaramelo Alexandre"
-        doc.setFontSize(10);
-        doc.text('Gerado por: Fellipe Scaramelo Alexandre', rightX, rightY);
-        rightY += 18;
+        // A partir daqui, você pode continuar com a geração da tabela e demais conteúdos...
 
-        const tableStartY = Math.max(logoDataUrl ? 200 : 180, rightY + 6);
+        // Exemplo simples de tabela abaixo do cabeçalho
+        const tableStartY = Math.max(contatoStartY + 40, rightY + 10);
 
         const tabelaDados = multasSelecionadas.map(multa => {
             const dataISO = multa.data ? multa.data.split('T')[0] : '';
@@ -967,8 +954,6 @@ async function gerarRelatorioSelecionados() {
             headStyles: { fillColor: [102, 126, 234] },
             margin: { left: 40, right: 40 }
         });
-
-        // Removido o texto "Quantidade total de multas" do final
 
         const ts = new Date().toISOString().replace(/[:.]/g, '-');
         doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
