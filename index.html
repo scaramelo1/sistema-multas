@@ -831,14 +831,12 @@ async function loadImageAsDataURL(url) {
     });
 }
 
-// Substitua sua função gerarRelatorioSelecionados por esta
 async function gerarRelatorioSelecionados() {
     if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
         alert('Apenas administradores podem gerar este relatório.');
         return;
     }
 
-    // Coleta IDs selecionados
     const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
     if (checkboxes.length === 0) {
         alert('Selecione pelo menos uma multa para gerar o relatório.');
@@ -846,23 +844,34 @@ async function gerarRelatorioSelecionados() {
     }
     const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
 
-    // Recupera objetos das multas selecionadas a partir de multasAtuais
     const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
     if (multasSelecionadas.length === 0) {
         alert('Erro: não foi possível localizar as multas selecionadas.');
         return;
     }
 
-    // Pede ao usuário o número do OFÍCIO (string aceita; pode validar se desejar)
     const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número, sem prefixos):', '');
-    if (oficioNum === null) return; // usuário cancelou
+    if (oficioNum === null) return;
+
+    // Função para carregar imagem como dataURL
+    async function loadImageAsDataURL(url) {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error('Não foi possível carregar a imagem do logo.');
+        const blob = await res.blob();
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject('Erro ao converter imagem em dataURL');
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    }
 
     try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
 
-        // Carrega logo (use a URL pública da imagem enviada)
-        const logoUrl = 'https://cdn.abacus.ai/images/e979d41a-3b52-45be-835b-ecfb485dd286.png';
+        // Nova imagem do logo (substitua pela URL pública da imagem enviada)
+        const logoUrl = 'https://cdn.abacus.ai/images/0a7a3a3a-7a3a-4a3a-9a3a-0a7a3a3a3a3a.png'; // Atualize com a URL correta da nova imagem
         let logoDataUrl = null;
         try {
             logoDataUrl = await loadImageAsDataURL(logoUrl);
@@ -870,11 +879,9 @@ async function gerarRelatorioSelecionados() {
             console.warn('Não foi possível carregar o logo, gerando sem logo:', err);
         }
 
-        // Dimensões e posições
         const pageWidth = doc.internal.pageSize.getWidth();
         let y = 20;
 
-        // Top: título centralizado
         doc.setFont('Times', 'bold');
         doc.setFontSize(16);
         doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', pageWidth / 2, y + 6, { align: 'center' });
@@ -883,14 +890,12 @@ async function gerarRelatorioSelecionados() {
         y += 22;
         doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', pageWidth / 2, y + 6, { align: 'center' });
 
-        // Logo e contato à esquerda
         if (logoDataUrl) {
-            const logoW = 80; // largura em pt
-            const logoH = 80; // altura em pt
+            const logoW = 80;
+            const logoH = 80;
             doc.addImage(logoDataUrl, 'PNG', 40, 60, logoW, logoH);
         }
 
-        // Informações de contato à esquerda (embaixo do logo)
         const contatoX = 40;
         const contatoY = 160;
         doc.setFont('Times', 'normal');
@@ -900,27 +905,26 @@ async function gerarRelatorioSelecionados() {
         doc.text('Jd. Aeroporto, SJB/Vista/SP.', contatoX, contatoY + 24);
         doc.text('Fone-(19) 3623-3623', contatoX, contatoY + 36);
 
-        // Conteúdo à direita do header
         const rightX = logoDataUrl ? 160 : 40;
         let rightY = 80;
 
         doc.setFontSize(11);
-        // Data atual
+
+        // Data formatada no estilo "23 de janeiro de 2025"
+        const meses = [
+            'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+            'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+        ];
         const hoje = new Date();
-        const dd = String(hoje.getDate()).padStart(2, '0');
-        const mm = String(hoje.getMonth() + 1).padStart(2, '0');
-        const yyyy = hoje.getFullYear();
-        const dataStr = `${dd}/${mm}/${yyyy}`;
+        const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
 
         doc.setFont('Times', 'normal');
-        doc.text(`São João da Boa Vista, ${dataStr}.`, rightX, rightY);
+        doc.text(`São João da Boa Vista, ${dataFormatada}.`, rightX, rightY);
         rightY += 18;
 
-        // OFÍCIO com o número digitado
         doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, rightX, rightY);
         rightY += 18;
 
-        // Corpo do ofício (linhas conforme imagem)
         doc.text('Do Comandante da 1ª Cia PM', rightX, rightY);
         rightY += 18;
         doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', rightX, rightY);
@@ -931,21 +935,17 @@ async function gerarRelatorioSelecionados() {
         doc.text('Assunto: Autos de Infração Municipais.', rightX, rightY);
         rightY += 20;
 
-        // Anexos: quantidade de multas selecionadas
         doc.setFont('Times', 'normal');
         doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, rightX, rightY);
         rightY += 26;
 
-        // Informar quem gerou o relatório
-        const nomeUsuario = perfilUsuario ? perfilUsuario.nome_completo : 'Usuário desconhecido';
+        // Texto fixo "Gerado por: Fellipe Scaramelo Alexandre"
         doc.setFontSize(10);
-        doc.text(`Gerado por: ${nomeUsuario}`, rightX, rightY);
+        doc.text('Gerado por: Fellipe Scaramelo Alexandre', rightX, rightY);
         rightY += 18;
 
-        // Espaço antes da tabela
         const tableStartY = Math.max(logoDataUrl ? 200 : 180, rightY + 6);
 
-        // Monta corpo da tabela
         const tabelaDados = multasSelecionadas.map(multa => {
             const dataISO = multa.data ? multa.data.split('T')[0] : '';
             const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
@@ -959,7 +959,6 @@ async function gerarRelatorioSelecionados() {
             ];
         });
 
-        // Gera a tabela com autoTable
         doc.autoTable({
             startY: tableStartY,
             head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
@@ -969,13 +968,8 @@ async function gerarRelatorioSelecionados() {
             margin: { left: 40, right: 40 }
         });
 
-        // Quantidade total ao final
-        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : tableStartY + 20;
-        doc.setFontSize(11);
-        doc.setFont('Times', 'bold');
-        doc.text(`Quantidade total de multas: ${multasSelecionadas.length}`, 40, finalY + 20);
+        // Removido o texto "Quantidade total de multas" do final
 
-        // Salva com timestamp para evitar sobreposição
         const ts = new Date().toISOString().replace(/[:.]/g, '-');
         doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
     } catch (err) {
