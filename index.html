@@ -377,7 +377,15 @@
                 </div>
 
                 <h2>📋 Cadastro de Multas</h2>
-
+<div class="form-group" style="margin-top: 30px;">
+    <label for="dataInicio">Data Início:</label>
+    <input type="date" id="dataInicio" />
+</div>
+<div class="form-group">
+    <label for="dataFim">Data Fim:</label>
+    <input type="date" id="dataFim" />
+</div>
+<button class="btn btn-info" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
                 <form id="multaForm">
                     <div class="form-group">
                         <label for="placa">Placa:</label>
@@ -492,6 +500,82 @@
     </div>
 
     <script>
+        async function gerarRelatorioPDF() {
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+
+    if (!dataInicio || !dataFim) {
+        alert('Por favor, selecione as duas datas para gerar o relatório.');
+        return;
+    }
+
+    if (dataFim < dataInicio) {
+        alert('A data final deve ser maior ou igual à data inicial.');
+        return;
+    }
+
+    // Ajusta as datas para incluir o dia inteiro (meio-dia para evitar fuso)
+    const dataInicioISO = dataInicio + "T00:00:00";
+    const dataFimISO = dataFim + "T23:59:59";
+
+    try {
+        const { data: multasFiltradas, error } = await supabaseClient
+            .from('multas')
+            .select('*')
+            .gte('data', dataInicioISO)
+            .lte('data', dataFimISO)
+            .order('data', { ascending: true });
+
+        if (error) {
+            alert('Erro ao buscar multas: ' + error.message);
+            return;
+        }
+
+        if (!multasFiltradas || multasFiltradas.length === 0) {
+            alert('Nenhuma multa encontrada no período selecionado.');
+            return;
+        }
+
+        // Gerar PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text('Relatório de Multas', 14, 22);
+        doc.setFontSize(12);
+        doc.text(`Período: ${formatarData(dataInicio)} até ${formatarData(dataFim)}`, 14, 30);
+
+        // Montar dados para a tabela
+        const tabelaDados = multasFiltradas.map(multa => [
+            multa.placa,
+            multa.numero_auto_infracao || '-',
+            multa.codigo_infracao,
+            multa.descricao_infracao || '-',
+            multa.agente_re || '-',
+            formatarData(multa.data.split('T')[0]),
+        ]);
+
+        doc.autoTable({
+            startY: 40,
+            head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+            body: tabelaDados,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [102, 126, 234] },
+            margin: { left: 14, right: 14 },
+        });
+
+        doc.save(`relatorio_multas_${dataInicio}_a_${dataFim}.pdf`);
+    } catch (err) {
+        alert('Erro ao gerar relatório. Veja o console.');
+        console.error(err);
+    }
+}
+
+function formatarData(dataISO) {
+    if (!dataISO) return '';
+    const partes = dataISO.split('-');
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
         const SUPABASE_URL = 'https://xgfzeujvkjrifetokxff.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnZnpldWp2a2pyaWZldG9reGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzOTI1MDgsImV4cCI6MjA4Mzk2ODUwOH0.ldLZUkTvPJ6iXaLpkB1ugX2mrcz3PAY0cwCWorhVwHI';
 
