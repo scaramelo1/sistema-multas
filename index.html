@@ -980,14 +980,23 @@ async function gerarRelatorioSelecionados() {
         doc.setFontSize(10);
         doc.text(assinaturaCargo, sigX, sigY + 16, { align: 'right' });
 
-        // ----------------------------
-        // Rodapé (frase padrão), centralizado no final da página
-        // ----------------------------
-        const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
-        const splitRodape = doc.splitTextToSize(fraseRodape, pageWidth - (marginX * 2));
-        doc.setFont('Times', 'italic');
-        doc.setFontSize(7);
-        doc.text(splitRodape, pageWidth / 2, pageHeight - 40, { align: 'center' });
+// ----------------------------
+// Rodapé (linha e frase padrão), centralizado no final da página
+// ----------------------------
+const rodapeY = pageHeight - 60; // posição da linha
+const linhaX1 = marginX;
+const linhaX2 = pageWidth - marginX;
+
+// Desenha a linha horizontal acima da frase
+doc.setDrawColor(0, 0, 0); // cor preta
+doc.setLineWidth(0.5);
+doc.line(linhaX1, rodapeY, linhaX2, rodapeY);
+
+const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
+const splitRodape = doc.splitTextToSize(fraseRodape, pageWidth - (marginX * 2));
+doc.setFont('Times', 'italic');
+doc.setFontSize(8);
+doc.text(splitRodape, pageWidth / 2, rodapeY + 15, { align: 'center' });
 
         // Salvar PDF
         const ts = new Date().toISOString().replace(/[:.]/g, '-');
