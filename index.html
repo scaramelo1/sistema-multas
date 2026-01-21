@@ -818,74 +818,171 @@
         }
 
         // Gera relatório apenas com multas selecionadas (apenas admin vê o botão e checkboxes)
-        async function gerarRelatorioSelecionados() {
-            if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
-                alert('Apenas administradores podem gerar este relatório.');
-                return;
-            }
+// Helper: carrega uma imagem remota e retorna dataURL (base64)
+async function loadImageAsDataURL(url) {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error('Não foi possível carregar a imagem do logo.');
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject('Erro ao converter imagem em dataURL');
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+    });
+}
 
-            // Coleta IDs selecionados
-            const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
-            if (checkboxes.length === 0) {
-                alert('Selecione pelo menos uma multa para gerar o relatório.');
-                return;
-            }
-            const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
+// Substitua sua função gerarRelatorioSelecionados por esta
+async function gerarRelatorioSelecionados() {
+    if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
+        alert('Apenas administradores podem gerar este relatório.');
+        return;
+    }
 
-            // Recupera objetos das multas selecionadas a partir de multasAtuais
-            const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
+    // Coleta IDs selecionados
+    const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
+    if (checkboxes.length === 0) {
+        alert('Selecione pelo menos uma multa para gerar o relatório.');
+        return;
+    }
+    const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
 
-            if (multasSelecionadas.length === 0) {
-                alert('Erro: não foi possível localizar as multas selecionadas.');
-                return;
-            }
+    // Recupera objetos das multas selecionadas a partir de multasAtuais
+    const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
+    if (multasSelecionadas.length === 0) {
+        alert('Erro: não foi possível localizar as multas selecionadas.');
+        return;
+    }
 
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
+    // Pede ao usuário o número do OFÍCIO (string aceita; pode validar se desejar)
+    const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número, sem prefixos):', '');
+    if (oficioNum === null) return; // usuário cancelou
 
-                doc.setFontSize(18);
-                doc.text('Relatório de Multas', 14, 22);
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
 
-                // Nome do usuário que gerou o relatório
-                const nomeUsuario = perfilUsuario ? perfilUsuario.nome_completo : 'Usuário desconhecido';
-                doc.setFontSize(12);
-                doc.text(`Gerado por: ${nomeUsuario}`, 14, 30);
-
-                const tabelaDados = multasSelecionadas.map(multa => {
-                    const dataISO = multa.data ? multa.data.split('T')[0] : '';
-                    return [
-                        multa.placa,
-                        multa.numero_auto_infracao || '-',
-                        multa.codigo_infracao,
-                        multa.descricao_infracao || '-',
-                        multa.agente_re || '-',
-                        formatarData(dataISO),
-                    ];
-                });
-
-                doc.autoTable({
-                    startY: 40,
-                    head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-                    body: tabelaDados,
-                    styles: { fontSize: 8 },
-                    headStyles: { fillColor: [102, 126, 234] },
-                    margin: { left: 14, right: 14 },
-                });
-
-                // Quantidade total ao final
-                const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 40;
-                doc.setFontSize(12);
-                doc.text(`Quantidade total de multas: ${multasSelecionadas.length}`, 14, finalY + 10);
-
-                // Nome do arquivo com timestamp para evitar sobreposição
-                const ts = new Date().toISOString().replace(/[:.]/g, '-');
-                doc.save(`relatorio_multas_selecionadas_${ts}.pdf`);
-            } catch (err) {
-                console.error('Erro ao gerar PDF:', err);
-                alert('Erro ao gerar relatório. Veja o console.');
-            }
+        // Carrega logo (use a URL pública da imagem enviada)
+        const logoUrl = 'https://cdn.abacus.ai/images/e979d41a-3b52-45be-835b-ecfb485dd286.png';
+        let logoDataUrl = null;
+        try {
+            logoDataUrl = await loadImageAsDataURL(logoUrl);
+        } catch (err) {
+            console.warn('Não foi possível carregar o logo, gerando sem logo:', err);
         }
+
+        // Dimensões e posições
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let y = 20;
+
+        // Top: título centralizado
+        doc.setFont('Times', 'bold');
+        doc.setFontSize(16);
+        doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', pageWidth / 2, y + 6, { align: 'center' });
+
+        doc.setFontSize(16);
+        y += 22;
+        doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', pageWidth / 2, y + 6, { align: 'center' });
+
+        // Logo e contato à esquerda
+        if (logoDataUrl) {
+            const logoW = 80; // largura em pt
+            const logoH = 80; // altura em pt
+            doc.addImage(logoDataUrl, 'PNG', 40, 60, logoW, logoH);
+        }
+
+        // Informações de contato à esquerda (embaixo do logo)
+        const contatoX = 40;
+        const contatoY = 160;
+        doc.setFont('Times', 'normal');
+        doc.setFontSize(9);
+        doc.text('24bpmilcia@policiamilitar.sp.gov.br', contatoX, contatoY);
+        doc.text('Av. Sen. Marcos Freire, nº 169,', contatoX, contatoY + 12);
+        doc.text('Jd. Aeroporto, SJB/Vista/SP.', contatoX, contatoY + 24);
+        doc.text('Fone-(19) 3623-3623', contatoX, contatoY + 36);
+
+        // Conteúdo à direita do header
+        const rightX = logoDataUrl ? 160 : 40;
+        let rightY = 80;
+
+        doc.setFontSize(11);
+        // Data atual
+        const hoje = new Date();
+        const dd = String(hoje.getDate()).padStart(2, '0');
+        const mm = String(hoje.getMonth() + 1).padStart(2, '0');
+        const yyyy = hoje.getFullYear();
+        const dataStr = `${dd}/${mm}/${yyyy}`;
+
+        doc.setFont('Times', 'normal');
+        doc.text(`São João da Boa Vista, ${dataStr}.`, rightX, rightY);
+        rightY += 18;
+
+        // OFÍCIO com o número digitado
+        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, rightX, rightY);
+        rightY += 18;
+
+        // Corpo do ofício (linhas conforme imagem)
+        doc.text('Do Comandante da 1ª Cia PM', rightX, rightY);
+        rightY += 18;
+        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', rightX, rightY);
+        rightY += 18;
+        doc.text('DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.', rightX, rightY);
+        rightY += 18;
+        doc.setFont('Times', 'bold');
+        doc.text('Assunto: Autos de Infração Municipais.', rightX, rightY);
+        rightY += 20;
+
+        // Anexos: quantidade de multas selecionadas
+        doc.setFont('Times', 'normal');
+        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, rightX, rightY);
+        rightY += 26;
+
+        // Informar quem gerou o relatório
+        const nomeUsuario = perfilUsuario ? perfilUsuario.nome_completo : 'Usuário desconhecido';
+        doc.setFontSize(10);
+        doc.text(`Gerado por: ${nomeUsuario}`, rightX, rightY);
+        rightY += 18;
+
+        // Espaço antes da tabela
+        const tableStartY = Math.max(logoDataUrl ? 200 : 180, rightY + 6);
+
+        // Monta corpo da tabela
+        const tabelaDados = multasSelecionadas.map(multa => {
+            const dataISO = multa.data ? multa.data.split('T')[0] : '';
+            const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
+            return [
+                multa.placa || '-',
+                multa.numero_auto_infracao || '-',
+                multa.codigo_infracao || '-',
+                multa.descricao_infracao || '-',
+                multa.agente_re || '-',
+                dataFormatada || '-'
+            ];
+        });
+
+        // Gera a tabela com autoTable
+        doc.autoTable({
+            startY: tableStartY,
+            head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+            body: tabelaDados,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [102, 126, 234] },
+            margin: { left: 40, right: 40 }
+        });
+
+        // Quantidade total ao final
+        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : tableStartY + 20;
+        doc.setFontSize(11);
+        doc.setFont('Times', 'bold');
+        doc.text(`Quantidade total de multas: ${multasSelecionadas.length}`, 40, finalY + 20);
+
+        // Salva com timestamp para evitar sobreposição
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
+    } catch (err) {
+        console.error('Erro ao gerar PDF com cabeçalho:', err);
+        alert('Erro ao gerar o relatório. Veja o console para detalhes.');
+    }
+}
 
         // Mantive a função de gerar relatório por período (modal) caso queira reutilizar
         function abrirModalRelatorio() {
