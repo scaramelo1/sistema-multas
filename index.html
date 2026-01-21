@@ -852,16 +852,16 @@ async function gerarRelatorioSelecionados() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
         const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // Margens
         const marginX = 50;
         const marginTop = 40;
 
         // Bloco esquerdo (logo + contato)
-        const bloco1Width = 120;
+        const bloco1Width = 180;
         const bloco1X = marginX;
         const logoHeight = 80;
-
-        // Espaço reservado para logo (não desenhado)
-        // doc.rect(bloco1X, marginTop, bloco1Width, logoHeight); // opcional
 
         // Texto contato em preto, centralizado no bloco esquerdo, abaixo do logo
         const contatoYStart = marginTop + logoHeight + 10;
@@ -907,7 +907,7 @@ async function gerarRelatorioSelecionados() {
         doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
 
         y += 18;
-        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
+        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, bloco2X, y);
 
         y += 18;
         doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
@@ -926,8 +926,8 @@ async function gerarRelatorioSelecionados() {
         doc.setTextColor(0, 0, 0);
         doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
         y += 18;
-        doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
-        y += 30;
+        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
+        y += 20;
 
         // Tabela ocupando toda a largura da página (com margens)
         const tabelaDados = multasSelecionadas.map(multa => {
@@ -952,6 +952,44 @@ async function gerarRelatorioSelecionados() {
             headStyles: { fillColor: [102, 126, 234] }
         });
 
+        // ----------------------------
+        // Bloco de assinatura alinhado à direita
+        // ----------------------------
+        // Texto da assinatura (ajuste aqui se quiser outro nome/cargo)
+        const assinaturaNome = 'DANIEL FERREIRA LOPES';
+        const assinaturaCargo = 'Cap PM Comandante';
+
+        // Determina Y para assinatura: logo após a tabela (se houver) ou um pouco abaixo de y
+        const assinaturaOffsetY = 40; // distância entre a tabela e a assinatura (ajuste se quiser)
+        const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
+        let sigY = tabelaFinalY + assinaturaOffsetY;
+
+        // Se a assinatura cair muito perto do final da página, força nova página
+        const requiredSpaceForSignature = 60;
+        if (sigY + requiredSpaceForSignature > pageHeight - 100) {
+            doc.addPage();
+            sigY = marginTop + 60;
+        }
+
+        const sigX = pageWidth - marginX; // alinhar ao limite direito da página (margem)
+        doc.setFont('Times', 'bold');
+        doc.setFontSize(11);
+        doc.text(assinaturaNome, sigX, sigY, { align: 'right' });
+
+        doc.setFont('Times', 'normal');
+        doc.setFontSize(10);
+        doc.text(assinaturaCargo, sigX, sigY + 16, { align: 'right' });
+
+        // ----------------------------
+        // Rodapé (frase padrão), centralizado no final da página
+        // ----------------------------
+        const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
+        const splitRodape = doc.splitTextToSize(fraseRodape, pageWidth - (marginX * 2));
+        doc.setFont('Times', 'italic');
+        doc.setFontSize(8);
+        doc.text(splitRodape, pageWidth / 2, pageHeight - 40, { align: 'center' });
+
+        // Salvar PDF
         const ts = new Date().toISOString().replace(/[:.]/g, '-');
         doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
 
