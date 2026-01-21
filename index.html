@@ -852,30 +852,22 @@ async function gerarRelatorioSelecionados() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
         const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-
-        // Margens
         const marginX = 50;
         const marginTop = 40;
 
-        // Largura dos blocos
-        const bloco1Width = 180; // bloco da esquerda (imagem + contato)
-        const bloco2Width = pageWidth - marginX * 2 - bloco1Width - 20; // bloco da direita (texto do ofício)
+        // Bloco esquerdo (logo + contato)
+        const bloco1Width = 180;
         const bloco1X = marginX;
-        const bloco2X = bloco1X + bloco1Width + 20; // 20pt de espaço entre blocos
-
-        // Altura reservada para a imagem
         const logoHeight = 80;
 
-        // --- Bloco 1: Espaço da imagem + texto contato centralizado ---
-        // Espaço reservado para logo (não desenha a imagem, só espaço)
-        // doc.rect(bloco1X, marginTop, bloco1Width, logoHeight); // opcional para debug
+        // Espaço reservado para logo (não desenhado)
+        // doc.rect(bloco1X, marginTop, bloco1Width, logoHeight); // opcional
 
-        // Texto contato centralizado no bloco 1, abaixo do espaço da imagem
+        // Texto contato em preto, centralizado no bloco esquerdo, abaixo do logo
         const contatoYStart = marginTop + logoHeight + 10;
         doc.setFont('Times', 'normal');
         doc.setFontSize(9);
-        doc.setTextColor(0, 0, 255);
+        doc.setTextColor(0, 0, 0); // preto
 
         const contatoLinhas = [
             '24bpmi1cia@policiamilitar.sp.gov.br',
@@ -891,7 +883,9 @@ async function gerarRelatorioSelecionados() {
             doc.text(linha, x, y);
         });
 
-        // --- Bloco 2: Texto do ofício alinhado à esquerda ---
+        // Bloco direito (texto do ofício) alinhado à esquerda
+        const bloco2X = bloco1X + bloco1Width + 20;
+        const bloco2Width = pageWidth - marginX * 2 - bloco1Width - 20;
         let y = marginTop;
 
         doc.setFont('Times', 'bold');
@@ -906,7 +900,6 @@ async function gerarRelatorioSelecionados() {
         doc.setFont('Times', 'normal');
         doc.setFontSize(11);
 
-        // Data formatada
         const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
             'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
         const hoje = new Date();
@@ -923,23 +916,20 @@ async function gerarRelatorioSelecionados() {
         doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
 
         y += 18;
-        // Quebra de linha para texto longo
         const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
         const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
         doc.text(destinatarioSplit, bloco2X, y);
         y += destinatarioSplit.length * 14;
 
-        doc.setFont('Times', 'bold');
+        // Assunto e Anexos em preto normal (sem negrito)
+        doc.setFont('Times', 'normal');
+        doc.setTextColor(0, 0, 0);
         doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
         y += 18;
-
-        doc.setFont('Times', 'normal');
-        doc.setTextColor(255, 0, 0);
         doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
-        doc.setTextColor(0, 0, 0);
         y += 30;
 
-        // --- Tabela de multas ---
+        // Tabela ocupando toda a largura da página (com margens)
         const tabelaDados = multasSelecionadas.map(multa => {
             const dataISO = multa.data ? multa.data.split('T')[0] : '';
             const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
@@ -955,14 +945,13 @@ async function gerarRelatorioSelecionados() {
 
         doc.autoTable({
             startY: y,
-            margin: { left: bloco2X, right: marginX },
+            margin: { left: marginX, right: marginX },
             head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
             body: tabelaDados,
             styles: { fontSize: 9 },
             headStyles: { fillColor: [102, 126, 234] }
         });
 
-        // Salvar PDF
         const ts = new Date().toISOString().replace(/[:.]/g, '-');
         doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
 
