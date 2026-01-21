@@ -852,122 +852,123 @@ async function gerarRelatorioSelecionados() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
         const pageWidth = doc.internal.pageSize.getWidth();
-        
-        // --- CONFIGURAÇÕES DE MARGEM ---
-        const marginX = 56; // Margem padrão de ofício (aprox 2cm)
-        let y = 40;
+        const pageHeight = doc.internal.pageSize.getHeight();
 
-        // --- 1. CABEÇALHO CENTRALIZADO ---
+        // Margens
+        const marginX = 50;
+        const marginTop = 40;
+
+        // Largura dos blocos
+        const bloco1Width = 180; // bloco da esquerda (imagem + contato)
+        const bloco2Width = pageWidth - marginX * 2 - bloco1Width - 20; // bloco da direita (texto do ofício)
+        const bloco1X = marginX;
+        const bloco2X = bloco1X + bloco1Width + 20; // 20pt de espaço entre blocos
+
+        // Altura reservada para a imagem
+        const logoHeight = 80;
+
+        // --- Bloco 1: Espaço da imagem + texto contato centralizado ---
+        // Espaço reservado para logo (não desenha a imagem, só espaço)
+        // doc.rect(bloco1X, marginTop, bloco1Width, logoHeight); // opcional para debug
+
+        // Texto contato centralizado no bloco 1, abaixo do espaço da imagem
+        const contatoYStart = marginTop + logoHeight + 10;
+        doc.setFont('Times', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 255);
+
+        const contatoLinhas = [
+            '24bpmi1cia@policiamilitar.sp.gov.br',
+            'Av. Sen. Marcos Freire, nº 169,',
+            'Jd. Aeroporto, SJBVista/SP.',
+            'Fone-(19) 3623-3623'
+        ];
+
+        contatoLinhas.forEach((linha, i) => {
+            const y = contatoYStart + i * 14;
+            const textWidth = doc.getTextWidth(linha);
+            const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
+            doc.text(linha, x, y);
+        });
+
+        // --- Bloco 2: Texto do ofício alinhado à esquerda ---
+        let y = marginTop;
+
         doc.setFont('Times', 'bold');
-        doc.setFontSize(12);
-        doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', pageWidth / 2, y, { align: 'center' });
-        y += 16;
-        doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', pageWidth / 2, y, { align: 'center' });
-        
-        // --- 2. ESPAÇO DO LOGO E BLOCOS LATERAIS ---
-        // O logo fica à esquerda. O texto de contato fica ABAIXO do logo.
-        // O texto do ofício começa à direita, na mesma altura que o logo começaria.
-        
-        const logoWidth = 70;
-        const logoHeight = 70;
-        const logoX = marginX;
-        const logoY = y + 20;
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
 
-        // Espaço reservado para o seu logoDataUrl (quando você inserir)
-        if (typeof logoDataUrl !== 'undefined' && logoDataUrl) {
-            doc.addImage(logoDataUrl, 'PNG', logoX, logoY, logoWidth, logoHeight);
-        }
+        y += 18;
+        doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
 
-        // --- 3. TEXTO À DIREITA (DATA E DESTINATÁRIO) ---
-        const rightX = pageWidth - marginX;
-        let rY = logoY + 10; // Alinhado com o topo do logo
-
+        y += 22;
         doc.setFont('Times', 'normal');
         doc.setFontSize(11);
 
-        // Data
-        const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+        // Data formatada
+        const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+            'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
         const hoje = new Date();
-        const dataStr = `São João da Boa Vista, ${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
-        doc.text(dataStr, rightX, rY, { align: 'right' });
-        
-        rY += 18;
+        const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
+        doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
+
+        y += 18;
+        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, bloco2X, y);
+
+        y += 18;
+        doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
+
+        y += 18;
+        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
+
+        y += 18;
+        // Quebra de linha para texto longo
+        const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
+        const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
+        doc.text(destinatarioSplit, bloco2X, y);
+        y += destinatarioSplit.length * 14;
+
         doc.setFont('Times', 'bold');
-        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, rightX, rY, { align: 'right' });
-        
-        rY += 18;
+        doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
+        y += 18;
+
         doc.setFont('Times', 'normal');
-        doc.text('Do Comandante da 1ª Cia PM', rightX, rY, { align: 'right' });
-        
-        rY += 18;
-        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', rightX, rY, { align: 'right' });
-        
-        rY += 18;
-        // Texto longo do destinatário com quebra de linha se necessário
-        const destTexto = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
-        const splitDest = doc.splitTextToSize(destTexto, 250);
-        doc.text(splitDest, rightX, rY, { align: 'right' });
-        
-        rY += (splitDest.length * 14);
-        doc.setFont('Times', 'bold');
-        doc.text('Assunto: Autos de Infração Municipais.', rightX, rY, { align: 'right' });
-        
-        rY += 18;
-        doc.setFont('Times', 'normal');
-        doc.setTextColor(255, 0, 0); // Vermelho conforme sua imagem
-        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, rightX, rY, { align: 'right' });
+        doc.setTextColor(255, 0, 0);
+        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
         doc.setTextColor(0, 0, 0);
+        y += 30;
 
-        // --- 4. TEXTO DE CONTATO (ABAIXO DO LOGO) ---
-        let lY = logoY + logoHeight + 15;
-        doc.setFontSize(8);
-        doc.setTextColor(0, 0, 255); // Azul para o link
-        doc.text('24bpmilcia@policiamilitar.sp.gov.br', marginX, lY);
-        
-        doc.setTextColor(0, 0, 0);
-        lY += 10;
-        doc.text('Av. Sen. Marcos Freire, nº 169,', marginX, lY);
-        lY += 10;
-        doc.text('Jd. Aeroporto, SJBVista/SP.', marginX, lY);
-        lY += 10;
-        doc.text('Fone-(19) 3623-3623', marginX, lY);
-
-        // --- 5. TABELA DE MULTAS ---
-        // A tabela deve começar após o bloco mais longo (esquerda ou direita)
-        const tableStartY = Math.max(rY, lY) + 30;
-
-        const tabelaDados = multasSelecionadas.map(m => [
-            m.placa,
-            m.numero_auto_infracao || '-',
-            m.codigo_infracao,
-            m.descricao_infracao || '-',
-            m.agente_re || '-',
-            m.data ? m.data.split('T')[0].split('-').reverse().join('/') : '-'
-        ]);
-
-        doc.autoTable({
-            startY: tableStartY,
-            head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-            body: tabelaDados,
-            theme: 'grid',
-            headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: 'bold' },
-            styles: { font: 'Times', fontSize: 9 },
-            margin: { left: marginX, right: marginX }
+        // --- Tabela de multas ---
+        const tabelaDados = multasSelecionadas.map(multa => {
+            const dataISO = multa.data ? multa.data.split('T')[0] : '';
+            const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
+            return [
+                multa.placa || '-',
+                multa.numero_auto_infracao || '-',
+                multa.codigo_infracao || '-',
+                multa.descricao_infracao || '-',
+                multa.agente_re || '-',
+                dataFormatada || '-'
+            ];
         });
 
-        // --- 6. RODAPÉ (FRASE PADRÃO DO OFÍCIO) ---
-        const finalY = doc.lastAutoTable.finalY + 40;
-        doc.setFontSize(8);
-        doc.setFont('Times', 'italic');
-        const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
-        const splitRodape = doc.splitTextToSize(fraseRodape, pageWidth - (marginX * 2));
-        doc.text(splitRodape, pageWidth / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
+        doc.autoTable({
+            startY: y,
+            margin: { left: bloco2X, right: marginX },
+            head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+            body: tabelaDados,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [102, 126, 234] }
+        });
 
-        doc.save(`Oficio_${oficioNum}_Multas.pdf`);
+        // Salvar PDF
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
 
     } catch (err) {
-        console.error(err);
-        alert('Erro ao gerar o PDF. Verifique o console.');
+        console.error('Erro ao gerar PDF:', err);
+        alert('Erro ao gerar o relatório. Veja o console para detalhes.');
     }
 }
 
