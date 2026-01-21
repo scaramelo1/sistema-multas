@@ -831,206 +831,213 @@ async function loadImageAsDataURL(url) {
     });
 }
 
+// Função completa: gerarRelatorioSelecionados
 async function gerarRelatorioSelecionados() {
-    if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
-        alert('Apenas administradores podem gerar este relatório.');
-        return;
-    }
+  // checagem de permissão (mantive sua verificação original)
+  if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
+    alert('Apenas administradores podem gerar este relatório.');
+    return;
+  }
 
-    const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
-    if (checkboxes.length === 0) {
-        alert('Selecione pelo menos uma multa para gerar o relatório.');
-        return;
-    }
-    const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
-    const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
+  const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
+  if (checkboxes.length === 0) {
+    alert('Selecione pelo menos uma multa para gerar o relatório.');
+    return;
+  }
+  const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
+  const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
 
-    const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
-    if (oficioNum === null) return;
+  const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
+  if (oficioNum === null) return;
+
+  // helper para carregar imagem via URL (retorna HTMLImageElement)
+  function loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = (e) => reject(e);
+      img.src = url;
+    });
+  }
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // configuração de margens e blocos
+    const marginX = 50;
+    const marginTop = 40;
+
+    // Bloco esquerdo (logo + contato)
+    const bloco1Width = 180; // ajuste se desejar outro tamanho
+    const bloco1X = marginX;
+    const logoHeight = 80;
+    const logoY = marginTop; // topo da imagem
+
+    // Bloco direito (texto do ofício)
+    const gapBetweenBlocks = 20;
+    const bloco2X = bloco1X + bloco1Width + gapBetweenBlocks;
+    const bloco2Width = pageWidth - marginX * 2 - bloco1Width - gapBetweenBlocks;
+
+    // --- desenhar imagem no bloco esquerdo (usa a URL do upload) ---
+    // substitua a URL abaixo se quiser outra imagem
+    const logoUrl = 'https://cdn.abacus.ai/images/b4cc4328-e138-4e89-a5e0-af97e97cf064.png';
 
     try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-
-        // Margens
-        const marginX = 50;
-        const marginTop = 40;
-
-        // Bloco esquerdo (logo + contato)
-        const bloco1Width = 120;
-        const bloco1X = marginX;
-        const logoHeight = 80;
-
-        // Texto contato em preto, centralizado no bloco esquerdo, abaixo do logo
-        const contatoYStart = marginTop + logoHeight + 10;
-        doc.setFont('Times', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(0, 0, 0); // preto
-
-        const contatoLinhas = [
-            '24bpmi1cia@policiamilitar.sp.gov.br',
-            'Av. Sen. Marcos Freire, nº 169,',
-            'Jd. Aeroporto, SJBVista/SP.',
-            'Fone-(19) 3623-3623'
-        ];
-
-        contatoLinhas.forEach((linha, i) => {
-            const y = contatoYStart + i * 14;
-            const textWidth = doc.getTextWidth(linha);
-            const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
-            doc.text(linha, x, y);
-        });
-
-        // Bloco direito (texto do ofício) alinhado à esquerda
-        const bloco2X = bloco1X + bloco1Width + 20;
-        const bloco2Width = pageWidth - marginX * 2 - bloco1Width - 20;
-        let y = marginTop;
-
-        doc.setFont('Times', 'bold');
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
-
-        y += 18;
-        doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
-
-        y += 22;
-        doc.setFont('Times', 'normal');
-        doc.setFontSize(11);
-
-        const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-            'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        const hoje = new Date();
-        const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
-        doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
-
-        y += 18;
-        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
-
-        y += 18;
-        doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
-
-        y += 18;
-        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
-
-        y += 18;
-        const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
-        const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
-        doc.text(destinatarioSplit, bloco2X, y);
-        y += destinatarioSplit.length * 14;
-
-        // Assunto e Anexos em preto normal (sem negrito)
-        doc.setFont('Times', 'normal');
-        doc.setTextColor(0, 0, 0);
-        doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
-        y += 18;
-        doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
-        y += 20;
-
-        // Tabela ocupando toda a largura da página (com margens)
-        const tabelaDados = multasSelecionadas.map(multa => {
-            const dataISO = multa.data ? multa.data.split('T')[0] : '';
-            const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
-            return [
-                multa.placa || '-',
-                multa.numero_auto_infracao || '-',
-                multa.codigo_infracao || '-',
-                multa.descricao_infracao || '-',
-                multa.agente_re || '-',
-                dataFormatada || '-'
-            ];
-        });
-
-        doc.autoTable({
-            startY: y,
-            margin: { left: marginX, right: marginX },
-            head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-            body: tabelaDados,
-            styles: { fontSize: 9 },
-            headStyles: { fillColor: [102, 126, 234] }
-        });
-
-// ----------------------------
-// Bloco de assinatura alinhado à direita (Cargo centralizado com o Nome)
-// ----------------------------
-const assinaturaNome = 'DANIEL FERREIRA LOPES';
-const assinaturaCargo = 'Cap PM Comandante';
-
-const assinaturaOffsetY = 60; // Espaço após a tabela
-const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
-let sigY = tabelaFinalY + assinaturaOffsetY;
-
-// Verifica se cabe na página
-if (sigY + 60 > pageHeight - 80) {
-    doc.addPage();
-    sigY = marginTop + 60;
-}
-
-doc.setFont('Times', 'normal'); // Sem negrito conforme solicitado
-doc.setFontSize(11);
-
-// Calculamos a largura do nome para saber onde é o centro dele
-const larguraNome = doc.getTextWidth(assinaturaNome);
-const sigX_Direita = pageWidth - marginX; // Ponto final na direita
-const centroAssinaturaX = sigX_Direita - (larguraNome / 2); // O centro real do bloco de assinatura
-
-// Desenha o Nome alinhado à direita
-doc.text(assinaturaNome, sigX_Direita, sigY, { align: 'right' });
-
-// Desenha o Cargo centralizado no eixo do nome
-doc.setFontSize(10);
-doc.text(assinaturaCargo, centroAssinaturaX, sigY + 16, { align: 'center' });
-
-// ----------------------------
-// Rodapé (linha e frase em UMA linha, fonte 7pt), centralizado no final da página
-// ----------------------------
-const rodapeMargin = marginX; // mesma margem lateral usada antes
-const rodapeY = pageHeight - 60; // y da linha
-const linhaX1 = rodapeMargin;
-const linhaX2 = pageWidth - rodapeMargin;
-
-// Desenha a linha horizontal acima da frase
-doc.setDrawColor(0, 0, 0); // cor preta
-doc.setLineWidth(0.5);
-doc.line(linhaX1, rodapeY, linhaX2, rodapeY);
-
-// Frase do rodapé em UMA linha, fonte 7pt, itálico
-const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
-
-doc.setFont('Times', 'italic');
-doc.setFontSize(7);
-
-// Garante centralização horizontal da frase numa única linha
-const maxWidth = pageWidth - (rodapeMargin * 2);
-let fraseWidth = doc.getTextWidth(fraseRodape);
-
-// Se, por algum motivo, a frase exceder a largura máxima mesmo em 7pt, reduz ligeiramente a fonte
-// (isso é apenas uma segurança; você pediu 7pt como referência)
-if (fraseWidth > maxWidth) {
-    // Reduz fonte até caber (mínimo 6)
-    let f = 7;
-    while (fraseWidth > maxWidth && f > 6) {
-        f -= 0.25;
-        doc.setFontSize(f);
-        fraseWidth = doc.getTextWidth(fraseRodape);
-    }
-}
-
-// Desenha a frase centralizada em uma única linha
-const fraseX = pageWidth / 2;
-const fraseY = rodapeY + 14; // distância entre a linha e o texto
-doc.text(fraseRodape, fraseX, fraseY, { align: 'center' });
-
-        // Salvar PDF
-        const ts = new Date().toISOString().replace(/[:.]/g, '-');
-        doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
-
+      const img = await loadImage(logoUrl);
+      const logoWidth = bloco1Width; // preenche a largura do bloco
+      const ratio = Math.min(logoWidth / img.width, logoHeight / img.height);
+      const drawW = img.width * ratio;
+      const drawH = img.height * ratio;
+      const drawX = bloco1X + (bloco1Width - drawW) / 2;
+      const drawY = logoY + (logoHeight - drawH) / 2;
+      doc.addImage(img, 'PNG', drawX, drawY, drawW, drawH);
     } catch (err) {
-        console.error('Erro ao gerar PDF:', err);
-        alert('Erro ao gerar o relatório. Veja o console para detalhes.');
+      // falha ao carregar (CORS ou outro erro) -> não interrompe a geração
+      // opcional: desenhar retângulo placeholder:
+      // doc.setDrawColor(200); doc.rect(bloco1X, logoY, bloco1Width, logoHeight);
+      console.warn('Não foi possível carregar o logotipo:', err);
     }
+
+    // --- contato (preto), centralizado dentro do bloco esquerdo, abaixo do logo ---
+    const contatoYStart = logoY + logoHeight + 10;
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0); // preto
+
+    const contatoLinhas = [
+      '24bpmi1cia@policiamilitar.sp.gov.br',
+      'Av. Sen. Marcos Freire, nº 169,',
+      'Jd. Aeroporto, SJBVista/SP.',
+      'Fone-(19) 3623-3623'
+    ];
+    contatoLinhas.forEach((linha, i) => {
+      const y = contatoYStart + i * 14;
+      const textWidth = doc.getTextWidth(linha);
+      const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
+      doc.text(linha, x, y);
+    });
+
+    // --- bloco direito: texto do ofício (alinhado à esquerda dentro do bloco) ---
+    let y = marginTop;
+    doc.setFont('Times', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+
+    doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
+    y += 18;
+    doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
+    y += 22;
+
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(11);
+
+    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const hoje = new Date();
+    const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
+    doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
+    y += 18;
+
+    doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
+    y += 18;
+    doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
+    y += 18;
+    doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
+    y += 18;
+
+    const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
+    const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
+    doc.text(destinatarioSplit, bloco2X, y);
+    y += destinatarioSplit.length * 14;
+
+    // Assunto e Anexo em preto normal (sem negrito)
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
+    y += 18;
+    doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
+    y += 20;
+
+    // --- tabela ocupando toda a largura da página (com margens) ---
+    const tabelaDados = multasSelecionadas.map(multa => {
+      const dataISO = multa.data ? multa.data.split('T')[0] : '';
+      const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
+      return [
+        multa.placa || '-',
+        multa.numero_auto_infracao || '-',
+        multa.codigo_infracao || '-',
+        multa.descricao_infracao || '-',
+        multa.agente_re || '-',
+        dataFormatada || '-'
+      ];
+    });
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+      body: tabelaDados,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [102, 126, 234] }
+    });
+
+    // --- assinatura do comandante (após a tabela) ---
+    const assinaturaNome = 'DANIEL FERREIRA LOPES';
+    const assinaturaCargo = 'Cap PM Comandante';
+    const assinaturaOffsetY = 40; // distância abaixo da tabela
+
+    const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
+    let sigY = tabelaFinalY + assinaturaOffsetY;
+
+    // se não couber na página, cria nova
+    const requiredSpaceForSignature = 60;
+    if (sigY + requiredSpaceForSignature > pageHeight - 120) {
+      doc.addPage();
+      sigY = marginTop + 60;
+    }
+
+    // Nome sem negrito, alinhado à direita
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(11);
+    const sigX_Right = pageWidth - marginX; // margem direita
+    doc.text(assinaturaNome, sigX_Right, sigY, { align: 'right' });
+
+    // Cargo centralizado com relação ao NOME (mesmo eixo horizontal do centro do nome)
+    const larguraNome = doc.getTextWidth(assinaturaNome);
+    const centroNomeX = sigX_Right - (larguraNome / 2);
+    doc.setFontSize(10);
+    doc.text(assinaturaCargo, centroNomeX, sigY + 16, { align: 'center' });
+
+    // --- rodapé: linha e frase em UMA linha (fonte 7pt) ---
+    const rodapeMargin = marginX;
+    const rodapeLineY = pageHeight - 60;
+    const linhaX1 = rodapeMargin;
+    const linhaX2 = pageWidth - rodapeMargin;
+
+    // Desenha linha horizontal
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(linhaX1, rodapeLineY, linhaX2, rodapeLineY);
+
+    // Frase do rodapé em UMA linha, fonte 7pt, itálico
+    const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
+    doc.setFont('Times', 'italic');
+    doc.setFontSize(7);
+    // conforme solicitado, mantemos 7pt; centralizamos a linha (se por acaso a frase exceder a largura, ela ficará em uma só linha mesmo que ultrapasse levemente as margens)
+    doc.text(fraseRodape, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
+
+    // --- salvar pdf ---
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
+
+  } catch (err) {
+    console.error('Erro ao gerar PDF:', err);
+    alert('Erro ao gerar o relatório. Veja o console para detalhes.');
+  }
 }
 
         // Mantive a função de gerar relatório por período (modal) caso queira reutilizar
