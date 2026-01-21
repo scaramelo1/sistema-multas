@@ -986,7 +986,7 @@ async function gerarRelatorioSelecionados() {
         const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
         const splitRodape = doc.splitTextToSize(fraseRodape, pageWidth - (marginX * 2));
         doc.setFont('Times', 'italic');
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         doc.text(splitRodape, pageWidth / 2, pageHeight - 40, { align: 'center' });
 
         // Salvar PDF
