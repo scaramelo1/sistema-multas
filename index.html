@@ -983,15 +983,6 @@ doc.text(assinaturaNome, sigX_Direita, sigY, { align: 'right' });
 doc.setFontSize(10);
 doc.text(assinaturaCargo, centroAssinaturaX, sigY + 16, { align: 'center' });
 
-        const sigX = pageWidth - marginX; // alinhar ao limite direito da página (margem)
-        doc.setFont('Times', 'bold');
-        doc.setFontSize(11);
-        doc.text(assinaturaNome, sigX, sigY, { align: 'right' });
-
-        doc.setFont('Times', 'normal');
-        doc.setFontSize(10);
-        doc.text(assinaturaCargo, sigX, sigY + 16, { align: 'right' });
-
 // ----------------------------
 // Rodapé (linha e frase em UMA linha, fonte 7pt), centralizado no final da página
 // ----------------------------
