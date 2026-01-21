@@ -952,24 +952,36 @@ async function gerarRelatorioSelecionados() {
             headStyles: { fillColor: [102, 126, 234] }
         });
 
-        // ----------------------------
-        // Bloco de assinatura alinhado à direita
-        // ----------------------------
-        // Texto da assinatura (ajuste aqui se quiser outro nome/cargo)
-        const assinaturaNome = 'DANIEL FERREIRA LOPES';
-        const assinaturaCargo = 'Cap PM Comandante';
+// ----------------------------
+// Bloco de assinatura alinhado à direita (Cargo centralizado com o Nome)
+// ----------------------------
+const assinaturaNome = 'DANIEL FERREIRA LOPES';
+const assinaturaCargo = 'Cap PM Comandante';
 
-        // Determina Y para assinatura: logo após a tabela (se houver) ou um pouco abaixo de y
-        const assinaturaOffsetY = 40; // distância entre a tabela e a assinatura (ajuste se quiser)
-        const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
-        let sigY = tabelaFinalY + assinaturaOffsetY;
+const assinaturaOffsetY = 60; // Espaço após a tabela
+const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
+let sigY = tabelaFinalY + assinaturaOffsetY;
 
-        // Se a assinatura cair muito perto do final da página, força nova página
-        const requiredSpaceForSignature = 60;
-        if (sigY + requiredSpaceForSignature > pageHeight - 100) {
-            doc.addPage();
-            sigY = marginTop + 60;
-        }
+// Verifica se cabe na página
+if (sigY + 60 > pageHeight - 80) {
+    doc.addPage();
+    sigY = marginTop + 60;
+}
+
+doc.setFont('Times', 'normal'); // Sem negrito conforme solicitado
+doc.setFontSize(11);
+
+// Calculamos a largura do nome para saber onde é o centro dele
+const larguraNome = doc.getTextWidth(assinaturaNome);
+const sigX_Direita = pageWidth - marginX; // Ponto final na direita
+const centroAssinaturaX = sigX_Direita - (larguraNome / 2); // O centro real do bloco de assinatura
+
+// Desenha o Nome alinhado à direita
+doc.text(assinaturaNome, sigX_Direita, sigY, { align: 'right' });
+
+// Desenha o Cargo centralizado no eixo do nome
+doc.setFontSize(10);
+doc.text(assinaturaCargo, centroAssinaturaX, sigY + 16, { align: 'center' });
 
         const sigX = pageWidth - marginX; // alinhar ao limite direito da página (margem)
         doc.setFont('Times', 'bold');
