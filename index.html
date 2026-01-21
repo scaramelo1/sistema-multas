@@ -843,123 +843,131 @@ async function gerarRelatorioSelecionados() {
         return;
     }
     const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
-
     const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
-    if (multasSelecionadas.length === 0) {
-        alert('Erro: não foi possível localizar as multas selecionadas.');
-        return;
-    }
 
-    const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número, sem prefixos):', '');
+    const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
     if (oficioNum === null) return;
 
     try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
         const pageWidth = doc.internal.pageSize.getWidth();
+        
+        // --- CONFIGURAÇÕES DE MARGEM ---
+        const marginX = 56; // Margem padrão de ofício (aprox 2cm)
+        let y = 40;
 
-        // Reservar espaço para logo (80x80) no canto superior esquerdo, mas sem desenhar a imagem
-        const logoX = 40;
-        const logoY = 60;
-        const logoW = 80;
-        const logoH = 80;
-        // Desenhar um retângulo vazio para marcar o espaço do logo (opcional, pode comentar)
-        // doc.setDrawColor(200);
-        // doc.rect(logoX, logoY, logoW, logoH);
-
-        // Texto de contato à esquerda, abaixo do espaço reservado para logo
-        const contatoX = logoX;
-        const contatoStartY = logoY + logoH + 10; // 10pt abaixo do espaço do logo
-        doc.setFont('Times', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(0, 0, 255);
-        doc.text('24bpmilcia@policiamilitar.sp.gov.br', contatoX, contatoStartY);
-        doc.text('Av. Sen. Marcos Freire, nº 169,', contatoX, contatoStartY + 12);
-        doc.text('Jd. Aeroporto, SJB/Vista/SP.', contatoX, contatoStartY + 24);
-        doc.setTextColor(0, 0, 128);
-        doc.text('Fone-(19) 3623-3623', contatoX, contatoStartY + 36);
-
-        // Texto do cabeçalho centralizado (SECRETARIA, POLÍCIA MILITAR)
-        let y = 20;
+        // --- 1. CABEÇALHO CENTRALIZADO ---
         doc.setFont('Times', 'bold');
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 0);
-        doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', pageWidth / 2, y + 6, { align: 'center' });
-        y += 22;
-        doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', pageWidth / 2, y + 6, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', pageWidth / 2, y, { align: 'center' });
+        y += 16;
+        doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', pageWidth / 2, y, { align: 'center' });
+        
+        // --- 2. ESPAÇO DO LOGO E BLOCOS LATERAIS ---
+        // O logo fica à esquerda. O texto de contato fica ABAIXO do logo.
+        // O texto do ofício começa à direita, na mesma altura que o logo começaria.
+        
+        const logoWidth = 70;
+        const logoHeight = 70;
+        const logoX = marginX;
+        const logoY = y + 20;
 
-        // Texto do ofício alinhado à direita, começando próximo ao topo, alinhado com o topo do espaço do logo
-        const rightX = pageWidth - 40;
-        let rightY = logoY; // alinhado com o topo do espaço do logo
+        // Espaço reservado para o seu logoDataUrl (quando você inserir)
+        if (typeof logoDataUrl !== 'undefined' && logoDataUrl) {
+            doc.addImage(logoDataUrl, 'PNG', logoX, logoY, logoWidth, logoHeight);
+        }
+
+        // --- 3. TEXTO À DIREITA (DATA E DESTINATÁRIO) ---
+        const rightX = pageWidth - marginX;
+        let rY = logoY + 10; // Alinhado com o topo do logo
+
         doc.setFont('Times', 'normal');
         doc.setFontSize(11);
+
+        // Data
+        const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+        const hoje = new Date();
+        const dataStr = `São João da Boa Vista, ${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
+        doc.text(dataStr, rightX, rY, { align: 'right' });
+        
+        rY += 18;
+        doc.setFont('Times', 'bold');
+        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, rightX, rY, { align: 'right' });
+        
+        rY += 18;
+        doc.setFont('Times', 'normal');
+        doc.text('Do Comandante da 1ª Cia PM', rightX, rY, { align: 'right' });
+        
+        rY += 18;
+        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', rightX, rY, { align: 'right' });
+        
+        rY += 18;
+        // Texto longo do destinatário com quebra de linha se necessário
+        const destTexto = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
+        const splitDest = doc.splitTextToSize(destTexto, 250);
+        doc.text(splitDest, rightX, rY, { align: 'right' });
+        
+        rY += (splitDest.length * 14);
+        doc.setFont('Times', 'bold');
+        doc.text('Assunto: Autos de Infração Municipais.', rightX, rY, { align: 'right' });
+        
+        rY += 18;
+        doc.setFont('Times', 'normal');
+        doc.setTextColor(255, 0, 0); // Vermelho conforme sua imagem
+        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, rightX, rY, { align: 'right' });
         doc.setTextColor(0, 0, 0);
 
-        // Data formatada no estilo "23 de janeiro de 2025"
-        const meses = [
-            'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-            'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-        ];
-        const hoje = new Date();
-        const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+        // --- 4. TEXTO DE CONTATO (ABAIXO DO LOGO) ---
+        let lY = logoY + logoHeight + 15;
+        doc.setFontSize(8);
+        doc.setTextColor(0, 0, 255); // Azul para o link
+        doc.text('24bpmilcia@policiamilitar.sp.gov.br', marginX, lY);
+        
+        doc.setTextColor(0, 0, 0);
+        lY += 10;
+        doc.text('Av. Sen. Marcos Freire, nº 169,', marginX, lY);
+        lY += 10;
+        doc.text('Jd. Aeroporto, SJBVista/SP.', marginX, lY);
+        lY += 10;
+        doc.text('Fone-(19) 3623-3623', marginX, lY);
 
-        doc.text(`São João da Boa Vista, ${dataFormatada}.`, rightX, rightY, { align: 'right' });
-        rightY += 18;
+        // --- 5. TABELA DE MULTAS ---
+        // A tabela deve começar após o bloco mais longo (esquerda ou direita)
+        const tableStartY = Math.max(rY, lY) + 30;
 
-        doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/25`, rightX, rightY, { align: 'right' });
-        rightY += 18;
-
-        doc.text('Do Comandante da 1ª Cia PM', rightX, rightY, { align: 'right' });
-        rightY += 18;
-
-        doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', rightX, rightY, { align: 'right' });
-        rightY += 18;
-
-        doc.text('DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.', rightX, rightY, { align: 'right' });
-        rightY += 18;
-
-        doc.setFont('Times', 'bold');
-        doc.text('Assunto: Autos de Infração Municipais.', rightX, rightY, { align: 'right' });
-        rightY += 20;
-
-        doc.setFont('Times', 'normal');
-        doc.setTextColor(255, 0, 0);
-        doc.text(`Anexos: ${multasSelecionadas.length} autos de infração.`, rightX, rightY, { align: 'right' });
-        rightY += 26;
-
-        // A partir daqui, você pode continuar com a geração da tabela e demais conteúdos...
-
-        // Exemplo simples de tabela abaixo do cabeçalho
-        const tableStartY = Math.max(contatoStartY + 40, rightY + 10);
-
-        const tabelaDados = multasSelecionadas.map(multa => {
-            const dataISO = multa.data ? multa.data.split('T')[0] : '';
-            const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
-            return [
-                multa.placa || '-',
-                multa.numero_auto_infracao || '-',
-                multa.codigo_infracao || '-',
-                multa.descricao_infracao || '-',
-                multa.agente_re || '-',
-                dataFormatada || '-'
-            ];
-        });
+        const tabelaDados = multasSelecionadas.map(m => [
+            m.placa,
+            m.numero_auto_infracao || '-',
+            m.codigo_infracao,
+            m.descricao_infracao || '-',
+            m.agente_re || '-',
+            m.data ? m.data.split('T')[0].split('-').reverse().join('/') : '-'
+        ]);
 
         doc.autoTable({
             startY: tableStartY,
             head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
             body: tabelaDados,
-            styles: { fontSize: 9 },
-            headStyles: { fillColor: [102, 126, 234] },
-            margin: { left: 40, right: 40 }
+            theme: 'grid',
+            headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: 'bold' },
+            styles: { font: 'Times', fontSize: 9 },
+            margin: { left: marginX, right: marginX }
         });
 
-        const ts = new Date().toISOString().replace(/[:.]/g, '-');
-        doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
+        // --- 6. RODAPÉ (FRASE PADRÃO DO OFÍCIO) ---
+        const finalY = doc.lastAutoTable.finalY + 40;
+        doc.setFontSize(8);
+        doc.setFont('Times', 'italic');
+        const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
+        const splitRodape = doc.splitTextToSize(fraseRodape, pageWidth - (marginX * 2));
+        doc.text(splitRodape, pageWidth / 2, doc.internal.pageSize.getHeight() - 30, { align: 'center' });
+
+        doc.save(`Oficio_${oficioNum}_Multas.pdf`);
+
     } catch (err) {
-        console.error('Erro ao gerar PDF com cabeçalho:', err);
-        alert('Erro ao gerar o relatório. Veja o console para detalhes.');
+        console.error(err);
+        alert('Erro ao gerar o PDF. Verifique o console.');
     }
 }
 
