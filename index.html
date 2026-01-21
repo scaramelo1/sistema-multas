@@ -981,22 +981,44 @@ async function gerarRelatorioSelecionados() {
         doc.text(assinaturaCargo, sigX, sigY + 16, { align: 'right' });
 
 // ----------------------------
-// Rodapé (linha e frase padrão), centralizado no final da página
+// Rodapé (linha e frase em UMA linha, fonte 7pt), centralizado no final da página
 // ----------------------------
-const rodapeY = pageHeight - 60; // posição da linha
-const linhaX1 = marginX;
-const linhaX2 = pageWidth - marginX;
+const rodapeMargin = marginX; // mesma margem lateral usada antes
+const rodapeY = pageHeight - 60; // y da linha
+const linhaX1 = rodapeMargin;
+const linhaX2 = pageWidth - rodapeMargin;
 
 // Desenha a linha horizontal acima da frase
 doc.setDrawColor(0, 0, 0); // cor preta
 doc.setLineWidth(0.5);
 doc.line(linhaX1, rodapeY, linhaX2, rodapeY);
 
+// Frase do rodapé em UMA linha, fonte 7pt, itálico
 const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
-const splitRodape = doc.splitTextToSize(fraseRodape, pageWidth - (marginX * 2));
+
 doc.setFont('Times', 'italic');
-doc.setFontSize(8);
-doc.text(splitRodape, pageWidth / 2, rodapeY + 15, { align: 'center' });
+doc.setFontSize(7);
+
+// Garante centralização horizontal da frase numa única linha
+const maxWidth = pageWidth - (rodapeMargin * 2);
+let fraseWidth = doc.getTextWidth(fraseRodape);
+
+// Se, por algum motivo, a frase exceder a largura máxima mesmo em 7pt, reduz ligeiramente a fonte
+// (isso é apenas uma segurança; você pediu 7pt como referência)
+if (fraseWidth > maxWidth) {
+    // Reduz fonte até caber (mínimo 6)
+    let f = 7;
+    while (fraseWidth > maxWidth && f > 6) {
+        f -= 0.25;
+        doc.setFontSize(f);
+        fraseWidth = doc.getTextWidth(fraseRodape);
+    }
+}
+
+// Desenha a frase centralizada em uma única linha
+const fraseX = pageWidth / 2;
+const fraseY = rodapeY + 14; // distância entre a linha e o texto
+doc.text(fraseRodape, fraseX, fraseY, { align: 'center' });
 
         // Salvar PDF
         const ts = new Date().toISOString().replace(/[:.]/g, '-');
