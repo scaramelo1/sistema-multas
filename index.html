@@ -678,7 +678,8 @@ table tr:hover {
             await verificarSessaoInicial();
             configurarEventos();
             await carregarInfracoes();
-            autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
+autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
+    autocompleteCodigoInfracao(document.getElementById('editCodigoInfracao'));
 
             // Atualiza descrição ao digitar código exato
             document.getElementById('codigoInfracao').addEventListener('input', function() {
