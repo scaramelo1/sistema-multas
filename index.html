@@ -195,6 +195,10 @@ table tr:hover {
     margin-top: 15px;
     text-align: center;
 }
+        #registerModal input, #registerModal select {
+    background-color: white !important;
+    color: #003366 !important;
+}
 #pagination button {
     margin: 0 3px;
     background: #0055a4;
@@ -422,7 +426,7 @@ table tr:hover {
                     <small><strong>E-mail:</strong> <span id="userEmail"></span> | <strong>RE:</strong> <span id="userRE"></span> | <strong>Posto:</strong> <span id="userPosto"></span></small>
                 </div>
                 <div>
-                    <button id="btnCriarUsuario" class="btn btn-primary admin-only hidden" onclick="toggleAuthMode(true)">➕ Criar Novo Usuário</button>
+                    <button id="btnCriarUsuario" class="btn btn-primary admin-only hidden" onclick="abrirModalCadastro()">➕ Criar Novo Usuário</button>
                     <button class="btn btn-danger" onclick="fazerLogout()">Sair</button>
                 </div>
             </div>
@@ -519,7 +523,49 @@ table tr:hover {
             </div>
         </div>
     </div>
-
+<!-- Modal de Cadastro de Novo Usuário -->
+<div id="registerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>➕ Cadastrar Novo Usuário</h2>
+            <span class="close" onclick="fecharModalCadastro()">×</span>
+        </div>
+        <div id="modalRegisterFields">
+            <div class="form-group">
+                <label for="modRegNome">Nome Completo:</label>
+                <input type="text" id="modRegNome" placeholder="Nome do Agente" />
+            </div>
+            <div class="form-group">
+                <label for="modRegEmail">E-mail:</label>
+                <input type="email" id="modRegEmail" placeholder="agente@email.com" />
+            </div>
+            <div class="form-group">
+                <label for="modRegPassword">Senha:</label>
+                <input type="password" id="modRegPassword" placeholder="Mínimo 6 caracteres" />
+            </div>
+            <div class="form-group">
+                <label for="modRegRE">RE:</label>
+                <input type="text" id="modRegRE" placeholder="Ex: 123456-7" />
+            </div>
+            <div class="form-group">
+                <label for="modRegCargo">Cargo/Posto:</label>
+                <input type="text" id="modRegCargo" placeholder="Ex: Cb PM" />
+            </div>
+            <div class="form-group">
+                <label for="modRegNivel">Nível de Acesso:</label>
+                <select id="modRegNivel">
+                    <option value="agente">Agente</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+        </div>
+        <div class="actions-buttons">
+            <button class="btn btn-success" onclick="executarCadastroModal()">✅ Confirmar Cadastro</button>
+            <button class="btn btn-danger" onclick="fecharModalCadastro()">❌ Cancelar</button>
+        </div>
+        <div id="modalAuthStatus"></div>
+    </div>
+</div>
     <!-- Modal de Edição -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -612,7 +658,59 @@ table tr:hover {
                 console.error('Erro ao carregar infrações:', e);
             }
         }
+// Função para abrir o modal de cadastro
+function abrirModalCadastro() {
+    document.getElementById('registerModal').style.display = 'block';
+}
 
+// Função para fechar o modal de cadastro
+function fecharModalCadastro() {
+    document.getElementById('registerModal').style.display = 'none';
+    document.getElementById('modalAuthStatus').textContent = '';
+}
+
+// Função para executar o cadastro via Modal
+async function executarCadastroModal() {
+    const email = document.getElementById('modRegEmail').value;
+    const password = document.getElementById('modRegPassword').value;
+    const nome = document.getElementById('modRegNome').value;
+    const re = document.getElementById('modRegRE').value;
+    const cargo = document.getElementById('modRegCargo').value;
+    const nivel = document.getElementById('modRegNivel').value;
+
+    if(!email || !password || !nome || !re) {
+        alert("Preencha todos os campos obrigatórios!");
+        return;
+    }
+
+    try {
+        // 1. Criar usuário no Auth do Supabase
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: { data: { nome_completo: nome } }
+        });
+
+        if (error) throw error;
+
+        // 2. Criar perfil na tabela 'perfis'
+        const { error: profileError } = await supabaseClient.from('perfis').insert([{
+            id: data.user.id,
+            nome_completo: nome,
+            re: re,
+            cargo: cargo,
+            nivel_acesso: nivel
+        }]);
+
+        if (profileError) throw profileError;
+
+        alert('✅ Usuário cadastrado com sucesso!');
+        fecharModalCadastro();
+    } catch (err) {
+        console.error(err);
+        document.getElementById('modalAuthStatus').innerHTML = `<div class="status-message status-error">❌ ${err.message}</div>`;
+    }
+}
         // Função autocomplete para o campo código da infração
         function autocompleteCodigoInfracao(input) {
             let currentFocus;
