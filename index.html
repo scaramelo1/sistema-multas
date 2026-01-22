@@ -603,10 +603,15 @@ function autocompleteCodigoInfracao(input) {
       if (item.codigo.startsWith(val) || item.descricao.toUpperCase().includes(val)) {
         const itemDiv = document.createElement('div');
         itemDiv.innerHTML = `<strong>${item.codigo}</strong> - ${item.descricao}`;
+// Quando o usuário clica numa sugestão: mostra "CODIGO - DESCRIÇÃO" no input
 itemDiv.addEventListener('click', () => {
-  input.value = item.codigo;
+  const combined = `${item.codigo} - ${item.descricao}`;
+  input.value = combined;
+  // mantém a descrição em campo oculto também
   document.getElementById('descricaoInfracao').value = item.descricao;
-  document.getElementById('descricaoVisivel').textContent = item.descricao;
+  // opcional: atualiza a descrição visível se ainda quiser usar a div
+  const descVis = document.getElementById('descricaoVisivel');
+  if (descVis) descVis.textContent = item.descricao;
   closeAllLists();
 });
         list.appendChild(itemDiv);
@@ -680,17 +685,37 @@ configurarEventos();
     initAutocompleteInfracoes();
 
     // Atualiza descrição ao digitar código exato
-    document.getElementById('codigoInfracao').addEventListener('input', function() {
-      const val = this.value.toUpperCase();
-      const found = infracoesCTB.find(i => i.codigo === val);
-      if (found) {
-        document.getElementById('descricaoInfracao').value = found.descricao;
-        document.getElementById('descricaoVisivel').textContent = found.descricao;
-      } else {
-        document.getElementById('descricaoInfracao').value = '';
-        document.getElementById('descricaoVisivel').textContent = '';
-      }
-    });
+// Atualiza campo oculto / descrição quando o usuário digita no campo (também aceita "CODIGO - DESCRIÇÃO")
+document.getElementById('codigoInfracao').addEventListener('input', function() {
+  const raw = this.value.trim();
+  // se o usuário colou/escreveu no formato "CODIGO - DESCRIÇÃO", separamos
+  if (raw.includes(' - ')) {
+    const parts = raw.split(' - ');
+    const codigo = parts.shift().trim();
+    const descricao = parts.join(' - ').trim();
+    // preenche hidden e descr vis
+    document.getElementById('descricaoInfracao').value = descricao;
+    const descVis = document.getElementById('descricaoVisivel');
+    if (descVis) descVis.textContent = descricao;
+    // atualiza visual (mantemos o valor do input como está — já possui codigo + descricao)
+  } else {
+    // se o usuário digitou só o código (ex: 50291), tentamos encontrar descrição na base
+    const val = raw.toUpperCase();
+    const found = infracoesCTB.find(i => i.codigo === val);
+    if (found) {
+      // preenche o input com "CODIGO - DESCRIÇÃO" para visual
+      this.value = `${found.codigo} - ${found.descricao}`;
+      document.getElementById('descricaoInfracao').value = found.descricao;
+      const descVis = document.getElementById('descricaoVisivel');
+      if (descVis) descVis.textContent = found.descricao;
+    } else {
+      // não encontrou: limpa hidden/descr vis (mas não modifica input)
+      document.getElementById('descricaoInfracao').value = '';
+      const descVis = document.getElementById('descricaoVisivel');
+      if (descVis) descVis.textContent = '';
+    }
+  }
+});
 });
         });
 
@@ -783,17 +808,30 @@ configurarEventos();
                     // Forçamos horário ao meio-dia para evitar deslocamento por fuso horário
                     const dataParaSalvar = dataInput + "T12:00:00";
 
-                    const novaMulta = {
-                        placa: document.getElementById('placa').value.toUpperCase(),
-                        numero_auto_infracao: document.getElementById('numeroAutoInfracao').value,
-                        codigo_infracao: document.getElementById('codigoInfracao').value,
-                        descricao_infracao: document.getElementById('descricaoInfracao').value,
-                        agente_posto: document.getElementById('agentePosto') ? document.getElementById('agentePosto').value : '',
-                        agente_re: document.getElementById('agenteRE').value,
-                        agente_nome: document.getElementById('agenteNome').value,
-                        data: dataParaSalvar,
-                        user_id: usuarioLogado.id,
-                    };
+// Antes de montar o objeto novaMulta:
+const codigoRaw = document.getElementById('codigoInfracao').value.trim();
+let codigoParaSalvar = codigoRaw;
+let descricaoParaSalvar = document.getElementById('descricaoInfracao').value || '';
+
+// Se o campo estiver no formato "CODIGO - DESCRIÇÃO", separa
+if (codigoRaw.includes(' - ')) {
+  const parts = codigoRaw.split(' - ');
+  codigoParaSalvar = parts.shift().trim();
+  if (!descricaoParaSalvar) descricaoParaSalvar = parts.join(' - ').trim();
+}
+
+// Agora o objeto:
+const novaMulta = {
+  placa: document.getElementById('placa').value.toUpperCase(),
+  numero_auto_infracao: document.getElementById('numeroAutoInfracao').value,
+  codigo_infracao: codigoParaSalvar,
+  descricao_infracao: descricaoParaSalvar,
+  agente_posto: document.getElementById('agentePosto') ? document.getElementById('agentePosto').value : '',
+  agente_re: document.getElementById('agenteRE').value,
+  agente_nome: document.getElementById('agenteNome').value,
+  data: dataParaSalvar,
+  user_id: usuarioLogado.id,
+};
 
                     try {
                         const { error } = await supabaseClient.from('multas').insert([novaMulta]);
@@ -1102,8 +1140,10 @@ badge.className = 'badge ' + (perfil.nivel_acesso === 'admin' ? 'badge-admin' : 
             document.getElementById('editId').value = multa.id;
             document.getElementById('editPlaca').value = multa.placa;
             document.getElementById('editNumeroAutoInfracao').value = multa.numero_auto_infracao || '';
-            document.getElementById('editCodigoInfracao').value = multa.codigo_infracao;
-            document.getElementById('editDescricaoInfracao').value = multa.descricao_infracao || '';
+            document.getElementById('editCodigoInfracao').value = multa.descricao_infracao
+  ? `${multa.codigo_infracao} - ${multa.descricao_infracao}`
+  : (multa.codigo_infracao || '');
+document.getElementById('editDescricaoInfracao').value = multa.descricao_infracao || '';
             document.getElementById('editAgenteRE').value = multa.agente_re || '';
             document.getElementById('editAgenteNome').value = multa.agente_nome || '';
             document.getElementById('editAgentePosto').value = multa.agente_posto || '';
@@ -1131,16 +1171,26 @@ badge.className = 'badge ' + (perfil.nivel_acesso === 'admin' ? 'badge-admin' : 
             }
             const dataParaSalvar = dataInput + "T12:00:00";
 
-            const multaAtualizada = {
-                placa: document.getElementById('editPlaca').value.toUpperCase(),
-                numero_auto_infracao: document.getElementById('editNumeroAutoInfracao').value,
-                codigo_infracao: document.getElementById('editCodigoInfracao').value,
-                descricao_infracao: document.getElementById('editDescricaoInfracao').value,
-                agente_posto: document.getElementById('editAgentePosto') ? document.getElementById('editAgentePosto').value : '',
-                agente_re: document.getElementById('editAgenteRE').value,
-                agente_nome: document.getElementById('editAgenteNome').value,
-                data: dataParaSalvar,
-            };
+const codigoRawEdit = document.getElementById('editCodigoInfracao').value.trim();
+let codigoParaSalvarEdit = codigoRawEdit;
+let descricaoParaSalvarEdit = document.getElementById('editDescricaoInfracao').value || '';
+
+if (codigoRawEdit.includes(' - ')) {
+  const parts = codigoRawEdit.split(' - ');
+  codigoParaSalvarEdit = parts.shift().trim();
+  if (!descricaoParaSalvarEdit) descricaoParaSalvarEdit = parts.join(' - ').trim();
+}
+
+const multaAtualizada = {
+  placa: document.getElementById('editPlaca').value.toUpperCase(),
+  numero_auto_infracao: document.getElementById('editNumeroAutoInfracao').value,
+  codigo_infracao: codigoParaSalvarEdit,
+  descricao_infracao: descricaoParaSalvarEdit,
+  agente_posto: document.getElementById('editAgentePosto') ? document.getElementById('editAgentePosto').value : '',
+  agente_re: document.getElementById('editAgenteRE').value,
+  agente_nome: document.getElementById('editAgenteNome').value,
+  data: dataParaSalvar,
+};
 
             try {
                 const { error } = await supabaseClient.from('multas').update(multaAtualizada).eq('id', id);
