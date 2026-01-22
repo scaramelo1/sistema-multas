@@ -1590,204 +1590,228 @@ const multaAtualizada = {
             });
         }
 
-        async function gerarRelatorioSelecionados() {
-          // checagem de permissão (mantive sua verificação original)
-          if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
-            alert('Apenas administradores podem gerar este relatório.');
-            return;
-          }
+async function gerarRelatorioSelecionados() {
+  // checagem de permissão (mantive sua verificação original)
+  if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
+    alert('Apenas administradores podem gerar este relatório.');
+    return;
+  }
 
-          const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
-          if (checkboxes.length === 0) {
-            alert('Selecione pelo menos uma multa para gerar o relatório.');
-            return;
-          }
-          const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
-          const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
+  const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
+  if (checkboxes.length === 0) {
+    alert('Selecione pelo menos uma multa para gerar o relatório.');
+    return;
+  }
+  const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
+  const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
 
-          const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
-          if (oficioNum === null) return;
+  const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
+  if (oficioNum === null) return;
 
-          // helper para carregar imagem via URL (retorna HTMLImageElement)
-          function loadImage(url) {
-            return new Promise((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => resolve(img);
-              img.onerror = (e) => reject(e);
-              img.src = url;
-            });
-          }
+  // helper para carregar imagem via URL (retorna HTMLImageElement)
+  function loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = (e) => reject(e);
+      img.src = url;
+    });
+  }
 
-          try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-            // configuração de margens e blocos
-            const marginX = 50;
-            const marginTop = 40;
+    // configuração de margens e blocos
+    const marginX = 50;
+    const marginTop = 40;
+    const marginBottom = 40; // margem inferior para checagem de espaço
 
-            // Bloco esquerdo (logo + contato)
-            const bloco1Width = 120; // ajuste se desejar outro tamanho
-            const bloco1X = marginX;
-            const logoHeight = 80;
-            const logoY = marginTop; // topo da imagem
+    // Bloco esquerdo (logo + contato)
+    const bloco1Width = 120; // ajuste se desejar outro tamanho
+    const bloco1X = marginX;
+    const logoHeight = 80;
+    const logoY = marginTop; // topo da imagem
 
-            // Bloco direito (texto do ofício)
-            const gapBetweenBlocks = 20;
-            const bloco2X = bloco1X + bloco1Width + gapBetweenBlocks;
-            const bloco2Width = pageWidth - marginX * 2 - bloco1Width - gapBetweenBlocks;
+    // Bloco direito (texto do ofício)
+    const gapBetweenBlocks = 20;
+    const bloco2X = bloco1X + bloco1Width + gapBetweenBlocks;
+    const bloco2Width = pageWidth - marginX * 2 - bloco1Width - gapBetweenBlocks;
 
-            // --- desenhar imagem no bloco esquerdo (usa a URL do upload) ---
-            const logoUrl = 'https://cdn.abacus.ai/images/b4cc4328-e138-4e89-a5e0-af97e97cf064.png';
+    // --- desenhar imagem no bloco esquerdo (usa a URL do upload) ---
+    const logoUrl = 'https://cdn.abacus.ai/images/b4cc4328-e138-4e89-a5e0-af97e97cf064.png';
 
-            try {
-              const img = await loadImage(logoUrl);
-              const logoWidth = bloco1Width; // preenche a largura do bloco
-              const ratio = Math.min(logoWidth / img.width, logoHeight / img.height);
-              const drawW = img.width * ratio;
-              const drawH = img.height * ratio;
-              const drawX = bloco1X + (bloco1Width - drawW) / 2;
-              const drawY = logoY + (logoHeight - drawH) / 2;
-              doc.addImage(img, 'PNG', drawX, drawY, drawW, drawH);
-            } catch (err) {
-              console.warn('Não foi possível carregar o logotipo:', err);
-            }
+    try {
+      const img = await loadImage(logoUrl);
+      const logoWidth = bloco1Width; // preenche a largura do bloco
+      const ratio = Math.min(logoWidth / img.width, logoHeight / img.height);
+      const drawW = img.width * ratio;
+      const drawH = img.height * ratio;
+      const drawX = bloco1X + (bloco1Width - drawW) / 2;
+      const drawY = logoY + (logoHeight - drawH) / 2;
+      doc.addImage(img, 'PNG', drawX, drawY, drawW, drawH);
+    } catch (err) {
+      console.warn('Não foi possível carregar o logotipo:', err);
+    }
 
-            // --- contato (preto), centralizado dentro do bloco esquerdo, abaixo do logo ---
-            const contatoYStart = logoY + logoHeight + 10;
-            doc.setFont('Times', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(0, 0, 0); // preto
+    // --- contato (preto), centralizado dentro do bloco esquerdo, abaixo do logo ---
+    const contatoYStart = logoY + logoHeight + 10;
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0); // preto
 
-            const contatoLinhas = [
-              '24bpmi1cia@policiamilitar.sp.gov.br',
-              'Av. Sen. Marcos Freire, nº 169,',
-              'Jd. Aeroporto, SJBVista/SP.',
-              'Fone-(19) 3623-3623'
-            ];
-            contatoLinhas.forEach((linha, i) => {
-              const y = contatoYStart + i * 14;
-              const textWidth = doc.getTextWidth(linha);
-              const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
-              doc.text(linha, x, y);
-            });
+    const contatoLinhas = [
+      '24bpmi1cia@policiamilitar.sp.gov.br',
+      'Av. Sen. Marcos Freire, nº 169,',
+      'Jd. Aeroporto, SJBVista/SP.',
+      'Fone-(19) 3623-3623'
+    ];
+    contatoLinhas.forEach((linha, i) => {
+      const yLinha = contatoYStart + i * 14;
+      const textWidth = doc.getTextWidth(linha);
+      const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
+      doc.text(linha, x, yLinha);
+    });
 
-            // --- bloco direito: texto do ofício (alinhado à esquerda dentro do bloco) ---
-            let y = marginTop;
-            doc.setFont('Times', 'bold');
-            doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0);
+    // --- bloco direito: texto do ofício (alinhado à esquerda dentro do bloco) ---
+    let y = marginTop;
+    doc.setFont('Times', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
 
-            doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
-            y += 18;
-            doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
-            y += 22;
+    doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
+    y += 18;
+    doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
+    y += 22;
 
-            doc.setFont('Times', 'normal');
-            doc.setFontSize(11);
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(11);
 
-            const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-            const hoje = new Date();
-            const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
-            doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
-            y += 18;
+    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const hoje = new Date();
+    const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
+    doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
+    y += 18;
 
-            doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
-            y += 18;
-            doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
-            y += 18;
-            doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
-            y += 18;
+    doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
+    y += 18;
+    doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
+    y += 18;
+    doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
+    y += 18;
 
-            const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
-            const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
-            doc.text(destinatarioSplit, bloco2X, y);
-            y += destinatarioSplit.length * 14;
+    const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
+    const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
+    doc.text(destinatarioSplit, bloco2X, y);
+    y += destinatarioSplit.length * 14;
 
-            doc.setFont('Times', 'normal');
-            doc.setFontSize(11);
-            doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
-y += 18;
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(11);
+    doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
+    y += 18;
 
-// Novo texto formal adicionado aqui:
-const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, as multas constantes em anexo.';
-const textoSplit = doc.splitTextToSize(textoFormal, bloco2Width);
-doc.text(textoSplit, bloco2X, y);
-y += textoSplit.length * 14;
+    // Novo texto formal: ocupará a mesma largura da tabela (bloco2Width)
+    const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, as multas constantes em anexo.';
+    doc.setFontSize(11);
+    const textoSplit = doc.splitTextToSize(textoFormal, bloco2Width);
 
-doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
-y += 20;
+    // calcula altura aproximada do parágrafo (em pontos)
+    const fontSize = doc.getFontSize(); // em pt
+    const lineHeightFactor = 1.15;
+    const alturaTexto = textoSplit.length * fontSize * lineHeightFactor;
 
-            const tabelaDados = multasSelecionadas.map(multa => {
-              const dataISO = multa.data ? multa.data.split('T')[0] : '';
-              const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
-              return [
-                multa.placa || '-',
-                multa.numero_auto_infracao || '-',
-                multa.codigo_infracao || '-',
-                multa.descricao_infracao || '-',
-                multa.agente_re || '-',
-                dataFormatada || '-'
-              ];
-            });
+    // se não couber na página atual, adiciona nova página
+    if (y + alturaTexto > pageHeight - marginBottom) {
+      doc.addPage();
+      y = marginTop;
+    }
 
-            doc.autoTable({
-              startY: y,
-              margin: { left: marginX, right: marginX },
-              head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-              body: tabelaDados,
-              styles: { fontSize: 9 },
-              headStyles: { fillColor: [102, 126, 234] }
-            });
+    doc.text(textoSplit, bloco2X, y);
+    y += alturaTexto + 6; // espaçamento extra antes da linha de anexo
 
-            const assinaturaNome = 'DANIEL FERREIRA LOPES';
-            const assinaturaCargo = 'Cap PM Comandante';
-            const assinaturaOffsetY = 82; // distância abaixo da tabela
+    // Linha de informação de anexo
+    const infoAnexo = `Anexo: ${multasSelecionadas.length} autos de infração.`;
+    // checar espaço breve
+    if (y + 14 > pageHeight - marginBottom) {
+      doc.addPage();
+      y = marginTop;
+    }
+    doc.setFontSize(11);
+    doc.text(infoAnexo, bloco2X, y);
+    y += 18; // espaçamento antes da tabela
 
-            const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
-            let sigY = tabelaFinalY + assinaturaOffsetY;
+    // Monta os dados para a tabela (ajuste as keys conforme seu objeto)
+    const tabelaDados = multasSelecionadas.map(multa => {
+      const dataISO = multa.data ? (typeof multa.data === 'string' ? multa.data.split('T')[0] : multa.data) : '';
+      const dataFormatada = (dataISO && typeof dataISO === 'string' && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO || '';
+      return [
+        multa.placa || '-',
+        multa.numero_auto_infracao || '-',
+        multa.codigo_infracao || '-',
+        multa.descricao_infracao || '-',
+        multa.agente_re || '-',
+        dataFormatada || '-'
+      ];
+    });
 
-            const requiredSpaceForSignature = 60;
-            if (sigY + requiredSpaceForSignature > pageHeight - 120) {
-              doc.addPage();
-              sigY = marginTop + 60;
-            }
+    // Gera a tabela alinhada ao bloco2X e com largura bloco2Width
+    doc.autoTable({
+      startY: y,
+      margin: { left: bloco2X, right: marginX },
+      tableWidth: bloco2Width,
+      head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+      body: tabelaDados,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [102, 126, 234], textColor: 255 }
+    });
 
-            doc.setFont('Times', 'normal');
-            doc.setFontSize(11);
-            const sigX_Right = pageWidth - marginX; // margem direita
-            doc.text(assinaturaNome, sigX_Right, sigY, { align: 'right' });
+    // assinatura
+    const assinaturaNome = 'DANIEL FERREIRA LOPES';
+    const assinaturaCargo = 'Cap PM Comandante';
+    const assinaturaOffsetY = 82; // distância abaixo da tabela
 
-            const larguraNome = doc.getTextWidth(assinaturaNome);
-            const centroNomeX = sigX_Right - (larguraNome / 2);
-            doc.setFontSize(10);
-            doc.text(assinaturaCargo, centroNomeX, sigY + 16, { align: 'center' });
+    const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
+    let sigY = tabelaFinalY + assinaturaOffsetY;
 
-            const rodapeMargin = marginX;
-            const rodapeLineY = pageHeight - 60;
-            const linhaX1 = rodapeMargin;
-            const linhaX2 = pageWidth - rodapeMargin;
+    const requiredSpaceForSignature = 60;
+    if (sigY + requiredSpaceForSignature > pageHeight - marginBottom) {
+      doc.addPage();
+      sigY = marginTop + 60;
+    }
 
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.line(linhaX1, rodapeLineY, linhaX2, rodapeLineY);
+    doc.setFont('Times', 'normal');
+    doc.setFontSize(11);
+    const sigX_Right = pageWidth - marginX; // margem direita
+    doc.text(assinaturaNome, sigX_Right, sigY, { align: 'right' });
 
-            const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
-            doc.setFont('Times', 'italic');
-            doc.setFontSize(7);
-            doc.text(fraseRodape, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(assinaturaCargo, sigX_Right, sigY + 16, { align: 'right' });
 
-            const ts = new Date().toISOString().replace(/[:.]/g, '-');
-            doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
+    // rodapé
+    const rodapeLineY = pageHeight - 60;
+    const linhaX1 = marginX;
+    const linhaX2 = pageWidth - marginX;
 
-          } catch (err) {
-            console.error('Erro ao gerar PDF:', err);
-            alert('Erro ao gerar o relatório. Veja o console para detalhes.');
-          }
-        }
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(linhaX1, rodapeLineY, linhaX2, rodapeLineY);
+
+    const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
+    doc.setFont('Times', 'italic');
+    doc.setFontSize(7);
+    doc.text(fraseRodape, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
+
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
+
+  } catch (err) {
+    console.error('Erro ao gerar PDF:', err);
+    alert('Erro ao gerar o relatório. Veja o console para detalhes.');
+  }
+}
 
         // Mantive a função de gerar relatório por período (modal) caso queira reutilizar
         function abrirModalRelatorio() {
