@@ -676,7 +676,22 @@ window.addEventListener('load', () => {
             }
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             verificarSessaoInicial();
-            configurarEventos();
+configurarEventos();
+    initAutocompleteInfracoes();
+
+    // Atualiza descrição ao digitar código exato
+    document.getElementById('codigoInfracao').addEventListener('input', function() {
+      const val = this.value.toUpperCase();
+      const found = infracoesCTB.find(i => i.codigo === val);
+      if (found) {
+        document.getElementById('descricaoInfracao').value = found.descricao;
+        document.getElementById('descricaoVisivel').textContent = found.descricao;
+      } else {
+        document.getElementById('descricaoInfracao').value = '';
+        document.getElementById('descricaoVisivel').textContent = '';
+      }
+    });
+});
         });
 
         async function verificarSessaoInicial() {
