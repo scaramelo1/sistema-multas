@@ -1712,15 +1712,20 @@ async function gerarRelatorioSelecionados() {
     doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
     y += 18;
 
-    // --- Texto formal: AGORA usa largura total da página (entre marginX e pageWidth - marginX)
+    // --- Anexo: colocado IMEDIATAMENTE abaixo do Assunto, alinhado ao bloco direito (como você pediu)
+    const infoAnexo = `Anexo: ${multasSelecionadas.length} autos de infração.`;
+    doc.text(infoAnexo, bloco2X, y);
+    y += 18;
+
+    // --- Texto formal: ocupa agora a largura TOTAL da página (entre marginX e pageWidth - marginX)
     const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, as multas constantes em anexo.';
     doc.setFontSize(11);
     const textoSplitFull = doc.splitTextToSize(textoFormal, pageWidth - marginX * 2);
 
     // Garantir que o parágrafo não comece sobrepondo o bloco do logo/contato
     const bottomLogoArea = contatoYStart + contatoLinhas.length * 14;
+    // Se y (onde está após Anexo) estiver acima do bottomLogoArea, ajustamos para abaixo do mesmo
     if (y < bottomLogoArea + 6) {
-      // Move o início do texto para abaixo do bloco do logo/contato se necessário
       y = bottomLogoArea + 6;
     }
 
@@ -1735,22 +1740,9 @@ async function gerarRelatorioSelecionados() {
 
     // Escreve o parágrafo ocupando a largura total entre as margens
     doc.text(textoSplitFull, marginX, y);
-    y += alturaTexto + 6; // espaço extra antes da linha de anexo
+    y += alturaTexto + 12; // espaço extra antes da tabela
 
-    // Informação de anexo (também em largura total)
-    const infoAnexo = `Anexo: ${multasSelecionadas.length} autos de infração.`;
-    if (y + 14 > pageHeight - marginBottom) {
-      doc.addPage();
-      y = marginTop;
-    }
-    doc.setFontSize(11);
-    doc.text(infoAnexo, marginX, y);
-    y += 18;
-
-    // --- Agora desenha a tabela; ela fica no bloco direito (ao lado do logo) ---
-    // Se o y atual estiver acima do topo do bloco de tabela (por exemplo, se o texto for curto),
-    // mantemos a tabela iniciando onde deve: startY = y.
-    // Se o espaço vertical restante for pequeno, autoTable cuidará da quebra de página.
+    // --- Agora desenha a tabela; ela ficará com largura TOTAL entre as margens (lado a lado do logo)
     const tabelaDados = multasSelecionadas.map(multa => {
       const dataISO = multa.data ? (typeof multa.data === 'string' ? multa.data.split('T')[0] : multa.data) : '';
       const dataFormatada = (dataISO && typeof dataISO === 'string' && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO || '';
@@ -1764,26 +1756,27 @@ async function gerarRelatorioSelecionados() {
       ];
     });
 
-    // Se a tabela iniciar muito em cima da margem inferior atual, criamos nova página
+    // Se a tabela iniciar muito em cima da margem inferior atual, cria nova página
     if (y + 30 > pageHeight - marginBottom) {
       doc.addPage();
       y = marginTop;
     }
 
-doc.autoTable({
-  startY: y,
-  margin: { left: marginX, right: marginX },           // margens da página inteira
-  tableWidth: pageWidth - marginX * 2,                 // largura total entre margens
-  head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-  body: tabelaDados,
-  styles: { fontSize: 9 },
-  headStyles: { fillColor: [102, 126, 234], textColor: 255 },
-  didDrawPage: function (data) {
-    const pageNumber = doc.internal.getNumberOfPages();
-    doc.setFontSize(9);
-    doc.text(`Página ${pageNumber}`, pageWidth - marginX, doc.internal.pageSize.getHeight() - 20, { align: 'right' });
-  }
-});
+    doc.autoTable({
+      startY: y,
+      margin: { left: marginX, right: marginX },           // usa margens da página inteira
+      tableWidth: pageWidth - marginX * 2,                 // largura total entre margens
+      head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+      body: tabelaDados,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [102, 126, 234], textColor: 255 },
+      didDrawPage: function (data) {
+        // opcional: número de página no rodapé
+        const pageNumber = doc.internal.getNumberOfPages();
+        doc.setFontSize(9);
+        doc.text(`Página ${pageNumber}`, pageWidth - marginX, pageHeight - 20, { align: 'right' });
+      }
+    });
 
     // assinatura (abaixo da tabela)
     const assinaturaNome = 'DANIEL FERREIRA LOPES';
