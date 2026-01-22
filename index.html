@@ -440,11 +440,12 @@ table tr:hover {
                         <input type="text" id="numeroAutoInfracao" placeholder="Número do Auto de Infração" required />
                     </div>
 
-                    <div class="form-group">
-                        <label for="codigoInfracao">Código da Infração:</label>
-                        <input type="text" id="codigoInfracao" placeholder="Ex: 50291" autocomplete="off" required />
-                        <input type="hidden" id="descricaoInfracao" />
-                    </div>
+<div class="form-group">
+  <label for="codigoInfracao">Código da Infração:</label>
+  <input type="text" id="codigoInfracao" placeholder="Ex: 50291" autocomplete="off" required />
+  <input type="hidden" id="descricaoInfracao" />
+  <div id="descricaoVisivel" style="margin-top: 5px; font-style: italic; color: #555;"></div>
+</div>
 
                     <div class="form-group">
                         <label for="agenteRE">RE do Agente:</label>
@@ -602,11 +603,12 @@ function autocompleteCodigoInfracao(input) {
       if (item.codigo.startsWith(val) || item.descricao.toUpperCase().includes(val)) {
         const itemDiv = document.createElement('div');
         itemDiv.innerHTML = `<strong>${item.codigo}</strong> - ${item.descricao}`;
-        itemDiv.addEventListener('click', () => {
-          input.value = item.codigo;
-          document.getElementById('descricaoInfracao').value = item.descricao;
-          closeAllLists();
-        });
+itemDiv.addEventListener('click', () => {
+  input.value = item.codigo;
+  document.getElementById('descricaoInfracao').value = item.descricao;
+  document.getElementById('descricaoVisivel').textContent = item.descricao;
+  closeAllLists();
+});
         list.appendChild(itemDiv);
         count++;
         if (count >= 10) break; // limita a 10 sugestões
