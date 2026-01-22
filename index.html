@@ -627,83 +627,78 @@ async function carregarMultas() {
     }
 }
 
-        function renderTablePage(page) {
-            const tbody = document.getElementById('multasBody');
-            tbody.innerHTML = '';
-            const isAdmin = perfilUsuario && perfilUsuario.nivel_acesso === 'admin';
+function renderTablePage(page) {
+    const tbody = document.getElementById('multasBody');
+    tbody.innerHTML = '';
+    const isAdmin = perfilUsuario && perfilUsuario.nivel_acesso === 'admin';
 
-            const start = (page - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageMultas = multasAtuais.slice(start, end);
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageMultas = multasAtuais.slice(start, end);
 
-            if (pageMultas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
-                atualizarEstatisticas([]);
-                return;
+    if (pageMultas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+        return;
+    }
+
+    pageMultas.forEach((multa) => {
+        const tr = document.createElement('tr');
+        const podeEditar = isAdmin || multa.user_id === (usuarioLogado && usuarioLogado.id);
+        const reInseriu = multa.perfis ? multa.perfis.re : '-';
+
+        let dataFormatada = '';
+        try {
+            if (multa.data) {
+                const dataISO = multa.data.split('T')[0];
+                dataFormatada = dataISO.split('-').reverse().join('/');
             }
-
-            pageMultas.forEach((multa) => {
-                const tr = document.createElement('tr');
-                const podeEditar = isAdmin || multa.user_id === (usuarioLogado && usuarioLogado.id);
-                const reInseriu = multa.perfis ? multa.perfis.re : '-';
-
-                // EXIBIÇÃO: Extrai a data diretamente do texto (YYYY-MM-DD) e inverte para DD/MM/YYYY
-                let dataFormatada = '';
-                try {
-                    if (multa.data) {
-                        const dataISO = multa.data.split('T')[0];
-                        dataFormatada = dataISO.split('-').reverse().join('/');
-                    }
-                } catch (err) {
-                    dataFormatada = '';
-                }
-
-                // Checkbox sempre visível, mas desabilitado para não-admins (com tooltip)
-                const checkboxCell = `
-                  <td class="select-col">
-                    <input
-                      type="checkbox"
-                      class="select-multa"
-                      data-id="${multa.id}"
-                      ${isAdmin ? '' : 'disabled title="Apenas administradores podem selecionar"'}
-                    />
-                  </td>
-                `;
-
-                tr.innerHTML = `
-                    ${checkboxCell}
-                    <td>${multa.placa}</td>
-                    <td>${multa.numero_auto_infracao || '-'}</td>
-                    <td>${multa.codigo_infracao}</td>
-                    <td>${multa.descricao_infracao || '-'}</td>
-                    <td>${multa.agente_re || '-'}</td>
-                    <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
-                    <td>${dataFormatada}</td>
-                    <td>
-                        <div class="action-buttons">
-                            ${
-                                podeEditar
-                                    ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>`
-                                    : ''
-                            }
-                            ${
-                                isAdmin
-                                    ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
-                                    : ''
-                            }
-                            ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // Mostrar/ocultar botão de gerar relatório conforme admin
-            document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !(perfilUsuario && perfilUsuario.nivel_acesso === 'admin')));
-
-            atualizarEstatisticas(multasAtuais);
-            renderPagination();
+        } catch (err) {
+            dataFormatada = '';
         }
+
+        const checkboxCell = `
+          <td class="select-col">
+            <input
+              type="checkbox"
+              class="select-multa"
+              data-id="${multa.id}"
+              ${isAdmin ? '' : 'disabled title="Apenas administradores podem selecionar"'}
+            />
+          </td>
+        `;
+
+        tr.innerHTML = `
+            ${checkboxCell}
+            <td>${multa.placa}</td>
+            <td>${multa.numero_auto_infracao || '-'}</td>
+            <td>${multa.codigo_infracao}</td>
+            <td>${multa.descricao_infracao || '-'}</td>
+            <td>${multa.agente_re || '-'}</td>
+            <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
+            <td>${dataFormatada}</td>
+            <td>
+                <div class="action-buttons">
+                    ${
+                        podeEditar
+                            ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>`
+                            : ''
+                    }
+                    ${
+                        isAdmin
+                            ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
+                            : ''
+                    }
+                    ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !(perfilUsuario && perfilUsuario.nivel_acesso === 'admin')));
+
+    renderPagination();
+}
 
         function renderPagination() {
             const paginationContainer = document.getElementById('pagination');
