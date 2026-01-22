@@ -1591,7 +1591,7 @@ const multaAtualizada = {
         }
 
 async function gerarRelatorioSelecionados() {
-  // checagem de permissão (mantive sua verificação original)
+  // checagem de permissão
   if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
     alert('Apenas administradores podem gerar este relatório.');
     return;
@@ -1625,28 +1625,27 @@ async function gerarRelatorioSelecionados() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // configuração de margens e blocos
+    // margens e dimensões
     const marginX = 50;
     const marginTop = 40;
-    const marginBottom = 40; // margem inferior para checagem de espaço
+    const marginBottom = 40;
 
     // Bloco esquerdo (logo + contato)
-    const bloco1Width = 120; // ajuste se desejar outro tamanho
+    const bloco1Width = 120;
     const bloco1X = marginX;
     const logoHeight = 80;
-    const logoY = marginTop; // topo da imagem
+    const logoY = marginTop;
 
-    // Bloco direito (texto do ofício)
+    // Bloco direito (onde normalmente fica o texto do ofício e a tabela)
     const gapBetweenBlocks = 20;
     const bloco2X = bloco1X + bloco1Width + gapBetweenBlocks;
     const bloco2Width = pageWidth - marginX * 2 - bloco1Width - gapBetweenBlocks;
 
-    // --- desenhar imagem no bloco esquerdo (usa a URL do upload) ---
+    // desenhar imagem (logo)
     const logoUrl = 'https://cdn.abacus.ai/images/b4cc4328-e138-4e89-a5e0-af97e97cf064.png';
-
     try {
       const img = await loadImage(logoUrl);
-      const logoWidth = bloco1Width; // preenche a largura do bloco
+      const logoWidth = bloco1Width;
       const ratio = Math.min(logoWidth / img.width, logoHeight / img.height);
       const drawW = img.width * ratio;
       const drawH = img.height * ratio;
@@ -1657,11 +1656,11 @@ async function gerarRelatorioSelecionados() {
       console.warn('Não foi possível carregar o logotipo:', err);
     }
 
-    // --- contato (preto), centralizado dentro do bloco esquerdo, abaixo do logo ---
+    // contato (centralizado dentro do bloco esquerdo)
     const contatoYStart = logoY + logoHeight + 10;
     doc.setFont('Times', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0); // preto
+    doc.setTextColor(0, 0, 0);
 
     const contatoLinhas = [
       '24bpmi1cia@policiamilitar.sp.gov.br',
@@ -1676,7 +1675,7 @@ async function gerarRelatorioSelecionados() {
       doc.text(linha, x, yLinha);
     });
 
-    // --- bloco direito: texto do ofício (alinhado à esquerda dentro do bloco) ---
+    // --- Cabeçalho e informações iniciais no bloco direito ---
     let y = marginTop;
     doc.setFont('Times', 'bold');
     doc.setFontSize(14);
@@ -1713,37 +1712,45 @@ async function gerarRelatorioSelecionados() {
     doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
     y += 18;
 
-    // Novo texto formal: ocupará a mesma largura da tabela (bloco2Width)
+    // --- Texto formal: AGORA usa largura total da página (entre marginX e pageWidth - marginX)
     const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, as multas constantes em anexo.';
     doc.setFontSize(11);
-    const textoSplit = doc.splitTextToSize(textoFormal, bloco2Width);
+    const textoSplitFull = doc.splitTextToSize(textoFormal, pageWidth - marginX * 2);
 
-    // calcula altura aproximada do parágrafo (em pontos)
+    // Garantir que o parágrafo não comece sobrepondo o bloco do logo/contato
+    const bottomLogoArea = contatoYStart + contatoLinhas.length * 14;
+    if (y < bottomLogoArea + 6) {
+      // Move o início do texto para abaixo do bloco do logo/contato se necessário
+      y = bottomLogoArea + 6;
+    }
+
+    // Verifica se o parágrafo cabe na página, se não, adiciona página
     const fontSize = doc.getFontSize(); // em pt
     const lineHeightFactor = 1.15;
-    const alturaTexto = textoSplit.length * fontSize * lineHeightFactor;
-
-    // se não couber na página atual, adiciona nova página
+    const alturaTexto = textoSplitFull.length * fontSize * lineHeightFactor;
     if (y + alturaTexto > pageHeight - marginBottom) {
       doc.addPage();
       y = marginTop;
     }
 
-    doc.text(textoSplit, bloco2X, y);
-    y += alturaTexto + 6; // espaçamento extra antes da linha de anexo
+    // Escreve o parágrafo ocupando a largura total entre as margens
+    doc.text(textoSplitFull, marginX, y);
+    y += alturaTexto + 6; // espaço extra antes da linha de anexo
 
-    // Linha de informação de anexo
+    // Informação de anexo (também em largura total)
     const infoAnexo = `Anexo: ${multasSelecionadas.length} autos de infração.`;
-    // checar espaço breve
     if (y + 14 > pageHeight - marginBottom) {
       doc.addPage();
       y = marginTop;
     }
     doc.setFontSize(11);
-    doc.text(infoAnexo, bloco2X, y);
-    y += 18; // espaçamento antes da tabela
+    doc.text(infoAnexo, marginX, y);
+    y += 18;
 
-    // Monta os dados para a tabela (ajuste as keys conforme seu objeto)
+    // --- Agora desenha a tabela; ela fica no bloco direito (ao lado do logo) ---
+    // Se o y atual estiver acima do topo do bloco de tabela (por exemplo, se o texto for curto),
+    // mantemos a tabela iniciando onde deve: startY = y.
+    // Se o espaço vertical restante for pequeno, autoTable cuidará da quebra de página.
     const tabelaDados = multasSelecionadas.map(multa => {
       const dataISO = multa.data ? (typeof multa.data === 'string' ? multa.data.split('T')[0] : multa.data) : '';
       const dataFormatada = (dataISO && typeof dataISO === 'string' && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO || '';
@@ -1757,7 +1764,12 @@ async function gerarRelatorioSelecionados() {
       ];
     });
 
-    // Gera a tabela alinhada ao bloco2X e com largura bloco2Width
+    // Se a tabela iniciar muito em cima da margem inferior atual, criamos nova página
+    if (y + 30 > pageHeight - marginBottom) {
+      doc.addPage();
+      y = marginTop;
+    }
+
     doc.autoTable({
       startY: y,
       margin: { left: bloco2X, right: marginX },
@@ -1765,13 +1777,19 @@ async function gerarRelatorioSelecionados() {
       head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
       body: tabelaDados,
       styles: { fontSize: 9 },
-      headStyles: { fillColor: [102, 126, 234], textColor: 255 }
+      headStyles: { fillColor: [102, 126, 234], textColor: 255 },
+      didDrawPage: function (data) {
+        // opcional: número de página no rodapé
+        const pageNumber = doc.internal.getNumberOfPages();
+        doc.setFontSize(9);
+        doc.text(`Página ${pageNumber}`, pageWidth - marginX, pageHeight - 20, { align: 'right' });
+      }
     });
 
-    // assinatura
+    // assinatura (abaixo da tabela)
     const assinaturaNome = 'DANIEL FERREIRA LOPES';
     const assinaturaCargo = 'Cap PM Comandante';
-    const assinaturaOffsetY = 82; // distância abaixo da tabela
+    const assinaturaOffsetY = 82;
 
     const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
     let sigY = tabelaFinalY + assinaturaOffsetY;
@@ -1784,13 +1802,13 @@ async function gerarRelatorioSelecionados() {
 
     doc.setFont('Times', 'normal');
     doc.setFontSize(11);
-    const sigX_Right = pageWidth - marginX; // margem direita
+    const sigX_Right = pageWidth - marginX;
     doc.text(assinaturaNome, sigX_Right, sigY, { align: 'right' });
 
     doc.setFontSize(10);
     doc.text(assinaturaCargo, sigX_Right, sigY + 16, { align: 'right' });
 
-    // rodapé
+    // rodapé com linha e frase
     const rodapeLineY = pageHeight - 60;
     const linhaX1 = marginX;
     const linhaX2 = pageWidth - marginX;
@@ -1804,9 +1822,9 @@ async function gerarRelatorioSelecionados() {
     doc.setFontSize(7);
     doc.text(fraseRodape, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
 
+    // salva o arquivo
     const ts = new Date().toISOString().replace(/[:.]/g, '-');
     doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
-
   } catch (err) {
     console.error('Erro ao gerar PDF:', err);
     alert('Erro ao gerar o relatório. Veja o console para detalhes.');
