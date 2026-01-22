@@ -1608,7 +1608,6 @@ async function gerarRelatorioSelecionados() {
   const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
   if (oficioNum === null) return;
 
-  // helper para carregar imagem via URL (retorna HTMLImageElement)
   function loadImage(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -1625,23 +1624,20 @@ async function gerarRelatorioSelecionados() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // margens e dimensões
     const marginX = 50;
     const marginTop = 40;
-    const marginBottom = 40;
+    const marginBottom = 60;
 
-    // Bloco esquerdo (logo + contato)
     const bloco1Width = 120;
     const bloco1X = marginX;
     const logoHeight = 80;
     const logoY = marginTop;
 
-    // Bloco direito (onde normalmente fica o texto do ofício e a tabela)
     const gapBetweenBlocks = 20;
     const bloco2X = bloco1X + bloco1Width + gapBetweenBlocks;
     const bloco2Width = pageWidth - marginX * 2 - bloco1Width - gapBetweenBlocks;
 
-    // desenhar imagem (logo)
+    // Logo
     const logoUrl = 'https://cdn.abacus.ai/images/b4cc4328-e138-4e89-a5e0-af97e97cf064.png';
     try {
       const img = await loadImage(logoUrl);
@@ -1652,16 +1648,12 @@ async function gerarRelatorioSelecionados() {
       const drawX = bloco1X + (bloco1Width - drawW) / 2;
       const drawY = logoY + (logoHeight - drawH) / 2;
       doc.addImage(img, 'PNG', drawX, drawY, drawW, drawH);
-    } catch (err) {
-      console.warn('Não foi possível carregar o logotipo:', err);
-    }
+    } catch (err) { console.warn(err); }
 
-    // contato (centralizado dentro do bloco esquerdo)
+    // Contato
     const contatoYStart = logoY + logoHeight + 10;
     doc.setFont('Times', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-
     const contatoLinhas = [
       '24bpmi1cia@policiamilitar.sp.gov.br',
       'Av. Sen. Marcos Freire, nº 169,',
@@ -1671,16 +1663,13 @@ async function gerarRelatorioSelecionados() {
     contatoLinhas.forEach((linha, i) => {
       const yLinha = contatoYStart + i * 14;
       const textWidth = doc.getTextWidth(linha);
-      const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
-      doc.text(linha, x, yLinha);
+      doc.text(linha, bloco1X + (bloco1Width / 2) - (textWidth / 2), yLinha);
     });
 
-    // --- Cabeçalho e informações iniciais no bloco direito ---
+    // Cabeçalho Ofício
     let y = marginTop;
     doc.setFont('Times', 'bold');
     doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-
     doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
     y += 18;
     doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
@@ -1688,11 +1677,9 @@ async function gerarRelatorioSelecionados() {
 
     doc.setFont('Times', 'normal');
     doc.setFontSize(11);
-
     const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
     const hoje = new Date();
-    const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
-    doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
+    doc.text(`São João da Boa Vista, ${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`, bloco2X, y);
     y += 18;
 
     doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
@@ -1703,46 +1690,41 @@ async function gerarRelatorioSelecionados() {
     y += 18;
 
     const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
-    const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
-    doc.text(destinatarioSplit, bloco2X, y);
-    y += destinatarioSplit.length * 14;
+    const destSplit = doc.splitTextToSize(destinatario, bloco2Width);
+    doc.text(destSplit, bloco2X, y);
+    y += destSplit.length * 14;
 
-    doc.setFont('Times', 'normal');
-    doc.setFontSize(11);
     doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
     y += 18;
 
-    // --- Anexo: colocado IMEDIATAMENTE abaixo do Assunto, alinhado ao bloco direito (como você pediu)
-    const infoAnexo = `Anexo: ${multasSelecionadas.length} autos de infração.`;
-    doc.text(infoAnexo, bloco2X, y);
-    y += 40;
+    // --- ANEXO (Abaixo do assunto) ---
+    doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
+    
+    // --- ESPAÇO APÓS ANEXO ---
+    y += 40; // Aumente aqui para mais espaço entre Anexo e o Parágrafo
 
-    // --- Texto formal: ocupa agora a largura TOTAL da página (entre marginX e pageWidth - marginX)
-    const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, os Autos de Infração Municipais constantes em anexo.';
-    doc.setFontSize(11);
-    const textoSplitFull = doc.splitTextToSize(textoFormal, pageWidth - marginX * 2);
+    // --- PARÁGRAFO FORMAL (Deslocado para a direita) ---
+    const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, as multas constantes em anexo.';
+    const deslocamentoDireita = 60; // Quantos pontos o texto vai para a direita
+    const paragrafoX = marginX + deslocamentoDireita;
+    
+    // Ajusta a largura do texto para não estourar a margem direita ao deslocar
+    const larguraDisponivel = pageWidth - marginX - paragrafoX;
+    const textoSplit = doc.splitTextToSize(textoFormal, larguraDisponivel);
 
-    // Garantir que o parágrafo não comece sobrepondo o bloco do logo/contato
-    const bottomLogoArea = contatoYStart + contatoLinhas.length * 14;
-    // Se y (onde está após Anexo) estiver acima do bottomLogoArea, ajustamos para abaixo do mesmo
-    if (y < bottomLogoArea + 6) {
-      y = bottomLogoArea + 6;
-    }
-
-    // Verifica se o parágrafo cabe na página, se não, adiciona página
-    const fontSize = doc.getFontSize(); // em pt
-    const lineHeightFactor = 1.15;
-    const alturaTexto = textoSplitFull.length * fontSize * lineHeightFactor;
+    // Checa se o parágrafo cabe na página
+    const alturaTexto = textoSplit.length * 14;
     if (y + alturaTexto > pageHeight - marginBottom) {
       doc.addPage();
       y = marginTop;
     }
 
-    // Escreve o parágrafo ocupando a largura total entre as margens
-    doc.text(textoSplitFull, marginX, y);
-    y += alturaTexto + 12; // espaço extra antes da tabela
+    doc.text(textoSplit, paragrafoX, y);
 
-    // --- Agora desenha a tabela; ela ficará com largura TOTAL entre as margens (lado a lado do logo)
+    // --- ESPAÇO APÓS PARÁGRAFO ---
+    y += alturaTexto + 30; // Espaço entre o parágrafo e a tabela
+
+    // Dados da Tabela
     const tabelaDados = multasSelecionadas.map(multa => {
       const dataISO = multa.data ? (typeof multa.data === 'string' ? multa.data.split('T')[0] : multa.data) : '';
       const dataFormatada = (dataISO && typeof dataISO === 'string' && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO || '';
@@ -1756,70 +1738,43 @@ async function gerarRelatorioSelecionados() {
       ];
     });
 
-    // Se a tabela iniciar muito em cima da margem inferior atual, cria nova página
-    if (y + 30 > pageHeight - marginBottom) {
-      doc.addPage();
-      y = marginTop;
-    }
-
+    // --- TABELA TAMANHO DA FOLHA ---
     doc.autoTable({
       startY: y,
-      margin: { left: marginX, right: marginX },           // usa margens da página inteira
-      tableWidth: pageWidth - marginX * 2,                 // largura total entre margens
+      margin: { left: marginX, right: marginX },
+      tableWidth: pageWidth - (marginX * 2),
       head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
       body: tabelaDados,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [102, 126, 234], textColor: 255 },
-      didDrawPage: function (data) {
-        // opcional: número de página no rodapé
-        const pageNumber = doc.internal.getNumberOfPages();
-        doc.setFontSize(9);
-        doc.text(`Página ${pageNumber}`, pageWidth - marginX, pageHeight - 20, { align: 'right' });
-      }
+      styles: { fontSize: 9, font: 'Times' },
+      headStyles: { fillColor: [102, 126, 234] }
     });
 
-    // assinatura (abaixo da tabela)
-    const assinaturaNome = 'DANIEL FERREIRA LOPES';
-    const assinaturaCargo = 'Cap PM Comandante';
-    const assinaturaOffsetY = 82;
-
-    const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
-    let sigY = tabelaFinalY + assinaturaOffsetY;
-
-    const requiredSpaceForSignature = 60;
-    if (sigY + requiredSpaceForSignature > pageHeight - marginBottom) {
+    // Assinatura
+    const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : y;
+    let sigY = tabelaFinalY + 80;
+    if (sigY + 60 > pageHeight - marginBottom) {
       doc.addPage();
       sigY = marginTop + 60;
     }
 
     doc.setFont('Times', 'normal');
-    doc.setFontSize(11);
-    const sigX_Right = pageWidth - marginX;
-    doc.text(assinaturaNome, sigX_Right, sigY, { align: 'right' });
-
+    doc.text('DANIEL FERREIRA LOPES', pageWidth - marginX, sigY, { align: 'right' });
     doc.setFontSize(10);
-    doc.text(assinaturaCargo, sigX_Right, sigY + 16, { align: 'right' });
+    doc.text('Cap PM Comandante', pageWidth - marginX, sigY + 16, { align: 'right' });
 
-    // rodapé com linha e frase
+    // Rodapé
     const rodapeLineY = pageHeight - 60;
-    const linhaX1 = marginX;
-    const linhaX2 = pageWidth - marginX;
-
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(linhaX1, rodapeLineY, linhaX2, rodapeLineY);
-
-    const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
+    doc.setDrawColor(0);
+    doc.line(marginX, rodapeLineY, pageWidth - marginX, rodapeLineY);
+    const frase = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
     doc.setFont('Times', 'italic');
     doc.setFontSize(7);
-    doc.text(fraseRodape, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
+    doc.text(frase, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
 
-    // salva o arquivo
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
-    doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
+    doc.save(`oficio_${oficioNum || 'multas'}.pdf`);
   } catch (err) {
-    console.error('Erro ao gerar PDF:', err);
-    alert('Erro ao gerar o relatório. Veja o console para detalhes.');
+    console.error(err);
+    alert('Erro ao gerar PDF.');
   }
 }
 
