@@ -26,5 +26,6 @@
   { "codigo": "56300", "descricao": "Estacionar em ponto de embarque e desembarque de transporte coletivo de passageiros." },
   { "codigo": "56900", "descricao": "Transitar em faixa, pista ou via de trânsito exclusivo para transporte público coletivo de passageiros (faixa de ônibus) sem autorização." },
   { "codigo": "52151", "descricao": "Dirigir ameaçando pedestres ou demais veículos." },
-  { "codigo": "52581", "descricao": "Promover ou participar de competição, exibição ou demonstração de perícia em manobra de veículo na via sem autorização da autoridade competente." }
+  { "codigo": "52581", "descricao": "Promover ou participar de competição, exibição ou demonstração de perícia em manobra de veículo na via sem autorização da autoridade competente." },
+   {"codigo": "55250", "descricao": "Estacionar na contramão de direção"}
 ]
