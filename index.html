@@ -91,6 +91,27 @@
 
         /* Layout do botão de gerar relatório selecionados */
         .report-actions { display:flex; justify-content:flex-end; margin-top:12px; gap:10px; }
+
+        /* ===========================
+           NOVO: estilos para checkbox visível e desabilitado
+           =========================== */
+        /* Exibir coluna de seleção para todos e estilo visual quando desabilitado */
+        #multasTable thead tr th.select-col {
+          width: 48px;
+          text-align: center;
+        }
+
+        .select-col input[type="checkbox"] {
+          transform: scale(1.05);
+          cursor: pointer;
+        }
+
+        /* Quando desabilitado, indicar visualmente e mostrar cursor not-allowed */
+        .select-col input[type="checkbox"]:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+          filter: grayscale(20%);
+        }
     </style>
 </head>
 <body>
@@ -559,9 +580,9 @@
             const isAdmin = perfil.nivel_acesso === 'admin';
             document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
 
-            // Se admin, garantir que a coluna de seleção esteja visível (caso queira mostrar/ocultar via CSS)
+            // Mostrar a coluna de seleção sempre (checkbox por linha será desabilitado para não-admins)
             const selectHeader = document.querySelector('#multasTable thead tr th.select-col');
-            if (selectHeader) selectHeader.style.display = isAdmin ? 'table-cell' : 'none';
+            if (selectHeader) selectHeader.style.display = 'table-cell'; // sempre visível
 
             // Re-renderiza a tabela para garantir checkboxes corretos
             renderTablePage(currentPage);
@@ -622,10 +643,17 @@
                     dataFormatada = '';
                 }
 
-                // Checkbox apenas para admins (se não admin, célula vazia)
-                const checkboxCell = isAdmin
-                    ? `<td class="select-col"><input type="checkbox" class="select-multa" data-id="${multa.id}"></td>`
-                    : `<td class="select-col"></td>`;
+                // Checkbox sempre visível, mas desabilitado para não-admins (com tooltip)
+                const checkboxCell = `
+                  <td class="select-col">
+                    <input
+                      type="checkbox"
+                      class="select-multa"
+                      data-id="${multa.id}"
+                      ${isAdmin ? '' : 'disabled title="Apenas administradores podem selecionar"'}
+                    />
+                  </td>
+                `;
 
                 tr.innerHTML = `
                     ${checkboxCell}
