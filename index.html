@@ -588,29 +588,34 @@
             renderTablePage(currentPage);
         }
 
-        async function carregarMultas() {
-            try {
-                let query = supabaseClient
-                    .from('multas')
-                    .select(
-                        `
-                        *,
-                        perfis:user_id (
-                            re
-                        )
-                    `
-                    )
-                    .order('data', { ascending: false });
+async function carregarMultas() {
+    try {
+        let query = supabaseClient
+            .from('multas')
+            .select(
+                `
+                *,
+                perfis:user_id (
+                    re
+                )
+            `
+            )
+            .order('data', { ascending: false });
 
-                const { data, error } = await query;
-                if (!error) {
-                    multasAtuais = data || [];
-                    renderTablePage(currentPage);
-                } else console.error('Erro ao carregar multas:', error);
-            } catch (err) {
-                console.error('Erro na consulta de multas:', err);
-            }
+        // Se não for admin, filtra para só mostrar multas do usuário logado
+        if (perfilUsuario && perfilUsuario.nivel_acesso !== 'admin' && usuarioLogado) {
+            query = query.eq('user_id', usuarioLogado.id);
         }
+
+        const { data, error } = await query;
+        if (!error) {
+            multasAtuais = data || [];
+            renderTablePage(currentPage);
+        } else console.error('Erro ao carregar multas:', error);
+    } catch (err) {
+        console.error('Erro na consulta de multas:', err);
+    }
+}
 
         function renderTablePage(page) {
             const tbody = document.getElementById('multasBody');
