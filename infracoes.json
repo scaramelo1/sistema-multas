@@ -1,0 +1,6 @@
+[
+  {"codigo": "50291", "descricao": "Estacionar em local proibido"},
+  {"codigo": "50301", "descricao": "Ultrapassar em local proibido"},
+  {"codigo": "50401", "descricao": "Transitar em velocidade superior à máxima permitida"},
+  {"codigo": "50501", "descricao": "Conduzir veículo sem cinto de segurança"}
+]
