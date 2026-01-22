@@ -1710,9 +1710,16 @@ const multaAtualizada = {
             doc.setFont('Times', 'normal');
             doc.setFontSize(11);
             doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
-            y += 18;
-            doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
-            y += 20;
+y += 18;
+
+// Novo texto formal adicionado aqui:
+const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, as multas constantes em anexo.';
+const textoSplit = doc.splitTextToSize(textoFormal, bloco2Width);
+doc.text(textoSplit, bloco2X, y);
+y += textoSplit.length * 14;
+
+doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
+y += 20;
 
             const tabelaDados = multasSelecionadas.map(multa => {
               const dataISO = multa.data ? multa.data.split('T')[0] : '';
