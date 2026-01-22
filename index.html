@@ -1697,34 +1697,26 @@ async function gerarRelatorioSelecionados() {
     doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
     y += 18;
 
-    // --- ANEXO (Abaixo do assunto) ---
+    // Anexo
     doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
-    
-    // --- ESPAÇO APÓS ANEXO ---
-    y += 40; // Aumente aqui para mais espaço entre Anexo e o Parágrafo
+    y += 40; 
 
-    // --- PARÁGRAFO FORMAL (Deslocado para a direita) ---
+    // Parágrafo Formal
     const textoFormal = 'Encaminho a Vossa Senhoria, para conhecimento e providências cabíveis, as multas constantes em anexo.';
-    const deslocamentoDireita = 60; // Quantos pontos o texto vai para a direita
+    const deslocamentoDireita = 60; 
     const paragrafoX = marginX + deslocamentoDireita;
-    
-    // Ajusta a largura do texto para não estourar a margem direita ao deslocar
     const larguraDisponivel = pageWidth - marginX - paragrafoX;
     const textoSplit = doc.splitTextToSize(textoFormal, larguraDisponivel);
 
-    // Checa se o parágrafo cabe na página
     const alturaTexto = textoSplit.length * 14;
     if (y + alturaTexto > pageHeight - marginBottom) {
       doc.addPage();
       y = marginTop;
     }
-
     doc.text(textoSplit, paragrafoX, y);
+    y += alturaTexto + 30; 
 
-    // --- ESPAÇO APÓS PARÁGRAFO ---
-    y += alturaTexto + 30; // Espaço entre o parágrafo e a tabela
-
-    // Dados da Tabela
+    // Tabela
     const tabelaDados = multasSelecionadas.map(multa => {
       const dataISO = multa.data ? (typeof multa.data === 'string' ? multa.data.split('T')[0] : multa.data) : '';
       const dataFormatada = (dataISO && typeof dataISO === 'string' && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO || '';
@@ -1738,7 +1730,6 @@ async function gerarRelatorioSelecionados() {
       ];
     });
 
-    // --- TABELA TAMANHO DA FOLHA ---
     doc.autoTable({
       startY: y,
       margin: { left: marginX, right: marginX },
@@ -1749,7 +1740,7 @@ async function gerarRelatorioSelecionados() {
       headStyles: { fillColor: [102, 126, 234] }
     });
 
-    // Assinatura
+    // --- ASSINATURA CENTRALIZADA ---
     const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : y;
     let sigY = tabelaFinalY + 80;
     if (sigY + 60 > pageHeight - marginBottom) {
@@ -1758,9 +1749,21 @@ async function gerarRelatorioSelecionados() {
     }
 
     doc.setFont('Times', 'normal');
-    doc.text('DANIEL FERREIRA LOPES', pageWidth - marginX, sigY, { align: 'right' });
+    doc.setFontSize(11);
+    const nomeAssinatura = 'DANIEL FERREIRA LOPES';
+    const cargoAssinatura = 'Cap PM Comandante';
+    const xDireito = pageWidth - marginX;
+
+    // Escreve o nome alinhado à direita
+    doc.text(nomeAssinatura, xDireito, sigY, { align: 'right' });
+
+    // Calcula o centro do nome para centralizar o cargo abaixo dele
+    const larguraNome = doc.getTextWidth(nomeAssinatura);
+    const centroNomeX = xDireito - (larguraNome / 2);
+
     doc.setFontSize(10);
-    doc.text('Cap PM Comandante', pageWidth - marginX, sigY + 16, { align: 'right' });
+    // Escreve o cargo centralizado no ponto médio do nome
+    doc.text(cargoAssinatura, centroNomeX, sigY + 16, { align: 'center' });
 
     // Rodapé
     const rodapeLineY = pageHeight - 60;
