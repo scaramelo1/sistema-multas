@@ -590,28 +590,38 @@
 
 async function carregarMultas() {
     try {
+        // 1. BUSCA GLOBAL (Para as Estatísticas)
+        const { data: todasMultas, error: errorStats } = await supabaseClient
+            .from('multas')
+            .select('data'); // Pegamos apenas a data para performance
+
+        if (!errorStats) {
+            atualizarEstatisticas(todasMultas || []);
+        }
+
+        // 2. BUSCA FILTRADA (Para a Tabela)
         let query = supabaseClient
             .from('multas')
-            .select(
-                `
+            .select(`
                 *,
-                perfis:user_id (
-                    re
-                )
-            `
-            )
+                perfis:user_id ( re )
+            `)
             .order('data', { ascending: false });
 
-        // Se não for admin, filtra para só mostrar multas do usuário logado
+        // Se não for admin, filtra a tabela para mostrar apenas as dele
         if (perfilUsuario && perfilUsuario.nivel_acesso !== 'admin' && usuarioLogado) {
             query = query.eq('user_id', usuarioLogado.id);
         }
 
-        const { data, error } = await query;
-        if (!error) {
-            multasAtuais = data || [];
+        const { data: multasTabela, error: errorTabela } = await query;
+        
+        if (!errorTabela) {
+            multasAtuais = multasTabela || [];
             renderTablePage(currentPage);
-        } else console.error('Erro ao carregar multas:', error);
+        } else {
+            console.error('Erro ao carregar multas da tabela:', errorTabela);
+        }
+
     } catch (err) {
         console.error('Erro na consulta de multas:', err);
     }
