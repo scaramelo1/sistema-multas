@@ -1770,21 +1770,20 @@ async function gerarRelatorioSelecionados() {
       y = marginTop;
     }
 
-    doc.autoTable({
-      startY: y,
-      margin: { left: bloco2X, right: marginX },
-      tableWidth: bloco2Width,
-      head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-      body: tabelaDados,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [102, 126, 234], textColor: 255 },
-      didDrawPage: function (data) {
-        // opcional: número de página no rodapé
-        const pageNumber = doc.internal.getNumberOfPages();
-        doc.setFontSize(9);
-        doc.text(`Página ${pageNumber}`, pageWidth - marginX, pageHeight - 20, { align: 'right' });
-      }
-    });
+doc.autoTable({
+  startY: y,
+  margin: { left: marginX, right: marginX },           // margens da página inteira
+  tableWidth: pageWidth - marginX * 2,                 // largura total entre margens
+  head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+  body: tabelaDados,
+  styles: { fontSize: 9 },
+  headStyles: { fillColor: [102, 126, 234], textColor: 255 },
+  didDrawPage: function (data) {
+    const pageNumber = doc.internal.getNumberOfPages();
+    doc.setFontSize(9);
+    doc.text(`Página ${pageNumber}`, pageWidth - marginX, doc.internal.pageSize.getHeight() - 20, { align: 'right' });
+  }
+});
 
     // assinatura (abaixo da tabela)
     const assinaturaNome = 'DANIEL FERREIRA LOPES';
