@@ -1,6 +1,8 @@
 [
   {"codigo": "50291", "descricao": "Estacionar em local proibido"},
+  {"codigo": "76332", "descricao": "Dirigir veículo manuseando telefone celular"},
   {"codigo": "51851", "descricao": "Deixar o condutor de usar o cinto segurança"},
+  {"codigo": "60412", "descricao": "Executar operação de conversão à esquerda em local proibido pela sinalização"},
   {"codigo": "50301", "descricao": "Ultrapassar em local proibido"},
   {"codigo": "50501", "descricao": "Conduzir veículo sem cinto de segurança"},
   { "codigo": "50100", "descricao": "Dirigir sem possuir Carteira Nacional de Habilitação (CNH), Permissão para Dirigir (PPD) ou Autorização para Conduzir Ciclomotor (ACC)." },
