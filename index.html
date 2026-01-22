@@ -66,7 +66,7 @@
         table th { background: #667eea; color: white; padding: 12px; text-align: left; }
         table td { padding: 12px; border-bottom: 1px solid #e0e0e0; }
         table tr:hover { background: #f8f9fa; }
-        .hidden { display: none; }
+        .hidden { display: none !important; } /* FORÇA para evitar flash de conteúdo */
         .actions-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; align-items: flex-end; }
         .user-info { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; }
         .user-info strong { color: #667eea; }
@@ -92,21 +92,7 @@
         /* Layout do botão de gerar relatório selecionados */
         .report-actions { display:flex; justify-content:flex-end; margin-top:12px; gap:10px; }
 
-        /* ===========================
-           NOVO: estilos para checkbox visível e desabilitado
-           =========================== */
-        /* Exibir coluna de seleção para todos e estilo visual quando desabilitado */
-        #multasTable thead tr th.select-col {
-          width: 48px;
-          text-align: center;
-        }
-
-        .select-col input[type="checkbox"] {
-          transform: scale(1.05);
-          cursor: pointer;
-        }
-
-        /* Quando desabilitado, indicar visualmente e mostrar cursor not-allowed */
+        /* Estilo para checkbox quando desabilitado */
         .select-col input[type="checkbox"]:disabled {
           cursor: not-allowed;
           opacity: 0.6;
@@ -170,7 +156,7 @@
                 <div id="authStatus"></div>
             </div>
 
-            <!-- Informações do Usuário Logado -->
+            <!-- Informações do Usuário Logado (inicialmente escondida) -->
             <div id="userInfo" class="user-info hidden">
                 <div>
                     <strong>Usuário:</strong> <span id="userName" style="font-weight: bold; color: #333;"></span>
@@ -184,7 +170,7 @@
                 </div>
             </div>
 
-            <!-- Seção de Multas -->
+            <!-- Seção de Multas (inicialmente escondida) -->
             <div id="multasSection" class="multas-section hidden">
                 <!-- Cabeçalho de Estatísticas -->
                 <div class="stats-header">
@@ -418,7 +404,15 @@
 
                 if (error) throw error;
                 perfilUsuario = data;
-                mostrarUsuarioLogado(user, data);
+
+                // Preenche os dados do usuário antes de mostrar a barra
+                document.getElementById('userName').textContent = perfilUsuario.nome_completo || '';
+                document.getElementById('userEmail').textContent = usuarioLogado.email || '';
+                document.getElementById('userRE').textContent = perfilUsuario.re || '';
+                document.getElementById('userPosto').textContent = perfilUsuario.cargo || '';
+
+                mostrarUsuarioLogado(usuarioLogado, perfilUsuario);
+
                 carregarMultas();
 
                 document.getElementById('agenteRE').value = data.re;
@@ -565,140 +559,142 @@
         }
 
         function mostrarUsuarioLogado(user, perfil) {
+            // Esconde a seção de autenticação
             document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('userInfo').classList.remove('hidden');
-            document.getElementById('multasSection').classList.remove('hidden');
-            document.getElementById('userName').textContent = perfil.nome_completo;
-            document.getElementById('userEmail').textContent = user.email;
-            document.getElementById('userRE').textContent = perfil.re;
-            document.getElementById('userPosto').textContent = perfil.cargo;
 
+            // Preenche campos (já feitos em carregarPerfil, mas repetimos para garantir)
+            document.getElementById('userName').textContent = perfil.nome_completo || '';
+            document.getElementById('userEmail').textContent = user.email || '';
+            document.getElementById('userRE').textContent = perfil.re || '';
+            document.getElementById('userPosto').textContent = perfil.cargo || '';
+
+            // Atualiza badge e controles de admin
             const badge = document.getElementById('userBadge');
-            badge.textContent = perfil.nivel_acesso;
-            badge.className = `badge badge-${perfil.nivel_acesso}`;
+            badge.textContent = perfil.nivel_acesso || '';
+            badge.className = `badge badge-${perfil.nivel_acesso || 'agente'}`;
 
             const isAdmin = perfil.nivel_acesso === 'admin';
             document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
 
-            // Mostrar a coluna de seleção sempre (checkbox por linha será desabilitado para não-admins)
-            const selectHeader = document.querySelector('#multasTable thead tr th.select-col');
-            if (selectHeader) selectHeader.style.display = 'table-cell'; // sempre visível
+            // Mostrar a barra de usuário e a seção de multas (somente agora)
+            document.getElementById('userInfo').classList.remove('hidden');
+            document.getElementById('multasSection').classList.remove('hidden');
 
             // Re-renderiza a tabela para garantir checkboxes corretos
             renderTablePage(currentPage);
         }
 
-async function carregarMultas() {
-    try {
-        // 1. BUSCA GLOBAL (Para as Estatísticas)
-        const { data: todasMultas, error: errorStats } = await supabaseClient
-            .from('multas')
-            .select('data'); // Pegamos apenas a data para performance
+        async function carregarMultas() {
+            try {
+                // 1. BUSCA GLOBAL (Para as Estatísticas)
+                const { data: todasMultas, error: errorStats } = await supabaseClient
+                    .from('multas')
+                    .select('data'); // Pegamos apenas a data para performance
 
-        if (!errorStats) {
-            atualizarEstatisticas(todasMultas || []);
-        }
+                if (!errorStats) {
+                    atualizarEstatisticas(todasMultas || []);
+                }
 
-        // 2. BUSCA FILTRADA (Para a Tabela)
-        let query = supabaseClient
-            .from('multas')
-            .select(`
-                *,
-                perfis:user_id ( re )
-            `)
-            .order('data', { ascending: false });
+                // 2. BUSCA FILTRADA (Para a Tabela)
+                let query = supabaseClient
+                    .from('multas')
+                    .select(`
+                        *,
+                        perfis:user_id ( re )
+                    `)
+                    .order('data', { ascending: false });
 
-        // Se não for admin, filtra a tabela para mostrar apenas as dele
-        if (perfilUsuario && perfilUsuario.nivel_acesso !== 'admin' && usuarioLogado) {
-            query = query.eq('user_id', usuarioLogado.id);
-        }
+                // Se não for admin, filtra a tabela para mostrar apenas as dele
+                if (perfilUsuario && perfilUsuario.nivel_acesso !== 'admin' && usuarioLogado) {
+                    query = query.eq('user_id', usuarioLogado.id);
+                }
 
-        const { data: multasTabela, error: errorTabela } = await query;
-        
-        if (!errorTabela) {
-            multasAtuais = multasTabela || [];
-            renderTablePage(currentPage);
-        } else {
-            console.error('Erro ao carregar multas da tabela:', errorTabela);
-        }
+                const { data: multasTabela, error: errorTabela } = await query;
+                
+                if (!errorTabela) {
+                    multasAtuais = multasTabela || [];
+                    renderTablePage(currentPage);
+                } else {
+                    console.error('Erro ao carregar multas da tabela:', errorTabela);
+                }
 
-    } catch (err) {
-        console.error('Erro na consulta de multas:', err);
-    }
-}
-
-function renderTablePage(page) {
-    const tbody = document.getElementById('multasBody');
-    tbody.innerHTML = '';
-    const isAdmin = perfilUsuario && perfilUsuario.nivel_acesso === 'admin';
-
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageMultas = multasAtuais.slice(start, end);
-
-    if (pageMultas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
-        return;
-    }
-
-    pageMultas.forEach((multa) => {
-        const tr = document.createElement('tr');
-        const podeEditar = isAdmin || multa.user_id === (usuarioLogado && usuarioLogado.id);
-        const reInseriu = multa.perfis ? multa.perfis.re : '-';
-
-        let dataFormatada = '';
-        try {
-            if (multa.data) {
-                const dataISO = multa.data.split('T')[0];
-                dataFormatada = dataISO.split('-').reverse().join('/');
+            } catch (err) {
+                console.error('Erro na consulta de multas:', err);
             }
-        } catch (err) {
-            dataFormatada = '';
         }
 
-        const checkboxCell = `
-          <td class="select-col">
-            <input
-              type="checkbox"
-              class="select-multa"
-              data-id="${multa.id}"
-              ${isAdmin ? '' : 'disabled title="Apenas administradores podem selecionar"'}
-            />
-          </td>
-        `;
+        function renderTablePage(page) {
+            const tbody = document.getElementById('multasBody');
+            tbody.innerHTML = '';
+            const isAdmin = perfilUsuario && perfilUsuario.nivel_acesso === 'admin';
 
-        tr.innerHTML = `
-            ${checkboxCell}
-            <td>${multa.placa}</td>
-            <td>${multa.numero_auto_infracao || '-'}</td>
-            <td>${multa.codigo_infracao}</td>
-            <td>${multa.descricao_infracao || '-'}</td>
-            <td>${multa.agente_re || '-'}</td>
-            <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
-            <td>${dataFormatada}</td>
-            <td>
-                <div class="action-buttons">
-                    ${
-                        podeEditar
-                            ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>`
-                            : ''
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageMultas = multasAtuais.slice(start, end);
+
+            if (pageMultas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td></tr>`;
+                return;
+            }
+
+            pageMultas.forEach((multa) => {
+                const tr = document.createElement('tr');
+                const podeEditar = isAdmin || multa.user_id === (usuarioLogado && usuarioLogado.id);
+                const reInseriu = multa.perfis ? multa.perfis.re : '-';
+
+                let dataFormatada = '';
+                try {
+                    if (multa.data) {
+                        const dataISO = multa.data.split('T')[0];
+                        dataFormatada = dataISO.split('-').reverse().join('/');
                     }
-                    ${
-                        isAdmin
-                            ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
-                            : ''
-                    }
-                    ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
-                </div>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
+                } catch (err) {
+                    dataFormatada = '';
+                }
 
-    document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !(perfilUsuario && perfilUsuario.nivel_acesso === 'admin')));
+                const checkboxCell = `
+                  <td class="select-col">
+                    <input
+                      type="checkbox"
+                      class="select-multa"
+                      data-id="${multa.id}"
+                      ${isAdmin ? '' : 'disabled title="Apenas administradores podem selecionar"'}
+                    />
+                  </td>
+                `;
 
-    renderPagination();
-}
+                tr.innerHTML = `
+                    ${checkboxCell}
+                    <td>${multa.placa}</td>
+                    <td>${multa.numero_auto_infracao || '-'}</td>
+                    <td>${multa.codigo_infracao}</td>
+                    <td>${multa.descricao_infracao || '-'}</td>
+                    <td>${multa.agente_re || '-'}</td>
+                    <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
+                    <td>${dataFormatada}</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${
+                                podeEditar
+                                    ? `<button class="btn btn-warning btn-sm" onclick='abrirModalEdicao(${JSON.stringify(multa)})'>✏️</button>`
+                                    : ''
+                            }
+                            ${
+                                isAdmin
+                                    ? `<button class="btn btn-danger btn-sm" onclick="excluirMulta('${multa.id}')">🗑️</button>`
+                                    : ''
+                            }
+                            ${!podeEditar && !isAdmin ? '<span style="color: #999;">-</span>' : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !(perfilUsuario && perfilUsuario.nivel_acesso === 'admin')));
+
+            renderPagination();
+        }
 
         function renderPagination() {
             const paginationContainer = document.getElementById('pagination');
@@ -856,227 +852,210 @@ function renderTablePage(page) {
         }
 
         // Gera relatório apenas com multas selecionadas (apenas admin vê o botão e checkboxes)
-// Helper: carrega uma imagem remota e retorna dataURL (base64)
-async function loadImageAsDataURL(url) {
-    const res = await fetch(url, { mode: 'cors' });
-    if (!res.ok) throw new Error('Não foi possível carregar a imagem do logo.');
-    const blob = await res.blob();
-    return await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject('Erro ao converter imagem em dataURL');
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-    });
-}
+        // Helper: carrega uma imagem remota e retorna dataURL (base64)
+        async function loadImageAsDataURL(url) {
+            const res = await fetch(url, { mode: 'cors' });
+            if (!res.ok) throw new Error('Não foi possível carregar a imagem do logo.');
+            const blob = await res.blob();
+            return await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject('Erro ao converter imagem em dataURL');
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        }
 
-// Função completa: gerarRelatorioSelecionados
-async function gerarRelatorioSelecionados() {
-  // checagem de permissão (mantive sua verificação original)
-  if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
-    alert('Apenas administradores podem gerar este relatório.');
-    return;
-  }
+        async function gerarRelatorioSelecionados() {
+          // checagem de permissão (mantive sua verificação original)
+          if (!perfilUsuario || perfilUsuario.nivel_acesso !== 'admin') {
+            alert('Apenas administradores podem gerar este relatório.');
+            return;
+          }
 
-  const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
-  if (checkboxes.length === 0) {
-    alert('Selecione pelo menos uma multa para gerar o relatório.');
-    return;
-  }
-  const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
-  const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
+          const checkboxes = Array.from(document.querySelectorAll('.select-multa:checked'));
+          if (checkboxes.length === 0) {
+            alert('Selecione pelo menos uma multa para gerar o relatório.');
+            return;
+          }
+          const idsSelecionados = checkboxes.map((cb) => cb.getAttribute('data-id'));
+          const multasSelecionadas = multasAtuais.filter((m) => idsSelecionados.includes(String(m.id)));
 
-  const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
-  if (oficioNum === null) return;
+          const oficioNum = prompt('Informe o número do OFÍCIO (apenas o número):', '');
+          if (oficioNum === null) return;
 
-  // helper para carregar imagem via URL (retorna HTMLImageElement)
-  function loadImage(url) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = (e) => reject(e);
-      img.src = url;
-    });
-  }
+          // helper para carregar imagem via URL (retorna HTMLImageElement)
+          function loadImage(url) {
+            return new Promise((resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => resolve(img);
+              img.onerror = (e) => reject(e);
+              img.src = url;
+            });
+          }
 
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+          try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
 
-    // configuração de margens e blocos
-    const marginX = 50;
-    const marginTop = 40;
+            // configuração de margens e blocos
+            const marginX = 50;
+            const marginTop = 40;
 
-    // Bloco esquerdo (logo + contato)
-    const bloco1Width = 120; // ajuste se desejar outro tamanho
-    const bloco1X = marginX;
-    const logoHeight = 80;
-    const logoY = marginTop; // topo da imagem
+            // Bloco esquerdo (logo + contato)
+            const bloco1Width = 120; // ajuste se desejar outro tamanho
+            const bloco1X = marginX;
+            const logoHeight = 80;
+            const logoY = marginTop; // topo da imagem
 
-    // Bloco direito (texto do ofício)
-    const gapBetweenBlocks = 20;
-    const bloco2X = bloco1X + bloco1Width + gapBetweenBlocks;
-    const bloco2Width = pageWidth - marginX * 2 - bloco1Width - gapBetweenBlocks;
+            // Bloco direito (texto do ofício)
+            const gapBetweenBlocks = 20;
+            const bloco2X = bloco1X + bloco1Width + gapBetweenBlocks;
+            const bloco2Width = pageWidth - marginX * 2 - bloco1Width - gapBetweenBlocks;
 
-    // --- desenhar imagem no bloco esquerdo (usa a URL do upload) ---
-    // substitua a URL abaixo se quiser outra imagem
-    const logoUrl = 'https://cdn.abacus.ai/images/b4cc4328-e138-4e89-a5e0-af97e97cf064.png';
+            // --- desenhar imagem no bloco esquerdo (usa a URL do upload) ---
+            const logoUrl = 'https://cdn.abacus.ai/images/b4cc4328-e138-4e89-a5e0-af97e97cf064.png';
 
-    try {
-      const img = await loadImage(logoUrl);
-      const logoWidth = bloco1Width; // preenche a largura do bloco
-      const ratio = Math.min(logoWidth / img.width, logoHeight / img.height);
-      const drawW = img.width * ratio;
-      const drawH = img.height * ratio;
-      const drawX = bloco1X + (bloco1Width - drawW) / 2;
-      const drawY = logoY + (logoHeight - drawH) / 2;
-      doc.addImage(img, 'PNG', drawX, drawY, drawW, drawH);
-    } catch (err) {
-      // falha ao carregar (CORS ou outro erro) -> não interrompe a geração
-      // opcional: desenhar retângulo placeholder:
-      // doc.setDrawColor(200); doc.rect(bloco1X, logoY, bloco1Width, logoHeight);
-      console.warn('Não foi possível carregar o logotipo:', err);
-    }
+            try {
+              const img = await loadImage(logoUrl);
+              const logoWidth = bloco1Width; // preenche a largura do bloco
+              const ratio = Math.min(logoWidth / img.width, logoHeight / img.height);
+              const drawW = img.width * ratio;
+              const drawH = img.height * ratio;
+              const drawX = bloco1X + (bloco1Width - drawW) / 2;
+              const drawY = logoY + (logoHeight - drawH) / 2;
+              doc.addImage(img, 'PNG', drawX, drawY, drawW, drawH);
+            } catch (err) {
+              console.warn('Não foi possível carregar o logotipo:', err);
+            }
 
-    // --- contato (preto), centralizado dentro do bloco esquerdo, abaixo do logo ---
-    const contatoYStart = logoY + logoHeight + 10;
-    doc.setFont('Times', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0); // preto
+            // --- contato (preto), centralizado dentro do bloco esquerdo, abaixo do logo ---
+            const contatoYStart = logoY + logoHeight + 10;
+            doc.setFont('Times', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0); // preto
 
-    const contatoLinhas = [
-      '24bpmi1cia@policiamilitar.sp.gov.br',
-      'Av. Sen. Marcos Freire, nº 169,',
-      'Jd. Aeroporto, SJBVista/SP.',
-      'Fone-(19) 3623-3623'
-    ];
-    contatoLinhas.forEach((linha, i) => {
-      const y = contatoYStart + i * 14;
-      const textWidth = doc.getTextWidth(linha);
-      const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
-      doc.text(linha, x, y);
-    });
+            const contatoLinhas = [
+              '24bpmi1cia@policiamilitar.sp.gov.br',
+              'Av. Sen. Marcos Freire, nº 169,',
+              'Jd. Aeroporto, SJBVista/SP.',
+              'Fone-(19) 3623-3623'
+            ];
+            contatoLinhas.forEach((linha, i) => {
+              const y = contatoYStart + i * 14;
+              const textWidth = doc.getTextWidth(linha);
+              const x = bloco1X + (bloco1Width / 2) - (textWidth / 2);
+              doc.text(linha, x, y);
+            });
 
-    // --- bloco direito: texto do ofício (alinhado à esquerda dentro do bloco) ---
-    let y = marginTop;
-    doc.setFont('Times', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
+            // --- bloco direito: texto do ofício (alinhado à esquerda dentro do bloco) ---
+            let y = marginTop;
+            doc.setFont('Times', 'bold');
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
 
-    doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
-    y += 18;
-    doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
-    y += 22;
+            doc.text('SECRETARIA DA SEGURANÇA PÚBLICA', bloco2X, y);
+            y += 18;
+            doc.text('POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', bloco2X, y);
+            y += 22;
 
-    doc.setFont('Times', 'normal');
-    doc.setFontSize(11);
+            doc.setFont('Times', 'normal');
+            doc.setFontSize(11);
 
-    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-    const hoje = new Date();
-    const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
-    doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
-    y += 18;
+            const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+            const hoje = new Date();
+            const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}.`;
+            doc.text(`São João da Boa Vista, ${dataFormatada}`, bloco2X, y);
+            y += 18;
 
-    doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
-    y += 18;
-    doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
-    y += 18;
-    doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
-    y += 18;
+            doc.text(`OFICIO Nº 24BPMI-${oficioNum}/100/26`, bloco2X, y);
+            y += 18;
+            doc.text('Do Comandante da 1ª Cia PM', bloco2X, y);
+            y += 18;
+            doc.text('A Ilma. Sra. Andréa Parolin Pavani Perinoti.', bloco2X, y);
+            y += 18;
 
-    const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
-    const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
-    doc.text(destinatarioSplit, bloco2X, y);
-    y += destinatarioSplit.length * 14;
+            const destinatario = 'DD Diretora do Departamento de Segurança e Trânsito de São João Boa Vista/SP.';
+            const destinatarioSplit = doc.splitTextToSize(destinatario, bloco2Width);
+            doc.text(destinatarioSplit, bloco2X, y);
+            y += destinatarioSplit.length * 14;
 
-    // Assunto e Anexo em preto normal (sem negrito)
-    doc.setFont('Times', 'normal');
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
-    y += 18;
-    doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
-    y += 20;
+            doc.setFont('Times', 'normal');
+            doc.setFontSize(11);
+            doc.text('Assunto: Autos de Infração Municipais.', bloco2X, y);
+            y += 18;
+            doc.text(`Anexo: ${multasSelecionadas.length} autos de infração.`, bloco2X, y);
+            y += 20;
 
-    // --- tabela ocupando toda a largura da página (com margens) ---
-    const tabelaDados = multasSelecionadas.map(multa => {
-      const dataISO = multa.data ? multa.data.split('T')[0] : '';
-      const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
-      return [
-        multa.placa || '-',
-        multa.numero_auto_infracao || '-',
-        multa.codigo_infracao || '-',
-        multa.descricao_infracao || '-',
-        multa.agente_re || '-',
-        dataFormatada || '-'
-      ];
-    });
+            const tabelaDados = multasSelecionadas.map(multa => {
+              const dataISO = multa.data ? multa.data.split('T')[0] : '';
+              const dataFormatada = (dataISO && dataISO.includes('-')) ? dataISO.split('-').reverse().join('/') : dataISO;
+              return [
+                multa.placa || '-',
+                multa.numero_auto_infracao || '-',
+                multa.codigo_infracao || '-',
+                multa.descricao_infracao || '-',
+                multa.agente_re || '-',
+                dataFormatada || '-'
+              ];
+            });
 
-    doc.autoTable({
-      startY: y,
-      margin: { left: marginX, right: marginX },
-      head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
-      body: tabelaDados,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [102, 126, 234] }
-    });
+            doc.autoTable({
+              startY: y,
+              margin: { left: marginX, right: marginX },
+              head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
+              body: tabelaDados,
+              styles: { fontSize: 9 },
+              headStyles: { fillColor: [102, 126, 234] }
+            });
 
-    // --- assinatura do comandante (após a tabela) ---
-    const assinaturaNome = 'DANIEL FERREIRA LOPES';
-    const assinaturaCargo = 'Cap PM Comandante';
-    const assinaturaOffsetY = 82; // distância abaixo da tabela
+            const assinaturaNome = 'DANIEL FERREIRA LOPES';
+            const assinaturaCargo = 'Cap PM Comandante';
+            const assinaturaOffsetY = 82; // distância abaixo da tabela
 
-    const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
-    let sigY = tabelaFinalY + assinaturaOffsetY;
+            const tabelaFinalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : (y + 100);
+            let sigY = tabelaFinalY + assinaturaOffsetY;
 
-    // se não couber na página, cria nova
-    const requiredSpaceForSignature = 60;
-    if (sigY + requiredSpaceForSignature > pageHeight - 120) {
-      doc.addPage();
-      sigY = marginTop + 60;
-    }
+            const requiredSpaceForSignature = 60;
+            if (sigY + requiredSpaceForSignature > pageHeight - 120) {
+              doc.addPage();
+              sigY = marginTop + 60;
+            }
 
-    // Nome sem negrito, alinhado à direita
-    doc.setFont('Times', 'normal');
-    doc.setFontSize(11);
-    const sigX_Right = pageWidth - marginX; // margem direita
-    doc.text(assinaturaNome, sigX_Right, sigY, { align: 'right' });
+            doc.setFont('Times', 'normal');
+            doc.setFontSize(11);
+            const sigX_Right = pageWidth - marginX; // margem direita
+            doc.text(assinaturaNome, sigX_Right, sigY, { align: 'right' });
 
-    // Cargo centralizado com relação ao NOME (mesmo eixo horizontal do centro do nome)
-    const larguraNome = doc.getTextWidth(assinaturaNome);
-    const centroNomeX = sigX_Right - (larguraNome / 2);
-    doc.setFontSize(10);
-    doc.text(assinaturaCargo, centroNomeX, sigY + 16, { align: 'center' });
+            const larguraNome = doc.getTextWidth(assinaturaNome);
+            const centroNomeX = sigX_Right - (larguraNome / 2);
+            doc.setFontSize(10);
+            doc.text(assinaturaCargo, centroNomeX, sigY + 16, { align: 'center' });
 
-    // --- rodapé: linha e frase em UMA linha (fonte 7pt) ---
-    const rodapeMargin = marginX;
-    const rodapeLineY = pageHeight - 60;
-    const linhaX1 = rodapeMargin;
-    const linhaX2 = pageWidth - rodapeMargin;
+            const rodapeMargin = marginX;
+            const rodapeLineY = pageHeight - 60;
+            const linhaX1 = rodapeMargin;
+            const linhaX2 = pageWidth - rodapeMargin;
 
-    // Desenha linha horizontal
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(linhaX1, rodapeLineY, linhaX2, rodapeLineY);
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.5);
+            doc.line(linhaX1, rodapeLineY, linhaX2, rodapeLineY);
 
-    // Frase do rodapé em UMA linha, fonte 7pt, itálico
-    const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
-    doc.setFont('Times', 'italic');
-    doc.setFontSize(7);
-    // conforme solicitado, mantemos 7pt; centralizamos a linha (se por acaso a frase exceder a largura, ela ficará em uma só linha mesmo que ultrapasse levemente as margens)
-    doc.text(fraseRodape, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
+            const fraseRodape = '“Nós, Policiais Militares, sob a proteção de Deus, estamos compromissados com a defesa da Vida, da Integridade Física e da Dignidade da Pessoa Humana”';
+            doc.setFont('Times', 'italic');
+            doc.setFontSize(7);
+            doc.text(fraseRodape, pageWidth / 2, rodapeLineY + 14, { align: 'center' });
 
-    // --- salvar pdf ---
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
-    doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
+            const ts = new Date().toISOString().replace(/[:.]/g, '-');
+            doc.save(`relatorio_multas_oficio_${oficioNum || 'sem-num'}_${ts}.pdf`);
 
-  } catch (err) {
-    console.error('Erro ao gerar PDF:', err);
-    alert('Erro ao gerar o relatório. Veja o console para detalhes.');
-  }
-}
+          } catch (err) {
+            console.error('Erro ao gerar PDF:', err);
+            alert('Erro ao gerar o relatório. Veja o console para detalhes.');
+          }
+        }
 
         // Mantive a função de gerar relatório por período (modal) caso queira reutilizar
         function abrirModalRelatorio() {
