@@ -63,59 +63,6 @@ body {
     border-color: #0073e6;
     box-shadow: 0 0 5px #0073e6;
 }
-        .combobox-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 100%;
-  max-width: 220px; /* ajuste conforme layout */
-}
-.combobox-wrapper input {
-  width: 100%;
-  padding: 8px 36px 8px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
-}
-.combobox-toggle {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 6px;
-  color: #333;
-}
-.combobox-options {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(20,20,50,0.06);
-  list-style: none;
-  margin: 0;
-  padding: 6px 0;
-  z-index: 50;
-  max-height: 160px;
-  overflow-y: auto;
-}
-.combobox-options[aria-hidden="false"] { display: block; }
-.combobox-options li {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-.combobox-options li:hover,
-.combobox-options li[aria-selected="true"] {
-  background: #f0f4ff;
-}
 .btn {
     padding: 12px 24px;
     border: none;
@@ -533,17 +480,12 @@ table tr:hover {
                         <label for="data">Data:</label>
                         <input type="date" id="data" required />
                     </div>
-<!-- Combobox para cadastro -->
-<div class="form-group">
-  <label for="cancelada">Cancelada:</label>
-  <div class="combobox-wrapper" id="cancelada-wrapper">
-    <input type="text" id="cancelada" aria-haspopup="listbox" aria-expanded="false" readonly placeholder="Selecione...">
-    <button type="button" class="combobox-toggle" aria-label="Abrir opções">▾</button>
-    <ul class="combobox-options" role="listbox" id="cancelada-options">
-      <li role="option" data-value="Sim">Sim</li>
-      <li role="option" data-value="Não">Não</li>
-    </ul>
-  </div>
+                    <div class="form-group">
+    <label for="cancelada">Cancelada:</label>
+    <select id="cancelada" required>
+        <option value="não" selected>Não</option>
+        <option value="sim">Sim</option>
+    </select>
 </div>
 
                     <button type="submit" class="btn btn-primary">Adicionar Multa</button>
@@ -669,17 +611,12 @@ table tr:hover {
                     <label for="editData">Data:</label>
                     <input type="date" id="editData" required />
                 </div>
-<!-- Combobox para edição -->
-<div class="form-group">
-  <label for="editCancelada">Cancelada:</label>
-  <div class="combobox-wrapper" id="editCancelada-wrapper">
-    <input type="text" id="editCancelada" aria-haspopup="listbox" aria-expanded="false" readonly placeholder="Selecione...">
-    <button type="button" class="combobox-toggle" aria-label="Abrir opções">▾</button>
-    <ul class="combobox-options" role="listbox" id="editCancelada-options">
-      <li role="option" data-value="Sim">Sim</li>
-      <li role="option" data-value="Não">Não</li>
-    </ul>
-  </div>
+                <div class="form-group">
+    <label for="editCancelada">Cancelada:</label>
+    <select id="editCancelada" required>
+        <option value="não">Não</option>
+        <option value="sim">Sim</option>
+    </select>
 </div>
 
                 <div class="actions-buttons">
