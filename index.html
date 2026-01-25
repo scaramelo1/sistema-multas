@@ -480,13 +480,6 @@ table tr:hover {
                         <label for="data">Data:</label>
                         <input type="date" id="data" required />
                     </div>
-                    <div class="form-group">
-    <label for="cancelada">Cancelada:</label>
-    <select id="cancelada" required>
-        <option value="não" selected>Não</option>
-        <option value="sim">Sim</option>
-    </select>
-</div>
 
                     <button type="submit" class="btn btn-primary">Adicionar Multa</button>
                 </form>
@@ -512,13 +505,12 @@ table tr:hover {
                             <th>RE Agente</th>
                             <th>Inserido por (RE)</th>
                             <th>Data</th>
-                            <th>Cancelada</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="multasBody">
                         <tr>
-                            <td colspan="10" style="text-align: center; color: #999;">Nenhuma multa</td>
+                            <td colspan="9" style="text-align: center; color: #999;">Nenhuma multa</td>
                         </tr>
                     </tbody>
                 </table>
@@ -611,13 +603,6 @@ table tr:hover {
                     <label for="editData">Data:</label>
                     <input type="date" id="editData" required />
                 </div>
-                <div class="form-group">
-    <label for="editCancelada">Cancelada:</label>
-    <select id="editCancelada" required>
-        <option value="não">Não</option>
-        <option value="sim">Sim</option>
-    </select>
-</div>
 
                 <div class="actions-buttons">
                     <button type="submit" class="btn btn-success">💾 Salvar Alterações</button>
@@ -971,7 +956,6 @@ autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
                         agente_nome: document.getElementById('agenteNome').value,
                         data: dataParaSalvar,
                         user_id: usuarioLogado.id,
-                        cancelada: document.getElementById('cancelada').value
                     };
 
                     try {
@@ -1197,7 +1181,6 @@ autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
             document.getElementById('editAgenteRE').value = multa.agente_re || '';
             document.getElementById('editAgenteNome').value = multa.agente_nome || '';
             document.getElementById('editAgentePosto').value = multa.agente_posto || '';
-            document.getElementById('editCancelada').value = multa.cancelada || 'não';
 
             try {
                 document.getElementById('editData').value = multa.data ? multa.data.split('T')[0] : '';
@@ -1241,7 +1224,6 @@ autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
                 agente_re: document.getElementById('editAgenteRE').value,
                 agente_nome: document.getElementById('editAgenteNome').value,
                 data: dataParaSalvar,
-                cancelada: document.getElementById('editCancelada').value
             };
 
             try {
@@ -1403,7 +1385,6 @@ badge.className = 'badge ' + (perfil.nivel_acesso === 'admin' ? 'badge-admin' : 
                     <td>${multa.agente_re || '-'}</td>
                     <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
                     <td>${dataFormatada}</td>
-                    <td>${multa.cancelada || 'não'}</td>
                     <td>
                         <div class="action-buttons">
                             ${
