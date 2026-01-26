@@ -32,5 +32,6 @@
   {"codigo": "55250", "descricao": "Estacionar na contramão de direção"},
   {"codigo": "54600", "descricao": "Estacionar em guia de calçada rebaixada destinada à entrada/saída de veículos"},
   {"codigo": "55411", "descricao": "Estacionar em desacordo com a regulamentação especificada pela sinalização"},
+  {"codigo": "53800", "descricao": "Estacionar nas esquinas e a menos de 5m do alinhamento da via transversal"},
   {"codigo": "55500", "descricao": "Estacionar em local/horário proibido especificamente pela sinalização"}
 ]
