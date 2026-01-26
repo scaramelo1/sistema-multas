@@ -30,5 +30,7 @@
   { "codigo": "52151", "descricao": "Dirigir ameaçando pedestres ou demais veículos." },
   { "codigo": "52581", "descricao": "Promover ou participar de competição, exibição ou demonstração de perícia em manobra de veículo na via sem autorização da autoridade competente." },
   {"codigo": "55250", "descricao": "Estacionar na contramão de direção"},
+  {"codigo": "54600", "descricao": "Estacionar em guia de calçada rebaixada destinada à entrada/saída de veículos"},
+  {"codigo": "55411", "descricao": "Estacionar em desacordo com a regulamentação especificada pela sinalização"},
   {"codigo": "55500", "descricao": "Estacionar em local/horário proibido especificamente pela sinalização"}
 ]
