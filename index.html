@@ -480,11 +480,6 @@ table tr:hover {
                         <label for="data">Data:</label>
                         <input type="date" id="data" required />
                     </div>
-                    <div class="form-group">
-  <label>Cancelada:</label>
-  <label style="margin-right:12px;color:#003366"><input type="radio" name="cancelada" value="Sim" /> Sim</label>
-  <label style="color:#003366"><input type="radio" name="cancelada" value="Não" checked /> Não</label>
-</div>
 
                     <button type="submit" class="btn btn-primary">Adicionar Multa</button>
                 </form>
@@ -510,7 +505,6 @@ table tr:hover {
                             <th>RE Agente</th>
                             <th>Inserido por (RE)</th>
                             <th>Data</th>
-                            <th>Cancelada</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -609,11 +603,6 @@ table tr:hover {
                     <label for="editData">Data:</label>
                     <input type="date" id="editData" required />
                 </div>
-                <div class="form-group">
-  <label>Cancelada:</label>
-  <label style="margin-right:12px;color:#003366"><input type="radio" name="editCancelada" value="Sim" /> Sim</label>
-  <label style="color:#003366"><input type="radio" name="editCancelada" value="Não" /> Não</label>
-</div>
 
                 <div class="actions-buttons">
                     <button type="submit" class="btn btn-success">💾 Salvar Alterações</button>
@@ -967,7 +956,6 @@ autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
                         agente_nome: document.getElementById('agenteNome').value,
                         data: dataParaSalvar,
                         user_id: usuarioLogado.id,
-                        cancelada: cancelada
                     };
 
                     try {
@@ -1086,7 +1074,6 @@ autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
                     />
                   </td>
                 `;
-                const canceladaValor = multa.cancelada ? (String(multa.cancelada) === 'Sim' ? 'Sim' : 'Não') : 'Não';
 
                 tr.innerHTML = `
                     ${checkboxCell}
@@ -1097,7 +1084,6 @@ autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
                     <td>${multa.agente_re || '-'}</td>
                     <td style="font-weight: bold; color: #667eea;">${reInseriu}</td>
                     <td>${dataFormatada}</td>
-                    <td>${canceladaValor}</td>
                     <td>
                         <div class="action-buttons">
                             ${
@@ -1195,9 +1181,6 @@ autocompleteCodigoInfracao(document.getElementById('codigoInfracao'));
             document.getElementById('editAgenteRE').value = multa.agente_re || '';
             document.getElementById('editAgenteNome').value = multa.agente_nome || '';
             document.getElementById('editAgentePosto').value = multa.agente_posto || '';
-            const val = multa.cancelada ? (String(multa.cancelada) === 'Sim' ? 'Sim' : 'Não') : 'Não';
-const radio = document.querySelector(`input[name="editCancelada"][value="${val}"]`);
-if (radio) radio.checked = true;
 
             try {
                 document.getElementById('editData').value = multa.data ? multa.data.split('T')[0] : '';
@@ -1241,7 +1224,6 @@ if (radio) radio.checked = true;
                 agente_re: document.getElementById('editAgenteRE').value,
                 agente_nome: document.getElementById('editAgenteNome').value,
                 data: dataParaSalvar,
-                cancelada: cancelada
             };
 
             try {
@@ -1744,8 +1726,7 @@ async function gerarRelatorioSelecionados() {
         multa.codigo_infracao || '-',
         multa.descricao_infracao || '-',
         multa.agente_re || '-',
-        dataFormatada || '-',
-        multa.cancelada ? String(multa.cancelada) : 'Não'
+        dataFormatada || '-'
       ];
     });
 
@@ -1753,7 +1734,7 @@ async function gerarRelatorioSelecionados() {
       startY: y,
       margin: { left: marginX, right: marginX },
       tableWidth: pageWidth - (marginX * 2),
-      head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data', 'Cancelada']],
+      head: [['Placa', 'Auto Infração', 'Código', 'Descrição', 'RE Agente', 'Data']],
       body: tabelaDados,
       styles: { fontSize: 9, font: 'Times' },
       headStyles: { fillColor: [102, 126, 234] }
